@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, newComponent } from '../lib/wireframeTemplates.js'
 import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
@@ -112,7 +112,6 @@ function ComponentEditor({ wireframe, cmp, layout, onClose }) {
 function WireframeFrame({ wireframe, requirement }) {
   const { dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
-  const [collapsed, setCollapsed] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const cat = requirement ? categoryMeta(requirement.category) : null
 
@@ -208,9 +207,6 @@ function WireframeFrame({ wireframe, requirement }) {
   return (
     <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
-        <button className="ghost sm" title={collapsed ? '展開' : '收合'} onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c) }} style={{ padding: 2 }}>
-          {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-        </button>
         <span className="wf-dots"><i /><i /><i /></span>
         {cat && <span className="tag" style={{ background: cat.color }}>{cat.label}</span>}
         <input
@@ -235,15 +231,13 @@ function WireframeFrame({ wireframe, requirement }) {
         ><Trash2 size={14} /></button>
       </div>
 
-      {!collapsed && (
-        layout === 'sidebar' ? (
-          <div className="wf-admin">
-            <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
-            <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
-          </div>
-        ) : (
-          column(wireframe.components, 'content', wireframe.device === 'mobile')
-        )
+      {layout === 'sidebar' ? (
+        <div className="wf-admin">
+          <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
+          <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
+        </div>
+      ) : (
+        column(wireframe.components, 'content', wireframe.device === 'mobile')
       )}
     </div>
   )
@@ -252,6 +246,14 @@ function WireframeFrame({ wireframe, requirement }) {
 export default function WireframeBoard() {
   const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
+  const [selectedId, setSelectedId] = useState(null)
+
+  // 新增 / 複製畫面後自動選取最新的那一個
+  const prevLen = useRef(wireframes.length)
+  useEffect(() => {
+    if (wireframes.length > prevLen.current) setSelectedId(wireframes[wireframes.length - 1].id)
+    prevLen.current = wireframes.length
+  }, [wireframes])
 
   if (!wireframes.length) {
     return (
@@ -267,28 +269,36 @@ export default function WireframeBoard() {
   }
 
   const reqById = new Map(current.requirements.map((r) => [r.id, r]))
-
-  const jumpTo = (id) => {
-    document.getElementById(`wf-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  const selected = wireframes.find((w) => w.id === selectedId) || wireframes[0]
 
   return (
     <ConfigProvider theme={WF_THEME}>
-      <div className="toolbar">
-        <strong>畫面 Wireframe（{wireframes.length} 個）</strong>
-        <button className="sm" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /> 新增空白畫面</button>
-        <div className="spacer" />
-        <div className="muted" style={{ fontSize: 12 }}>拖曳把手排序、點元件可設寬度／對齊／內容、可收合畫面。</div>
-      </div>
-      <div className="wf-jump">
-        {wireframes.map((wf) => (
-          <button key={wf.id} className="sm" onClick={() => jumpTo(wf.id)}>{wf.name || '未命名'}</button>
-        ))}
-      </div>
-      <div className="wf-board">
-        {wireframes.map((wf) => (
-          <WireframeFrame key={wf.id} wireframe={wf} requirement={reqById.get(wf.requirementId)} />
-        ))}
+      <div className="wf-studio">
+        <aside className="wf-screens">
+          <div className="ws-head">
+            <strong style={{ fontSize: 13 }}>畫面（{wireframes.length}）</strong>
+            <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
+          </div>
+          <div className="ws-list">
+            {wireframes.map((wf) => {
+              const r = reqById.get(wf.requirementId)
+              const cat = r ? categoryMeta(r.category) : null
+              return (
+                <div
+                  key={wf.id}
+                  className={'wf-screen-item' + (wf.id === selected.id ? ' active' : '')}
+                  onClick={() => setSelectedId(wf.id)}
+                >
+                  <span className="dot" style={{ background: cat ? cat.color : '#cbd2cd' }} />
+                  <span className="nm">{wf.name || '未命名'}</span>
+                </div>
+              )
+            })}
+          </div>
+        </aside>
+        <main className="wf-stage">
+          <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} />
+        </main>
       </div>
     </ConfigProvider>
   )

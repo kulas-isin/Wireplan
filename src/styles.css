@@ -167,20 +167,32 @@ table.req th { font-size: 12px; color: var(--muted); font-weight: 600; backgroun
 table.req tr:hover td { background: #fafdfb; }
 .req-actions { display: flex; gap: 4px; }
 
-/* ── Wireframe ── */
-.wf-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(720px, 1fr)); gap: 22px; align-items: start; }
+/* ── Wireframe 工作室（左清單 + 右舞台） ── */
+.wf-studio { display: flex; gap: 16px; height: calc(100vh - 188px); }
+.wf-screens {
+  width: 230px; flex-shrink: 0; background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);
+}
+.wf-screens .ws-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 10px; }
+.wf-screens .ws-list { overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.wf-screen-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--text); }
+.wf-screen-item:hover { background: var(--surface); }
+.wf-screen-item.active { background: var(--primary-soft); color: var(--primary-dark); font-weight: 600; }
+.wf-screen-item .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.wf-screen-item .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-stage { flex: 1; min-width: 0; overflow: auto; }
+
 .wf-frame {
   border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
-  box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
-  scroll-margin-top: 64px; /* 跳轉時避開置頂的快速切換列 */
+  overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);
 }
-/* 瀏覽器視窗感的標題列 */
-.wf-titlebar { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+/* 瀏覽器視窗感的標題列（乾淨白底） */
+.wf-titlebar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .wf-dots { display: flex; gap: 5px; flex-shrink: 0; }
 .wf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #cbd2cd; display: block; }
 .wf-titlebar input { border: none; background: transparent; font-weight: 700; padding: 4px 6px; border-radius: 8px; font-size: 14px; }
 .wf-titlebar input:focus { background: #fff; box-shadow: none; }
-.wf-canvas { padding: 20px; background: #f7f8f7; min-height: 280px; max-height: var(--wf-h); overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+.wf-canvas { padding: 28px; background: #ffffff; min-height: 280px; max-height: var(--wf-h); overflow-y: auto; display: flex; flex-wrap: wrap; gap: 16px; align-content: flex-start; }
 .wf-canvas.mobile { max-width: 320px; margin: 0 auto; border: 10px solid var(--neutral-dark); border-radius: 32px; padding: 16px; }
 
 /* 兩欄 admin 版面 */
