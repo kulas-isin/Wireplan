@@ -7,7 +7,7 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, ChevronDown, ChevronRight, Columns2, PanelLeft } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // 套用品牌綠主題給 wireframe 內的 antd 元件
@@ -247,6 +247,7 @@ export default function WireframeBoard() {
   const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
   const [selectedId, setSelectedId] = useState(null)
+  const [navOpen, setNavOpen] = useState(true)
 
   // 新增 / 複製畫面後自動選取最新的那一個
   const prevLen = useRef(wireframes.length)
@@ -274,10 +275,19 @@ export default function WireframeBoard() {
   return (
     <ConfigProvider theme={WF_THEME}>
       <div className="wf-studio">
+        {!navOpen && (
+          <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
+            <PanelLeft size={18} />
+          </div>
+        )}
+        {navOpen && (
         <aside className="wf-screens">
           <div className="ws-head">
             <strong style={{ fontSize: 13 }}>畫面（{wireframes.length}）</strong>
-            <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
+            <span className="ws-actions">
+              <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
+              <button className="ghost sm" title="收合清單" onClick={() => setNavOpen(false)}><PanelLeftClose size={15} /></button>
+            </span>
           </div>
           <div className="ws-list">
             {wireframes.map((wf) => {
@@ -296,6 +306,7 @@ export default function WireframeBoard() {
             })}
           </div>
         </aside>
+        )}
         <main className="wf-stage">
           <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} />
         </main>
