@@ -11,6 +11,66 @@ function touch(project) {
   return { ...project, updatedAt: Date.now() }
 }
 
+// ── 樹狀元件工具（支援列容器巢狀 children）──
+function treeUpdate(list, id, patch) {
+  return list.map((c) => {
+    if (c.id === id) return { ...c, ...patch }
+    if (c.children) return { ...c, children: treeUpdate(c.children, id, patch) }
+    return c
+  })
+}
+function treeRemove(list, id) {
+  return list.filter((c) => c.id !== id).map((c) => (c.children ? { ...c, children: treeRemove(c.children, id) } : c))
+}
+function treeFind(list, id) {
+  for (const c of list) {
+    if (c.id === id) return c
+    if (c.children) { const f = treeFind(c.children, id); if (f) return f }
+  }
+  return null
+}
+function treeClone(c) {
+  return { ...c, id: uid('cmp'), children: c.children ? c.children.map(treeClone) : undefined }
+}
+// 在 id 之後插入 node（同層）
+function treeInsertAfter(list, id, node) {
+  const out = []
+  let done = false
+  for (const c of list) {
+    out.push(c.children ? { ...c, children: treeInsertAfter(c.children, id, node) } : c)
+    if (c.id === id) { out.push(node); done = true }
+  }
+  return out
+}
+// 將 node 加入指定父容器的 children（parentId 為 null 代表頂層）
+function treeAddChild(list, parentId, node) {
+  if (!parentId) return [...list, node]
+  return list.map((c) => {
+    if (c.id === parentId) return { ...c, children: [...(c.children || []), node] }
+    if (c.children) return { ...c, children: treeAddChild(c.children, parentId, node) }
+    return c
+  })
+}
+// 依 orderedIds 重排某父容器的子層（parentId null = 頂層）
+function treeReorder(list, parentId, orderedIds) {
+  if (!parentId) {
+    const byId = new Map(list.map((c) => [c.id, c]))
+    const arr = orderedIds.map((id) => byId.get(id)).filter(Boolean)
+    for (const c of list) if (!orderedIds.includes(c.id)) arr.push(c)
+    return arr
+  }
+  return list.map((c) => {
+    if (c.id === parentId && c.children) {
+      const byId = new Map(c.children.map((x) => [x.id, x]))
+      const arr = orderedIds.map((id) => byId.get(id)).filter(Boolean)
+      for (const x of c.children) if (!orderedIds.includes(x.id)) arr.push(x)
+      return { ...c, children: arr }
+    }
+    if (c.children) return { ...c, children: treeReorder(c.children, parentId, orderedIds) }
+    return c
+  })
+}
+
 function reducer(state, action) {
   const cur = state.projects.find((p) => p.id === state.currentId)
   const replaceCurrent = (next) => ({
@@ -113,67 +173,52 @@ function reducer(state, action) {
     }
 
     case 'UPDATE_COMPONENT': {
-      const wireframes = cur.wireframes.map((w) => {
-        if (w.id !== action.wireframeId) return w
-        return {
-          ...w,
-          components: w.components.map((cmp) =>
-            cmp.id === action.componentId ? { ...cmp, ...action.patch } : cmp,
-          ),
-        }
-      })
+      const wireframes = cur.wireframes.map((w) =>
+        w.id === action.wireframeId ? { ...w, components: treeUpdate(w.components, action.componentId, action.patch) } : w,
+      )
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
     case 'ADD_COMPONENT': {
       const wireframes = cur.wireframes.map((w) =>
-        w.id === action.wireframeId ? { ...w, components: [...w.components, action.component] } : w,
+        w.id === action.wireframeId ? { ...w, components: treeAddChild(w.components, action.parentId || null, action.component) } : w,
       )
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
     case 'DELETE_COMPONENT': {
       const wireframes = cur.wireframes.map((w) =>
-        w.id === action.wireframeId
-          ? { ...w, components: w.components.filter((c) => c.id !== action.componentId) }
-          : w,
+        w.id === action.wireframeId ? { ...w, components: treeRemove(w.components, action.componentId) } : w,
       )
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
-    case 'MOVE_COMPONENT': {
-      const wireframes = cur.wireframes.map((w) => {
-        if (w.id !== action.wireframeId) return w
-        const arr = [...w.components]
-        const idx = arr.findIndex((c) => c.id === action.componentId)
-        const target = idx + action.dir
-        if (idx < 0 || target < 0 || target >= arr.length) return w
-        ;[arr[idx], arr[target]] = [arr[target], arr[idx]]
-        return { ...w, components: arr }
-      })
-      return replaceCurrent(touch({ ...cur, wireframes }))
-    }
-
     case 'REORDER_COMPONENTS': {
-      const wireframes = cur.wireframes.map((w) => {
-        if (w.id !== action.wireframeId) return w
-        const byId = new Map(w.components.map((c) => [c.id, c]))
-        const arr = action.orderedIds.map((id) => byId.get(id)).filter(Boolean)
-        for (const c of w.components) if (!action.orderedIds.includes(c.id)) arr.push(c)
-        return { ...w, components: arr }
-      })
+      const wireframes = cur.wireframes.map((w) =>
+        w.id === action.wireframeId ? { ...w, components: treeReorder(w.components, action.parentId || null, action.orderedIds) } : w,
+      )
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
     case 'DUPLICATE_COMPONENT': {
       const wireframes = cur.wireframes.map((w) => {
         if (w.id !== action.wireframeId) return w
-        const idx = w.components.findIndex((c) => c.id === action.componentId)
-        if (idx < 0) return w
-        const copy = { ...w.components[idx], id: uid('cmp') }
-        const arr = [...w.components]
-        arr.splice(idx + 1, 0, copy)
-        return { ...w, components: arr }
+        const src = treeFind(w.components, action.componentId)
+        if (!src) return w
+        return { ...w, components: treeInsertAfter(w.components, action.componentId, treeClone(src)) }
+      })
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'WRAP_IN_ROW': {
+      // 把某元件包進新的列容器（之後可加入並排元件）
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        const src = treeFind(w.components, action.componentId)
+        if (!src) return w
+        const row = { id: uid('cmp'), type: 'row', label: '', width: src.width || 'full', region: src.region, gap: 'md', justify: 'left', valign: 'top', children: [{ ...src, width: 'full', region: undefined }] }
+        const replaced = treeInsertAfter(w.components, action.componentId, row)
+        return { ...w, components: treeRemove(replaced, action.componentId) }
       })
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
@@ -186,7 +231,7 @@ function reducer(state, action) {
         id: uid('wf'),
         requirementId: null,
         name: `${src.name} (複本)`,
-        components: src.components.map((c) => ({ ...c, id: uid('cmp') })),
+        components: src.components.map(treeClone),
       }
       const idx = cur.wireframes.findIndex((w) => w.id === action.id)
       const wireframes = [...cur.wireframes]

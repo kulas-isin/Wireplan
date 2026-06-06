@@ -6,8 +6,9 @@ import { categoryMeta } from '../lib/categories.js'
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X } from 'lucide-react'
+import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平 + 緊湊小尺寸）
@@ -98,6 +99,36 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
         </div>
       </label>
 
+      {cmp.type === 'row' && (
+        <>
+          <label className="field">
+            <span>子元件間距</span>
+            <div className="wseg">
+              {[['sm', '緊'], ['md', '中'], ['lg', '鬆']].map(([k, t]) => (
+                <button key={k} className={(cmp.gap || 'md') === k ? 'active' : ''} onClick={() => update({ gap: k })}>{t}</button>
+              ))}
+            </div>
+          </label>
+          <label className="field">
+            <span>水平分佈</span>
+            <select value={cmp.justify || 'left'} onChange={(e) => update({ justify: e.target.value })}>
+              <option value="left">靠左</option>
+              <option value="center">置中</option>
+              <option value="right">靠右</option>
+              <option value="between">兩端對齊</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>垂直對齊</span>
+            <select value={cmp.valign || 'top'} onChange={(e) => update({ valign: e.target.value })}>
+              <option value="top">頂端</option>
+              <option value="center">置中</option>
+              <option value="bottom">底端</option>
+            </select>
+          </label>
+        </>
+      )}
+
       {layout === 'sidebar' && (
         <label className="field">
           <span>所屬區域</span>
@@ -137,11 +168,99 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
         </label>
       )}
 
-      <div className="row" style={{ marginTop: 14, gap: 6 }}>
+      {cmp.type !== 'row' && (
+        <button className="sm" style={{ marginTop: 10, width: '100%' }} onClick={() => dispatch({ type: 'WRAP_IN_ROW', wireframeId: wireframe.id, componentId: cmp.id })}><Columns2 size={13} /> 包成列容器（可並排）</button>
+      )}
+
+      <div className="row" style={{ marginTop: 10, gap: 6 }}>
         <button className="sm" onClick={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}><Copy size={13} /> 複製</button>
         <button className="sm danger" onClick={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); onClose?.() }}><Trash2 size={13} /> 刪除</button>
       </div>
     </div>
+  )
+}
+
+const GAP = { sm: 8, md: 16, lg: 28 }
+const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end', between: 'space-between' }
+const VALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
+const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter' }
+
+function itemMargin(cmp) {
+  const s = {}
+  const nf = (cmp.width || 'full') !== 'full'
+  const a = cmp.align || 'left'
+  if (nf && a === 'right') s.marginLeft = 'auto'
+  if (nf && a === 'center') { s.marginLeft = 'auto'; s.marginRight = 'auto' }
+  return s
+}
+function findById(list, id) {
+  for (const c of list) { if (c.id === id) return c; if (c.children) { const f = findById(c.children, id); if (f) return f } }
+  return null
+}
+function siblingsOf(list, id, parentId = null) {
+  if (list.some((c) => c.id === id)) return { parentId, ids: list.map((c) => c.id) }
+  for (const c of list) { if (c.children) { const r = siblingsOf(c.children, id, c.id); if (r) return r } }
+  return null
+}
+
+function Palette({ onPick }) {
+  return (
+    <div className="palette-pop" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      {COMPONENT_GROUPS.map((g) => (
+        <div className="palette-group" key={g.group}>
+          <div className="pg-title">{g.group}</div>
+          <div className="pg-items">
+            {g.types.map((t) => (
+              <button key={t} onClick={() => onPick(t)}>＋{COMPONENT_TYPES[t]?.label}</button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RowItem({ cmp, ed }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, borderRadius: 8, ...itemMargin(cmp) }
+  const children = cmp.children || []
+  const sel = ed.selectedCmp === cmp.id
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
+      onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
+    >
+      <div className="wf-row" style={{ gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || 'top'] }}>
+        <SortableContext items={children.map((c) => c.id)} strategy={rectSortingStrategy}>
+          {children.map((ch) => <Node key={ch.id} cmp={ch} ed={ed} />)}
+        </SortableContext>
+        {children.length === 0 && <div className="wf-row-empty">空列容器 — 點右上「＋」加入並排元件</div>}
+      </div>
+      <span className="wf-rowhandle" title="拖曳此列" {...attributes} {...listeners}><GripVertical size={14} /></span>
+      {sel && <span className="wf-badge">列容器</span>}
+      <div className="wb-tools" onPointerDown={(e) => e.stopPropagation()}>
+        <button title="加入並排元件" onClick={(e) => { e.stopPropagation(); ed.openPalette(cmp.id) }}><Plus size={13} /></button>
+        <button title="複製" onClick={(e) => { e.stopPropagation(); ed.dup(cmp.id) }}><Copy size={13} /></button>
+        <button title="刪除" onClick={(e) => { e.stopPropagation(); ed.del(cmp.id) }}><X size={14} /></button>
+      </div>
+      {ed.paletteOpen === cmp.id && <Palette onPick={(t) => ed.addComponent(t, cmp.region, cmp.id)} />}
+    </div>
+  )
+}
+
+function Node({ cmp, ed }) {
+  if (cmp.type === 'row') return <RowItem cmp={cmp} ed={ed} />
+  return (
+    <WireframeBlock
+      cmp={cmp}
+      selected={ed.selectedCmp === cmp.id}
+      onSelect={() => ed.select(cmp.id)}
+      onDoubleClick={() => ed.rename(cmp.id)}
+      onDuplicate={() => ed.dup(cmp.id)}
+      onDelete={() => ed.del(cmp.id)}
+    />
   )
 }
 
@@ -158,10 +277,10 @@ function WireframeFrame({ wireframe, requirement }) {
     useSensor(KeyboardSensor),
   )
 
-  const addComponent = (type, region = 'content') => {
+  const addComponent = (type, region = 'content', parentId = null) => {
     const c = newComponent(type)
-    if (region === 'sidebar') c.region = 'sidebar'
-    dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: c })
+    if (!parentId && region === 'sidebar') c.region = 'sidebar'
+    dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: c, parentId })
     setSelectedCmp(c.id)
     setPaletteOpen(null)
   }
@@ -169,14 +288,26 @@ function WireframeFrame({ wireframe, requirement }) {
   const onDragEnd = (event) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const ids = wireframe.components.map((c) => c.id)
-    const oldIdx = ids.indexOf(active.id)
-    const newIdx = ids.indexOf(over.id)
-    if (oldIdx < 0 || newIdx < 0) return
-    const reordered = [...ids]
-    reordered.splice(oldIdx, 1)
-    reordered.splice(newIdx, 0, active.id)
-    dispatch({ type: 'REORDER_COMPONENTS', wireframeId: wireframe.id, orderedIds: reordered })
+    const sa = siblingsOf(wireframe.components, active.id)
+    const so = siblingsOf(wireframe.components, over.id)
+    if (!sa || !so || sa.parentId !== so.parentId) return // 跨容器拖曳暫不支援
+    const ids = [...sa.ids]
+    const oi = ids.indexOf(active.id)
+    const ni = ids.indexOf(over.id)
+    ids.splice(oi, 1)
+    ids.splice(ni, 0, active.id)
+    dispatch({ type: 'REORDER_COMPONENTS', wireframeId: wireframe.id, parentId: sa.parentId, orderedIds: ids })
+  }
+
+  const ed = {
+    selectedCmp,
+    paletteOpen,
+    select: (id) => setSelectedCmp(id),
+    rename: (id) => { setSelectedCmp(id); setTimeout(() => labelRef.current?.focus(), 30) },
+    dup: (id) => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: id }),
+    del: (id) => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: id }); setSelectedCmp(null) },
+    openPalette: (id) => setPaletteOpen((o) => (o === id ? null : id)),
+    addComponent,
   }
 
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
@@ -194,49 +325,24 @@ function WireframeFrame({ wireframe, requirement }) {
   const sidebarItems = wireframe.components.filter((c) => c.region === 'sidebar')
   const contentItems = wireframe.components.filter((c) => c.region !== 'sidebar')
 
-  const blockNode = (cmp) => (
-    <WireframeBlock
-      key={cmp.id}
-      cmp={cmp}
-      selected={selectedCmp === cmp.id}
-      onSelect={() => setSelectedCmp(cmp.id)}
-      onDoubleClick={() => { setSelectedCmp(cmp.id); setTimeout(() => labelRef.current?.focus(), 30) }}
-      onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
-      onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
-    />
-  )
-
   const column = (items, region, mobile) => (
     <div className="wf-colwrap">
       <div className={'wf-canvas' + (mobile ? ' mobile' : '')}>
         {items.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 16, width: '100%' }}>{region === 'sidebar' ? '側邊欄為空' : '空白，點下方新增'}</div>}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={items.map((c) => c.id)} strategy={rectSortingStrategy}>
-            {items.map(blockNode)}
+            {items.map((c) => <Node key={c.id} cmp={c} ed={ed} />)}
           </SortableContext>
         </DndContext>
       </div>
       <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
         <button className="primary sm" onClick={() => setPaletteOpen((o) => (o === region ? null : region))}><Plus size={14} /> 新增{region === 'sidebar' ? '側欄' : ''}元件</button>
-        {paletteOpen === region && (
-          <div className="palette-pop">
-            {COMPONENT_GROUPS.map((g) => (
-              <div className="palette-group" key={g.group}>
-                <div className="pg-title">{g.group}</div>
-                <div className="pg-items">
-                  {g.types.map((t) => (
-                    <button key={t} onClick={() => addComponent(t, region)}>＋{COMPONENT_TYPES[t]?.label}</button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {paletteOpen === region && <Palette onPick={(t) => addComponent(t, region)} />}
       </div>
     </div>
   )
 
-  const selectedComp = wireframe.components.find((c) => c.id === selectedCmp)
+  const selectedComp = findById(wireframe.components, selectedCmp)
 
   return (
     <div className="wf-edit-row">
