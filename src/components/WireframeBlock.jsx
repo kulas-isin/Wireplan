@@ -1,13 +1,19 @@
-// 將單一 wireframe 元件渲染成「線框視覺」。
+// 將單一 wireframe 元件以 Ant Design 高保真渲染。
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Copy, X, Search } from 'lucide-react'
+import { GripVertical, Copy, X } from 'lucide-react'
+import {
+  Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
+  List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
+} from 'antd'
 
 const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter' }
 
 // 取出陣列型屬性的 key（不同元件用不同欄位名）
 export const ARRAY_PROP = {
+  nav: 'items',
+  breadcrumb: 'items',
   buttonRow: 'buttons',
   table: 'columns',
   filter: 'fields',
@@ -18,97 +24,136 @@ export const ARRAY_PROP = {
   cardlist: 'cards',
 }
 
-function arr(cmp) {
+function arr(cmp, fallback = []) {
   const key = ARRAY_PROP[cmp.type]
-  return key ? cmp[key] || [] : []
+  const v = key ? cmp[key] : null
+  return v && v.length ? v : fallback
+}
+
+function splitLabel(label, fallback) {
+  const parts = String(label || '').split(/[,，/›>|]/).map((s) => s.trim()).filter(Boolean)
+  return parts.length ? parts : fallback
 }
 
 function Visual({ cmp }) {
-  const items = arr(cmp)
+  const align = cmp.align || 'left'
+  const justify = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
+
   switch (cmp.type) {
     case 'header':
-      return <div className="wb wb-header">{cmp.label}</div>
-    case 'nav':
-      return <div className="wb wb-nav">{(cmp.label || '選單一,選單二,選單三').split(',').map((s, i) => <span key={i}>{s.trim() || `選單${i + 1}`}</span>)}</div>
-    case 'breadcrumb':
-      return <div className="wb" style={{ background: 'transparent', border: 'none', padding: 2, color: '#94a3b8' }}>{cmp.label}</div>
-    case 'image':
-      return <div className="wb wb-image"><div className="wb-logo">{cmp.label || 'Logo'}</div></div>
+      return (
+        <div className="wb-ad-header" style={{ textAlign: align }}>
+          <Typography.Title level={5} style={{ margin: 0 }}>{cmp.label || '頁面標題'}</Typography.Title>
+        </div>
+      )
+    case 'nav': {
+      const items = arr(cmp, splitLabel(cmp.label, ['首頁', '功能一', '功能二', '功能三'])).map((t, i) => ({ key: String(i), label: t }))
+      return <Menu mode="horizontal" selectedKeys={['0']} items={items} style={{ borderRadius: 8, lineHeight: '40px' }} />
+    }
+    case 'breadcrumb': {
+      const items = arr(cmp, splitLabel(cmp.label, ['首頁', '列表', '詳情'])).map((t) => ({ title: t }))
+      return <Breadcrumb items={items} />
+    }
     case 'searchbar':
-      return <div className="wb wb-search"><Search size={13} /> <span style={{ color: '#94a3b8' }}>{cmp.label || '搜尋…'}</span></div>
+      return <Input.Search placeholder={cmp.label || '搜尋關鍵字…'} enterButton allowClear />
+    case 'filter': {
+      const fields = arr(cmp, ['狀態', '日期區間', '分類'])
+      return (
+        <Space wrap>
+          {fields.map((f, i) => <Select key={i} placeholder={f} style={{ minWidth: 130 }} options={[]} />)}
+        </Space>
+      )
+    }
     case 'field': {
       const ctrl = cmp.control || 'input'
+      const control =
+        ctrl === 'textarea' ? <Input.TextArea rows={2} placeholder={cmp.label} />
+        : ctrl === 'select' ? <Select style={{ width: '100%' }} placeholder={cmp.label} options={[]} />
+        : ctrl === 'password' ? <Input.Password placeholder={cmp.label} />
+        : ctrl === 'toggle' ? <Switch defaultChecked />
+        : <Input placeholder={cmp.label} />
       return (
-        <div className="wb wb-field">
-          <div className="lbl">{cmp.label}{ctrl === 'select' ? ' ▾' : ''}</div>
-          {ctrl === 'toggle'
-            ? <div style={{ width: 36, height: 20, borderRadius: 12, background: '#cbd5e1', position: 'relative' }}><div style={{ width: 16, height: 16, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: 2 }} /></div>
-            : <div className={'box' + (ctrl === 'textarea' ? ' textarea' : '')} />}
+        <div style={{ textAlign: align }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}</Typography.Text>
+          {control}
         </div>
       )
     }
-    case 'buttonRow':
+    case 'buttonRow': {
+      const buttons = arr(cmp, ['主要動作', '次要'])
       return (
-        <div className="wb wb-btnrow" style={{ border: 'none', background: 'transparent', padding: 2 }}>
-          {(items.length ? items : ['按鈕']).map((b, i) => (
-            <span key={i} className={'wb-btn' + (i > 0 ? ' secondary' : '')}>{b}</span>
-          ))}
+        <div style={{ display: 'flex', gap: 8, justifyContent: justify, flexWrap: 'wrap' }}>
+          {buttons.map((b, i) => <Button key={i} type={i === 0 ? 'primary' : 'default'}>{b}</Button>)}
         </div>
       )
-    case 'table':
-      return (
-        <div className="wb wb-table">
-          <div className="thead">{(items.length ? items : ['欄一', '欄二']).map((c, i) => <div key={i}>{c}</div>)}</div>
-          {[0, 1, 2].map((r) => (
-            <div className="trow" key={r}>{(items.length ? items : ['', '']).map((_, i) => <div key={i}>—</div>)}</div>
-          ))}
-        </div>
-      )
+    }
+    case 'table': {
+      const cols = arr(cmp, ['名稱', '狀態', '建立時間', '操作']).map((c, i) => ({ title: c, dataIndex: `c${i}`, key: i }))
+      const rows = [0, 1, 2].map((r) => {
+        const row = { key: r }
+        cols.forEach((c) => { row[c.dataIndex] = '—' })
+        return row
+      })
+      return <Table size="small" pagination={false} columns={cols} dataSource={rows} />
+    }
     case 'pagination':
-      return <div className="wb wb-pagination">◄ 1 2 3 … ► <span style={{ color: '#94a3b8', marginLeft: 6 }}>{cmp.label}</span></div>
-    case 'statcards':
+      return <div style={{ textAlign: 'center' }}><Pagination size="small" total={50} defaultCurrent={1} /></div>
+    case 'statcards': {
+      const cards = arr(cmp, ['指標一', '指標二', '指標三', '指標四'])
       return (
-        <div className="wb-statcards">
-          {(items.length ? items : ['指標', '指標', '指標', '指標']).map((c, i) => (
-            <div className="wb-stat" key={i}><div className="num">00</div><div className="cap">{c}</div></div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {cards.map((c, i) => (
+            <Card size="small" key={i} style={{ flex: '1 1 120px' }}>
+              <Statistic title={c} value={[1280, 53, 92, 4.6][i % 4]} />
+            </Card>
           ))}
         </div>
       )
+    }
     case 'chart':
       return (
-        <div className="wb wb-chart">
-          {[40, 70, 55, 90, 60, 80].map((h, i) => <div className="bar" key={i} style={{ height: `${h}%` }} />)}
-        </div>
+        <Card size="small" title={cmp.label || '圖表'}>
+          <div className="wb-ad-chart">
+            {[45, 70, 55, 90, 60, 80, 50].map((h, i) => <div key={i} style={{ height: `${h}%` }} />)}
+          </div>
+        </Card>
       )
-    case 'cardlist':
-      return <div className="wb-cardlist">{[0, 1, 2].map((i) => <div className="ci" key={i} />)}</div>
-    case 'steps':
+    case 'cardlist': {
+      const cards = arr(cmp, ['卡片一', '卡片二', '卡片三'])
       return (
-        <div className="wb-steps">
-          {(items.length ? items : ['步驟一', '步驟二', '步驟三']).map((s, i) => (
-            <div className={'st' + (i === 0 ? ' active' : '')} key={i}>{i + 1}. {s}</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {cards.map((c, i) => (
+            <Card size="small" key={i} style={{ flex: '1 1 140px' }}>
+              <Typography.Text strong>{c}</Typography.Text>
+              <div style={{ height: 28 }} />
+            </Card>
           ))}
         </div>
       )
-    case 'tabs':
+    }
+    case 'steps': {
+      const steps = arr(cmp, ['填寫', '確認', '完成']).map((s) => ({ title: s }))
+      return <Steps size="small" current={0} items={steps} />
+    }
+    case 'tabs': {
+      const items = arr(cmp, ['頁籤一', '頁籤二', '頁籤三']).map((t, i) => ({ key: String(i), label: t }))
+      return <Tabs items={items} size="small" />
+    }
+    case 'list': {
+      const items = arr(cmp, ['項目一', '項目二', '項目三'])
+      return <List size="small" bordered dataSource={items} renderItem={(it) => <List.Item>{it}</List.Item>} />
+    }
+    case 'image':
       return (
-        <div className="wb-tabs">
-          {(items.length ? items : ['頁籤一', '頁籤二']).map((t, i) => (
-            <div className={'tb' + (i === 0 ? ' active' : '')} key={i}>{t}</div>
-          ))}
-        </div>
-      )
-    case 'list':
-      return (
-        <div className="wb wb-list">
-          {(items.length ? items : ['項目一', '項目二', '項目三']).map((t, i) => <div className="li" key={i}>• {t}</div>)}
+        <div style={{ display: 'flex', justifyContent: justify }}>
+          <Avatar shape="square" size={48} style={{ background: '#e7eae8', color: '#69756e' }}>{cmp.label || 'Logo'}</Avatar>
         </div>
       )
     case 'divider':
-      return <div className="wb wb-divider" />
+      return <Divider style={{ margin: '6px 0' }} />
     case 'text':
     default:
-      return <div className="wb" style={{ background: 'transparent', borderStyle: 'dashed', color: '#475569' }}>{cmp.label || COMPONENT_TYPES[cmp.type]?.label}</div>
+      return <Typography.Paragraph style={{ textAlign: align, margin: 0, color: '#5a6b62' }}>{cmp.label || COMPONENT_TYPES[cmp.type]?.label}</Typography.Paragraph>
   }
 }
 
@@ -127,7 +172,10 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
       className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
     >
-      <Visual cmp={cmp} />
+      {/* 內容設為不可互動，讓點擊用於選取、避免誤觸 antd 控制項 */}
+      <div className="wb-ad" style={{ pointerEvents: 'none' }}>
+        <Visual cmp={cmp} />
+      </div>
       <span className="drag-handle" title="拖曳排序" {...attributes} {...listeners}>
         <GripVertical size={13} />
       </span>

@@ -240,10 +240,16 @@ table.req tr:hover td { background: #fafdfb; }
 .palette-group .pg-items { display: flex; flex-wrap: wrap; gap: 4px; }
 .palette-group .pg-items button { font-size: 11px; padding: 4px 8px; }
 
-/* width toggle */
+/* width / align toggle */
 .wseg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .wseg button { border: none; border-radius: 0; padding: 5px 10px; font-size: 12px; background: #fff; }
 .wseg button.active { background: var(--primary); color: #fff; }
+
+/* Ant Design 渲染層 */
+.wb-ad { width: 100%; }
+.wb-ad-header { padding: 4px 2px 10px; border-bottom: 2px solid var(--neutral-dark); }
+.wb-ad-chart { height: 110px; display: flex; align-items: flex-end; gap: 5px; }
+.wb-ad-chart > div { flex: 1; background: var(--primary); opacity: 0.75; border-radius: 4px 4px 0 0; }
 
 /* Document (spec / flow) */
 .doc-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 100%; }

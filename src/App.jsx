@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 import { useStore } from './store/StoreContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
-import WireframeBoard from './components/WireframeBoard.jsx'
 import SpecView from './components/SpecView.jsx'
 import FlowView from './components/FlowView.jsx'
+// Wireframe 用到 Ant Design，延遲載入避免進主包
+const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
 import { downloadText, readFileAsText } from './lib/download.js'
 import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow } from 'lucide-react'
 
@@ -85,7 +86,11 @@ export default function App() {
         <div className="content">
           {tab === 'import' && <ImportPanel onDone={() => { setTab('requirements'); showToast('已匯入需求並產生 wireframe / 流程') }} />}
           {tab === 'requirements' && <RequirementsEditor />}
-          {tab === 'wireframe' && <WireframeBoard />}
+          {tab === 'wireframe' && (
+            <Suspense fallback={<div className="empty"><div className="muted">載入元件庫中…</div></div>}>
+              <WireframeBoard />
+            </Suspense>
+          )}
           {tab === 'spec' && <SpecView />}
           {tab === 'flow' && <FlowView />}
         </div>

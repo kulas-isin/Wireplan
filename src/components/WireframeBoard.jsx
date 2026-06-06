@@ -8,12 +8,24 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate } from 'lucide-react'
+import { ConfigProvider } from 'antd'
+
+// 套用品牌綠主題給 wireframe 內的 antd 元件
+const WF_THEME = {
+  token: { colorPrimary: '#2e9e5b', borderRadius: 8, fontFamily: 'inherit' },
+}
 
 const WIDTHS = [
   { key: 'full', label: '整列' },
   { key: 'half', label: '½' },
   { key: 'third', label: '⅓' },
   { key: 'quarter', label: '¼' },
+]
+
+const ALIGNS = [
+  { key: 'left', label: '靠左' },
+  { key: 'center', label: '置中' },
+  { key: 'right', label: '靠右' },
 ]
 
 function ComponentEditor({ wireframe, cmp }) {
@@ -38,6 +50,17 @@ function ComponentEditor({ wireframe, cmp }) {
           {WIDTHS.map((w) => (
             <button key={w.key} className={(cmp.width || 'full') === w.key ? 'active' : ''} onClick={() => update({ width: w.key })}>
               {w.label}
+            </button>
+          ))}
+        </div>
+      </label>
+
+      <label className="field" style={{ marginBottom: 8 }}>
+        <span>對齊</span>
+        <div className="wseg">
+          {ALIGNS.map((a) => (
+            <button key={a.key} className={(cmp.align || 'left') === a.key ? 'active' : ''} onClick={() => update({ align: a.key })}>
+              {a.label}
             </button>
           ))}
         </div>
@@ -185,18 +208,18 @@ export default function WireframeBoard() {
   const reqById = new Map(current.requirements.map((r) => [r.id, r]))
 
   return (
-    <div>
+    <ConfigProvider theme={WF_THEME}>
       <div className="toolbar">
         <strong>畫面 Wireframe（{wireframes.length} 個）</strong>
         <button className="sm" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /> 新增空白畫面</button>
         <div className="spacer" />
-        <div className="muted" style={{ fontSize: 12 }}>拖曳左上把手排序、點元件可設寬度與內容、可複製或刪除整頁。</div>
+        <div className="muted" style={{ fontSize: 12 }}>拖曳左上把手排序、點元件可設寬度／對齊與內容、可複製或刪除整頁。</div>
       </div>
       <div className="wf-board">
         {wireframes.map((wf) => (
           <WireframeFrame key={wf.id} wireframe={wf} requirement={reqById.get(wf.requirementId)} />
         ))}
       </div>
-    </div>
+    </ConfigProvider>
   )
 }
