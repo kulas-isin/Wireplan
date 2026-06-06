@@ -96,9 +96,10 @@ function reducer(state, action) {
     case 'REGENERATE_WIREFRAME': {
       const req = cur.requirements.find((r) => r.id === action.requirementId)
       if (!req) return state
+      const { layout, components } = regenerateComponents(req)
       const wireframes = cur.wireframes.map((w) =>
         w.requirementId === action.requirementId
-          ? { ...w, name: req.screen || req.name, template: req.category, components: regenerateComponents(req) }
+          ? { ...w, name: req.screen || req.name, template: req.category, layout, components }
           : w,
       )
       return replaceCurrent(touch({ ...cur, wireframes }))

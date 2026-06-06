@@ -73,6 +73,18 @@ const appbar = (sys = '系統名稱') => c('topbar', sys)
 // 共用：頁首（標題 + 麵包屑 + 操作鈕）
 const pageHead = (title, crumb) => c('pageHeader', title, { sub: crumb })
 
+// 共用：admin 兩欄版面（左側欄 Logo+選單，右內容）
+const adminPage = (title, crumb, content) => ({
+  layout: 'sidebar',
+  components: [
+    c('image', 'Logo', { region: 'sidebar', align: 'center' }),
+    c('sidenav', '', { region: 'sidebar', items: ['儀表板', '訂單管理', '商品管理', '會員', '報表', '設定'] }),
+    appbar(),
+    pageHead(title, crumb),
+    ...content,
+  ],
+})
+
 // 各分類的範本產生器：一鍵生出較完整的頁面骨架。
 const TEMPLATES = {
   auth: (r) => [
@@ -84,55 +96,60 @@ const TEMPLATES = {
     c('buttonRow', '', { buttons: ['登入'] }),
     c('text', '忘記密碼？　|　還沒有帳號？前往註冊', { align: 'center' }),
   ],
-  list: (r) => [
-    appbar(),
-    pageHead(r.name || '資料列表', `首頁,${r.name || '列表'}`),
+  list: (r) => adminPage(r.name || '資料列表', `首頁,${r.name || '列表'}`, [
     c('filter', '', { fields: ['狀態', '日期區間', '分類'] }),
     c('searchbar', '搜尋關鍵字…', { width: 'half' }),
     c('buttonRow', '', { width: 'half', align: 'right', buttons: ['新增', '匯出', '批次操作'] }),
     c('table', '', { columns: ['名稱', '狀態', '建立時間', '操作'] }),
     c('pagination', '共 N 筆'),
-  ],
-  form: (r) => [
-    pageHead(r.name || '資料表單', `首頁,列表,新增 / 編輯`),
+  ]),
+  form: (r) => adminPage(r.name || '資料表單', '首頁,列表,新增 / 編輯', [
     c('formgrid', '', { fields: ['名稱', '分類', '負責人', '狀態'] }),
     c('field', '說明', { control: 'textarea' }),
     c('field', '啟用', { control: 'toggle' }),
     c('upload', '上傳附件'),
     c('buttonRow', '', { align: 'right', buttons: ['儲存', '取消'] }),
-  ],
-  detail: (r) => [
-    pageHead(r.name || '詳細資料', `首頁,列表,詳情`),
+  ]),
+  detail: (r) => adminPage(r.name || '詳細資料', '首頁,列表,詳情', [
     c('tabs', '', { tabs: ['基本資料', '相關紀錄', '附件'] }),
     c('descriptions', '基本資料', { items: ['名稱:王小明', '狀態:啟用', '建立日:2026-01-01', '負責人:管理員'] }),
     c('tags', '', { tags: ['VIP', '已驗證', '台北'] }),
     c('timeline', '', { items: ['建立資料', '更新資料', '最近登入'] }),
     c('buttonRow', '', { align: 'right', buttons: ['編輯', '刪除', '返回'] }),
-  ],
-  dashboard: (r) => [
-    appbar(),
-    pageHead(r.name || '儀表板', '首頁,儀表板'),
+  ]),
+  dashboard: (r) => adminPage(r.name || '儀表板', '首頁,儀表板', [
     c('statcards', '', { cards: ['今日營收', '訂單數', '會員數', '轉換率'] }),
     c('chart', '營收趨勢'),
     c('table', '最新訂單', { columns: ['訂單編號', '客戶', '金額', '狀態'] }),
-  ],
-  report: (r) => [
-    pageHead(r.name || '報表', '首頁,報表'),
+  ]),
+  report: (r) => adminPage(r.name || '報表', '首頁,報表', [
     c('filter', '', { fields: ['日期區間', '維度', '分類'] }),
     c('buttonRow', '', { align: 'right', buttons: ['查詢', '匯出 Excel', '列印'] }),
     c('statcards', '', { cards: ['總計', '平均', '最高', '最低'] }),
     c('chart', '統計圖表'),
     c('table', '明細資料', { columns: ['項目', '數量', '金額', '占比'] }),
     c('pagination', '共 N 筆'),
-  ],
-  workflow: (r) => [
-    pageHead(r.name || '流程作業', '首頁,流程'),
+  ]),
+  workflow: (r) => adminPage(r.name || '流程作業', '首頁,流程', [
     c('steps', '', { steps: ['填寫', '主管審核', '財務審核', '完成'] }),
     c('formgrid', '', { fields: ['申請人', '申請日期', '類別', '金額'] }),
     c('field', '申請說明', { control: 'textarea' }),
     c('timeline', '審核紀錄', { items: ['提交申請', '主管核准', '待財務審核'] }),
     c('buttonRow', '', { align: 'right', buttons: ['上一步', '送出'] }),
-  ],
+  ]),
+  setting: (r) => adminPage(r.name || '設定', '首頁,設定', [
+    c('tabs', '', { tabs: ['一般', '通知', '安全'] }),
+    c('formgrid', '', { fields: ['系統名稱', '語言', '時區', '主題'] }),
+    c('field', '啟用通知', { control: 'toggle' }),
+    c('field', '雙重驗證', { control: 'toggle' }),
+    c('buttonRow', '', { align: 'right', buttons: ['儲存設定'] }),
+  ]),
+  generic: (r) => adminPage(r.name || '頁面標題', `首頁,${r.name || '頁面'}`, [
+    c('text', r.description || '內容區塊'),
+    c('table', '', { columns: ['項目', '說明', '操作'] }),
+    c('buttonRow', '', { align: 'right', buttons: ['主要動作'] }),
+  ]),
+  // 結帳：前台單欄（非 admin）
   payment: (r) => [
     pageHead(r.name || '結帳', '首頁,購物車,結帳'),
     c('steps', '', { steps: ['購物車', '填寫資料', '付款', '完成'] }),
@@ -141,40 +158,33 @@ const TEMPLATES = {
     c('descriptions', '金額', { items: ['小計:NT$ 0', '運費:NT$ 0', '合計:NT$ 0'] }),
     c('buttonRow', '', { align: 'right', buttons: ['返回購物車', '確認付款'] }),
   ],
-  setting: (r) => [
-    pageHead(r.name || '設定', '首頁,設定'),
-    c('tabs', '', { tabs: ['一般', '通知', '安全'] }),
-    c('formgrid', '', { fields: ['系統名稱', '語言', '時區', '主題'] }),
-    c('field', '啟用通知', { control: 'toggle' }),
-    c('field', '雙重驗證', { control: 'toggle' }),
-    c('buttonRow', '', { align: 'right', buttons: ['儲存設定'] }),
-  ],
-  generic: (r) => [
-    appbar(),
-    pageHead(r.name || '頁面標題', `首頁,${r.name || '頁面'}`),
-    c('text', r.description || '內容區塊'),
-    c('table', '', { columns: ['項目', '說明', '操作'] }),
-    c('buttonRow', '', { align: 'right', buttons: ['主要動作'] }),
-  ],
+}
+
+// 執行範本，統一回傳 { layout, components }（範本可回陣列或物件）
+function runTemplate(requirement) {
+  const gen = TEMPLATES[requirement.category] || TEMPLATES.generic
+  const out = gen(requirement)
+  if (Array.isArray(out)) return { layout: 'stack', components: out }
+  return { layout: out.layout || 'stack', components: out.components }
 }
 
 // 為單一需求產生 wireframe 物件
 export function generateWireframe(requirement) {
-  const gen = TEMPLATES[requirement.category] || TEMPLATES.generic
+  const { layout, components } = runTemplate(requirement)
   return {
     id: uid('wf'),
     requirementId: requirement.id,
     name: requirement.screen || requirement.name || '未命名畫面',
     device: 'desktop', // desktop | mobile
+    layout, // stack | sidebar
     template: requirement.category,
-    components: gen(requirement),
+    components,
   }
 }
 
-// 重新依需求分類產生元件（保留 wireframe id 與名稱）
+// 重新依需求分類產生元件（回傳 { layout, components }）
 export function regenerateComponents(requirement) {
-  const gen = TEMPLATES[requirement.category] || TEMPLATES.generic
-  return gen(requirement)
+  return runTemplate(requirement)
 }
 
 // 新增一個空白元件

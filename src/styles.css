@@ -181,6 +181,15 @@ table.req tr:hover td { background: #fafdfb; }
 .wf-canvas { padding: 20px; background: #f7f8f7; min-height: 320px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
 .wf-canvas.mobile { max-width: 320px; margin: 0 auto; border: 10px solid var(--neutral-dark); border-radius: 32px; padding: 16px; }
 
+/* 兩欄 admin 版面 */
+.wf-admin { display: flex; align-items: stretch; }
+.wf-side { width: 240px; flex-shrink: 0; border-right: 1px solid var(--border); background: #fbfcfb; }
+.wf-side .wf-canvas { background: #fbfcfb; min-height: 100%; padding: 16px 14px; gap: 8px; }
+.wf-side .wf-item { flex: 0 0 100% !important; max-width: 100% !important; }
+.wf-content-col { flex: 1; min-width: 0; }
+.wf-colwrap { display: flex; flex-direction: column; }
+.wf-side .add-cmp-bar, .wf-content-col .add-cmp-bar { background: transparent; }
+
 /* 多欄寬度 */
 .wf-item { position: relative; }
 .wf-item.w-full { flex: 0 0 100%; max-width: 100%; }

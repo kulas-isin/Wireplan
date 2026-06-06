@@ -7,7 +7,7 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, ChevronDown, ChevronRight } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, ChevronDown, ChevronRight, Columns2, PanelLeft } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // 套用品牌綠主題給 wireframe 內的 antd 元件
@@ -28,7 +28,7 @@ const ALIGNS = [
   { key: 'right', label: '靠右' },
 ]
 
-function ComponentEditor({ wireframe, cmp, onClose }) {
+function ComponentEditor({ wireframe, cmp, layout, onClose }) {
   const { dispatch } = useStore()
   const arrKey = ARRAY_PROP[cmp.type]
   const update = (patch) => dispatch({ type: 'UPDATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id, patch })
@@ -65,6 +65,16 @@ function ComponentEditor({ wireframe, cmp, onClose }) {
           ))}
         </div>
       </label>
+
+      {layout === 'sidebar' && (
+        <label className="field" style={{ marginBottom: 8 }}>
+          <span>所屬區域</span>
+          <div className="wseg">
+            <button className={(cmp.region || 'content') === 'content' ? 'active' : ''} onClick={() => update({ region: 'content' })}>內容區</button>
+            <button className={cmp.region === 'sidebar' ? 'active' : ''} onClick={() => update({ region: 'sidebar' })}>側邊欄</button>
+          </div>
+        </label>
+      )}
 
       {cmp.type === 'field' && (
         <label className="field" style={{ marginBottom: 8 }}>
@@ -103,7 +113,7 @@ function WireframeFrame({ wireframe, requirement }) {
   const { dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [collapsed, setCollapsed] = useState(false)
-  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const cat = requirement ? categoryMeta(requirement.category) : null
 
   const sensors = useSensors(
@@ -112,11 +122,12 @@ function WireframeFrame({ wireframe, requirement }) {
     useSensor(KeyboardSensor),
   )
 
-  const addComponent = (type) => {
+  const addComponent = (type, region = 'content') => {
     const c = newComponent(type)
+    if (region === 'sidebar') c.region = 'sidebar'
     dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: c })
     setSelectedCmp(c.id)
-    setPaletteOpen(false)
+    setPaletteOpen(null)
   }
 
   const onDragEnd = (event) => {
@@ -134,8 +145,68 @@ function WireframeFrame({ wireframe, requirement }) {
 
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
 
+  const layout = wireframe.layout || 'stack'
+  const toggleLayout = () => {
+    const next = layout === 'sidebar' ? 'stack' : 'sidebar'
+    dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { layout: next } })
+    if (next === 'sidebar' && !wireframe.components.some((c) => c.region === 'sidebar')) {
+      dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: { ...newComponent('image'), label: 'Logo', region: 'sidebar', align: 'center' } })
+      dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: { ...newComponent('sidenav'), region: 'sidebar' } })
+    }
+  }
+
+  const sidebarItems = wireframe.components.filter((c) => c.region === 'sidebar')
+  const contentItems = wireframe.components.filter((c) => c.region !== 'sidebar')
+
+  const blockNode = (cmp) => (
+    <Fragment key={cmp.id}>
+      <WireframeBlock
+        cmp={cmp}
+        selected={selectedCmp === cmp.id}
+        onSelect={() => setSelectedCmp(cmp.id)}
+        onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
+        onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
+      />
+      {selectedCmp === cmp.id && (
+        <div className="wf-item w-full" onClick={(e) => e.stopPropagation()}>
+          <ComponentEditor wireframe={wireframe} cmp={cmp} layout={layout} onClose={() => setSelectedCmp(null)} />
+        </div>
+      )}
+    </Fragment>
+  )
+
+  const column = (items, region, mobile) => (
+    <div className="wf-colwrap">
+      <div className={'wf-canvas' + (mobile ? ' mobile' : '')}>
+        {items.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 16, width: '100%' }}>{region === 'sidebar' ? '側邊欄為空' : '空白，點下方新增'}</div>}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={items.map((c) => c.id)} strategy={rectSortingStrategy}>
+            {items.map(blockNode)}
+          </SortableContext>
+        </DndContext>
+      </div>
+      <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
+        <button className="primary sm" onClick={() => setPaletteOpen((o) => (o === region ? null : region))}><Plus size={14} /> 新增{region === 'sidebar' ? '側欄' : ''}元件</button>
+        {paletteOpen === region && (
+          <div className="palette-pop">
+            {COMPONENT_GROUPS.map((g) => (
+              <div className="palette-group" key={g.group}>
+                <div className="pg-title">{g.group}</div>
+                <div className="pg-items">
+                  {g.types.map((t) => (
+                    <button key={t} onClick={() => addComponent(t, region)}>＋{COMPONENT_TYPES[t]?.label}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   return (
-    <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(false) }}>
+    <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
         <button className="ghost sm" title={collapsed ? '展開' : '收合'} onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c) }} style={{ padding: 2 }}>
           {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
@@ -146,6 +217,9 @@ function WireframeFrame({ wireframe, requirement }) {
           value={wireframe.name}
           onChange={(e) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { name: e.target.value } })}
         />
+        <button className="ghost sm" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
+          {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
+        </button>
         <div className="device-toggle">
           <button title="桌機版面" className={wireframe.device === 'desktop' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('desktop') }}><Monitor size={15} /></button>
           <button title="行動版面" className={wireframe.device === 'mobile' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('mobile') }}><Smartphone size={15} /></button>
@@ -162,49 +236,14 @@ function WireframeFrame({ wireframe, requirement }) {
       </div>
 
       {!collapsed && (
-        <>
-          <div className={'wf-canvas' + (wireframe.device === 'mobile' ? ' mobile' : '')}>
-            {wireframe.components.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 20, width: '100%' }}>空白畫面，點下方「新增元件」加入</div>}
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              <SortableContext items={wireframe.components.map((c) => c.id)} strategy={rectSortingStrategy}>
-                {wireframe.components.map((cmp) => (
-                  <Fragment key={cmp.id}>
-                    <WireframeBlock
-                      cmp={cmp}
-                      selected={selectedCmp === cmp.id}
-                      onSelect={() => setSelectedCmp(cmp.id)}
-                      onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
-                      onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
-                    />
-                    {selectedCmp === cmp.id && (
-                      <div className="wf-item w-full" onClick={(e) => e.stopPropagation()}>
-                        <ComponentEditor wireframe={wireframe} cmp={cmp} onClose={() => setSelectedCmp(null)} />
-                      </div>
-                    )}
-                  </Fragment>
-                ))}
-              </SortableContext>
-            </DndContext>
+        layout === 'sidebar' ? (
+          <div className="wf-admin">
+            <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
+            <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
           </div>
-
-          <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
-            <button className="primary sm" onClick={() => setPaletteOpen((o) => !o)}><Plus size={14} /> 新增元件</button>
-            {paletteOpen && (
-              <div className="palette-pop">
-                {COMPONENT_GROUPS.map((g) => (
-                  <div className="palette-group" key={g.group}>
-                    <div className="pg-title">{g.group}</div>
-                    <div className="pg-items">
-                      {g.types.map((t) => (
-                        <button key={t} onClick={() => addComponent(t)}>＋{COMPONENT_TYPES[t]?.label}</button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+        ) : (
+          column(wireframe.components, 'content', wireframe.device === 'mobile')
+        )
       )}
     </div>
   )
