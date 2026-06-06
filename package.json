@@ -1,0 +1,22 @@
+{
+  "name": "wireplan",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "從報價單需求自動產出 wireframe、規格文件與流程設計文件，並可方便編輯與調整",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "pdfjs-dist": "^4.10.38",
+    "vite": "^6.0.7",
+    "xlsx": "^0.18.5"
+  }
+}
