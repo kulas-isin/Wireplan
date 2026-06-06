@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from './store/StoreContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
@@ -8,7 +8,7 @@ import FlowView from './components/FlowView.jsx'
 // Wireframe 用到 Ant Design，延遲載入避免進主包
 const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
 import { downloadText, readFileAsText } from './lib/download.js'
-import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow } from 'lucide-react'
+import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2 } from 'lucide-react'
 
 const TABS = [
   { key: 'import', label: '匯入', Icon: FileInput },
@@ -19,7 +19,7 @@ const TABS = [
 ]
 
 export default function App() {
-  const { current, dispatch } = useStore()
+  const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
   const [toast, setToast] = useState('')
   const importRef = useRef(null)
@@ -28,6 +28,19 @@ export default function App() {
     setToast(msg)
     setTimeout(() => setToast(''), 2200)
   }
+
+  // 鍵盤快捷鍵：Ctrl/Cmd+Z 復原、Ctrl/Cmd+Shift+Z 或 Ctrl+Y 重做
+  useEffect(() => {
+    const onKey = (e) => {
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+      const k = e.key.toLowerCase()
+      if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [undo, redo])
 
   function exportProject() {
     downloadText(`${current.name}.wireplan.json`, JSON.stringify(current, null, 2), 'application/json')
@@ -63,6 +76,8 @@ export default function App() {
           />
           <span className="meta">最後更新：{new Date(current.updatedAt).toLocaleString('zh-TW')}</span>
           <div className="spacer" />
+          <button className="ghost sm" title="復原 (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
+          <button className="ghost sm" title="重做 (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
           <button onClick={() => importRef.current?.click()}><Upload size={15} /> 匯入專案</button>
           <button onClick={exportProject}><Download size={15} /> 匯出專案</button>
           <input

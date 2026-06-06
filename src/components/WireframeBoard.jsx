@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, newComponent } from '../lib/wireframeTemplates.js'
 import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
@@ -7,7 +7,7 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, ChevronDown, ChevronRight } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // 套用品牌綠主題給 wireframe 內的 antd 元件
@@ -28,7 +28,7 @@ const ALIGNS = [
   { key: 'right', label: '靠右' },
 ]
 
-function ComponentEditor({ wireframe, cmp }) {
+function ComponentEditor({ wireframe, cmp, onClose }) {
   const { dispatch } = useStore()
   const arrKey = ARRAY_PROP[cmp.type]
   const update = (patch) => dispatch({ type: 'UPDATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id, patch })
@@ -88,6 +88,13 @@ function ComponentEditor({ wireframe, cmp }) {
           />
         </label>
       )}
+
+      <div className="row" style={{ marginTop: 12, gap: 6 }}>
+        <button className="sm" onClick={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}><Copy size={13} /> 複製</button>
+        <button className="sm danger" onClick={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); onClose?.() }}><Trash2 size={13} /> 刪除</button>
+        <div className="spacer" />
+        <button className="sm" onClick={() => onClose?.()}>完成</button>
+      </div>
     </div>
   )
 }
@@ -95,6 +102,8 @@ function ComponentEditor({ wireframe, cmp }) {
 function WireframeFrame({ wireframe, requirement }) {
   const { dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
+  const [collapsed, setCollapsed] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
   const sensors = useSensors(
@@ -107,6 +116,7 @@ function WireframeFrame({ wireframe, requirement }) {
     const c = newComponent(type)
     dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: c })
     setSelectedCmp(c.id)
+    setPaletteOpen(false)
   }
 
   const onDragEnd = (event) => {
@@ -125,8 +135,11 @@ function WireframeFrame({ wireframe, requirement }) {
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
 
   return (
-    <div className="wf-frame" onClick={() => setSelectedCmp(null)}>
+    <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(false) }}>
       <div className="wf-titlebar">
+        <button className="ghost sm" title={collapsed ? '展開' : '收合'} onClick={(e) => { e.stopPropagation(); setCollapsed((c) => !c) }} style={{ padding: 2 }}>
+          {collapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
+        </button>
         <span className="wf-dots"><i /><i /><i /></span>
         {cat && <span className="tag" style={{ background: cat.color }}>{cat.label}</span>}
         <input
@@ -148,42 +161,51 @@ function WireframeFrame({ wireframe, requirement }) {
         ><Trash2 size={14} /></button>
       </div>
 
-      <div className={'wf-canvas' + (wireframe.device === 'mobile' ? ' mobile' : '')}>
-        {wireframe.components.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 20, width: '100%' }}>空白畫面，使用下方元件庫新增</div>}
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={wireframe.components.map((c) => c.id)} strategy={rectSortingStrategy}>
-            {wireframe.components.map((cmp) => (
-              <WireframeBlock
-                key={cmp.id}
-                cmp={cmp}
-                selected={selectedCmp === cmp.id}
-                onSelect={() => setSelectedCmp(cmp.id)}
-                onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
-                onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
-      </div>
-
-      {selectedCmp && wireframe.components.find((c) => c.id === selectedCmp) && (
-        <div onClick={(e) => e.stopPropagation()}>
-          <ComponentEditor wireframe={wireframe} cmp={wireframe.components.find((c) => c.id === selectedCmp)} />
-        </div>
-      )}
-
-      <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
-        {COMPONENT_GROUPS.map((g) => (
-          <div className="palette-group" key={g.group}>
-            <div className="pg-title">{g.group}</div>
-            <div className="pg-items">
-              {g.types.map((t) => (
-                <button key={t} onClick={() => addComponent(t)}>＋{COMPONENT_TYPES[t]?.label}</button>
-              ))}
-            </div>
+      {!collapsed && (
+        <>
+          <div className={'wf-canvas' + (wireframe.device === 'mobile' ? ' mobile' : '')}>
+            {wireframe.components.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 20, width: '100%' }}>空白畫面，點下方「新增元件」加入</div>}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext items={wireframe.components.map((c) => c.id)} strategy={rectSortingStrategy}>
+                {wireframe.components.map((cmp) => (
+                  <Fragment key={cmp.id}>
+                    <WireframeBlock
+                      cmp={cmp}
+                      selected={selectedCmp === cmp.id}
+                      onSelect={() => setSelectedCmp(cmp.id)}
+                      onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
+                      onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
+                    />
+                    {selectedCmp === cmp.id && (
+                      <div className="wf-item w-full" onClick={(e) => e.stopPropagation()}>
+                        <ComponentEditor wireframe={wireframe} cmp={cmp} onClose={() => setSelectedCmp(null)} />
+                      </div>
+                    )}
+                  </Fragment>
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
-        ))}
-      </div>
+
+          <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
+            <button className="primary sm" onClick={() => setPaletteOpen((o) => !o)}><Plus size={14} /> 新增元件</button>
+            {paletteOpen && (
+              <div className="palette-pop">
+                {COMPONENT_GROUPS.map((g) => (
+                  <div className="palette-group" key={g.group}>
+                    <div className="pg-title">{g.group}</div>
+                    <div className="pg-items">
+                      {g.types.map((t) => (
+                        <button key={t} onClick={() => addComponent(t)}>＋{COMPONENT_TYPES[t]?.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -207,13 +229,22 @@ export default function WireframeBoard() {
 
   const reqById = new Map(current.requirements.map((r) => [r.id, r]))
 
+  const jumpTo = (id) => {
+    document.getElementById(`wf-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <ConfigProvider theme={WF_THEME}>
       <div className="toolbar">
         <strong>畫面 Wireframe（{wireframes.length} 個）</strong>
         <button className="sm" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /> 新增空白畫面</button>
         <div className="spacer" />
-        <div className="muted" style={{ fontSize: 12 }}>拖曳左上把手排序、點元件可設寬度／對齊與內容、可複製或刪除整頁。</div>
+        <div className="muted" style={{ fontSize: 12 }}>拖曳把手排序、點元件可設寬度／對齊／內容、可收合畫面。</div>
+      </div>
+      <div className="wf-jump">
+        {wireframes.map((wf) => (
+          <button key={wf.id} className="sm" onClick={() => jumpTo(wf.id)}>{wf.name || '未命名'}</button>
+        ))}
       </div>
       <div className="wf-board">
         {wireframes.map((wf) => (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import { loadState, saveState, emptyProject, rebuildArtifacts } from './store.js'
 import { uid } from '../lib/id.js'
 import { generateWireframe, regenerateComponents } from '../lib/wireframeTemplates.js'
@@ -233,8 +233,34 @@ function reducer(state, action) {
   }
 }
 
+// ── Undo/Redo 歷史包裝 ──
+const HISTORY_LIMIT = 60
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE'])
+
+function withHistory(baseReducer) {
+  return (h, action) => {
+    if (action.type === 'UNDO') {
+      if (!h.past.length) return h
+      const previous = h.past[h.past.length - 1]
+      return { past: h.past.slice(0, -1), present: previous, future: [h.present, ...h.future] }
+    }
+    if (action.type === 'REDO') {
+      if (!h.future.length) return h
+      const next = h.future[0]
+      return { past: [...h.past, h.present], present: next, future: h.future.slice(1) }
+    }
+    const present = baseReducer(h.present, action)
+    if (present === h.present) return h
+    if (NO_HISTORY.has(action.type)) return { ...h, present }
+    return { past: [...h.past, h.present].slice(-HISTORY_LIMIT), present, future: [] }
+  }
+}
+
 export function StoreProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, loadState)
+  const [hist, dispatch] = useReducer(withHistory(reducer), undefined, () => ({
+    past: [], present: loadState(), future: [],
+  }))
+  const state = hist.present
 
   useEffect(() => {
     saveState(state)
@@ -245,7 +271,13 @@ export function StoreProvider({ children }) {
     [state],
   )
 
-  const value = useMemo(() => ({ state, current, dispatch }), [state, current])
+  const undo = useCallback(() => dispatch({ type: 'UNDO' }), [])
+  const redo = useCallback(() => dispatch({ type: 'REDO' }), [])
+
+  const value = useMemo(
+    () => ({ state, current, dispatch, undo, redo, canUndo: hist.past.length > 0, canRedo: hist.future.length > 0 }),
+    [state, current, hist.past.length, hist.future.length],
+  )
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
 

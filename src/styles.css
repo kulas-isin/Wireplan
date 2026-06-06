@@ -234,7 +234,16 @@ table.req tr:hover td { background: #fafdfb; }
 .wb-pagination { display: flex; justify-content: center; gap: 4px; border: none; background: transparent; padding: 4px; font-size: 11px; }
 .wb-image { height: 56px; display: flex; align-items: center; justify-content: center; }
 
-.add-cmp-bar { padding: 10px 12px; border-top: 1px solid var(--border); background: #fff; }
+.add-cmp-bar { padding: 10px 12px; border-top: 1px solid var(--border); background: #fff; position: relative; }
+.palette-pop {
+  position: absolute; bottom: 100%; left: 12px; z-index: 20;
+  background: #fff; border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 12px; width: min(420px, 90%); margin-bottom: 6px;
+}
+/* 畫面快速跳轉列 */
+.wf-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.wf-jump button { background: var(--surface); border-color: var(--border); }
+.wf-jump button:hover { background: var(--primary-soft); border-color: var(--accent); }
 .palette-group { margin-bottom: 8px; }
 .palette-group .pg-title { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
 .palette-group .pg-items { display: flex; flex-wrap: wrap; gap: 4px; }
