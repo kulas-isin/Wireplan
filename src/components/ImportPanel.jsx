@@ -7,7 +7,7 @@ import {
   requirementsFromText,
 } from '../lib/requirementExtractor.js'
 import { categoryMeta, CATEGORY_LIST } from '../lib/categories.js'
-import { UploadCloud, FileSpreadsheet, Sparkles } from 'lucide-react'
+import { UploadCloud, FileSpreadsheet, Sparkles, Loader2 } from 'lucide-react'
 
 const FIELD_LABELS = {
   name: '功能名稱 *',
@@ -32,6 +32,7 @@ const SAMPLE = `會員登入：使用 Email 與密碼登入，支援忘記密碼
 export default function ImportPanel({ onDone }) {
   const { current, dispatch } = useStore()
   const fileRef = useRef(null)
+  const resultRef = useRef(null)
   const [drag, setDrag] = useState(false)
   const [text, setText] = useState('')
   const [parsed, setParsed] = useState(null) // { kind, headers?, rows?, text? }
@@ -39,6 +40,8 @@ export default function ImportPanel({ onDone }) {
   const [preview, setPreview] = useState([])
   const [mode, setMode] = useState('replace')
   const [error, setError] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [fileName, setFileName] = useState('')
 
   function recomputePreview(p, map) {
     if (!p) return setPreview([])
@@ -53,20 +56,36 @@ export default function ImportPanel({ onDone }) {
     setError('')
     const file = files[0]
     if (!file) return
+    setFileName(file.name || '')
+    setImporting(true)
+    // 讓「解析中」先畫出來，避免大檔解析時看起來像沒反應
+    await new Promise((r) => setTimeout(r, 0))
     try {
       const p = await parseFile(file)
       setParsed(p)
       if (p.kind === 'table') {
+        if (!p.rows.length) {
+          setError(`已讀取「${file.name}」，但找不到資料列。請確認該工作表有表頭與內容，或改用「貼上文字」。`)
+        }
         const m = buildFieldMapping(p.headers)
         setMapping(m)
         recomputePreview(p, m)
       } else {
+        if (!p.text || !p.text.trim()) {
+          setError(`已讀取「${file.name}」，但抽不到文字（PDF 可能是掃描圖檔）。請改用「貼上文字」。`)
+        }
         setText(p.text)
         recomputePreview(p, null)
       }
+      // 解析完自動捲到結果區（行動裝置常見：結果在下方看不到）
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
     } catch (e) {
       console.error(e)
-      setError('解析檔案失敗：' + (e.message || e))
+      setError(`解析「${file.name}」失敗：${e.message || e}。可改用「貼上文字」匯入。`)
+    } finally {
+      setImporting(false)
+      // 重設 input，讓同一個檔案可再次選取觸發
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
@@ -110,15 +129,25 @@ export default function ImportPanel({ onDone }) {
         <div className="grid2">
           <div>
             <div
-              className={'dropzone' + (drag ? ' drag' : '')}
-              onClick={() => fileRef.current?.click()}
+              className={'dropzone' + (drag ? ' drag' : '') + (importing ? ' drag' : '')}
+              onClick={() => !importing && fileRef.current?.click()}
               onDragOver={(e) => { e.preventDefault(); setDrag(true) }}
               onDragLeave={() => setDrag(false)}
               onDrop={(e) => { e.preventDefault(); setDrag(false); handleFiles(e.dataTransfer.files) }}
             >
-              <div className="big"><UploadCloud size={40} /></div>
-              <div>點擊或拖曳檔案到此</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>Excel / CSV / PDF</div>
+              {importing ? (
+                <>
+                  <div className="big"><Loader2 size={40} className="spin" /></div>
+                  <div>解析中…{fileName && `（${fileName}）`}</div>
+                </>
+              ) : (
+                <>
+                  <div className="big"><UploadCloud size={40} /></div>
+                  <div>點擊或拖曳檔案到此</div>
+                  <div style={{ fontSize: 12, marginTop: 4 }}>Excel / CSV / PDF</div>
+                  {fileName && <div style={{ fontSize: 12, marginTop: 6, color: 'var(--primary)' }}>已選：{fileName}</div>}
+                </>
+              )}
               <input
                 ref={fileRef}
                 type="file"
@@ -146,8 +175,14 @@ export default function ImportPanel({ onDone }) {
           </div>
         </div>
 
-        {error && <div style={{ color: 'var(--danger)', marginTop: 10 }}>{error}</div>}
+        {error && (
+          <div style={{ color: 'var(--danger)', marginTop: 10, padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+            {error}
+          </div>
+        )}
       </div>
+
+      <div ref={resultRef} />
 
       {parsed?.kind === 'table' && (
         <div className="panel">

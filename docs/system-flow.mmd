@@ -1,0 +1,89 @@
+flowchart TD
+    %% ───── 進入 ─────
+    A([使用者開啟 Wireplan<br/>GitHub Pages 網頁]) --> B{localStorage<br/>有資料?}
+    B -- 有 --> C[載入既有專案]
+    B -- 無 --> D[建立預設專案]
+    C --> E[選擇 / 新增專案]
+    D --> E
+
+    %% ───── 匯入來源 ─────
+    subgraph IN[1 . 匯入需求]
+        direction TB
+        E --> F1[上傳 Excel / CSV]
+        E --> F2[上傳 PDF]
+        E --> F3[貼上文字 / 載入範例]
+    end
+
+    %% ───── 解析 ─────
+    subgraph PARSE[2 . 解析與抽取 - src/lib]
+        direction TB
+        F1 --> G1[SheetJS xlsx<br/>讀成表格列]
+        F2 --> G2[pdf.js<br/>抽取文字]
+        F3 --> G3[文字內容]
+        G1 --> H{資料型別}
+        G2 --> H
+        G3 --> H
+        H -- 表格 --> I1[buildFieldMapping<br/>自動對應欄位]
+        H -- 文字 --> I2[requirementsFromText]
+        I1 --> J[requirementsFromRows]
+        I2 --> K[detectCategory<br/>關鍵字自動分類]
+        J --> K
+        K --> L[結構化需求清單]
+    end
+
+    L --> M[預覽 → 取代 / 附加 匯入]
+
+    %% ───── 產出 ─────
+    M --> N[[rebuildArtifacts]]
+    subgraph GEN[3 . 自動產出]
+        direction LR
+        N --> O1[generateWireframe<br/>依分類套版型]
+        N --> O2[generateFlow<br/>整體操作流程]
+        L -.-> O3[generateSpec<br/>規格 Markdown]
+    end
+
+    %% ───── 四大分頁編輯 ─────
+    subgraph EDIT[4 . 檢視與編輯 四大分頁]
+        direction TB
+        P1[需求分頁<br/>增刪改 / 排序 / 改分類]
+        P2[Wireframe 分頁<br/>編輯元件 / 桌機行動]
+        P3[規格文件分頁<br/>編輯 / 匯出 .md]
+        P4[流程設計分頁<br/>編輯節點 / 匯出 Mermaid]
+    end
+    O1 --> P2
+    O2 --> P4
+    O3 --> P3
+    L --> P1
+
+    %% ───── 異動迴圈 ─────
+    P1 -- 改需求/分類 --> Q{需求異動?}
+    Q -- 是 --> R[按 ↻ 重新產生<br/>版面 / 流程]
+    R --> N
+    P2 --> S
+    P3 --> S
+    P4 --> S
+    Q -- 否 --> S
+
+    %% ───── 狀態與持久化 ─────
+    subgraph STATE[5 . 狀態管理]
+        direction TB
+        S[dispatch action] --> T[reducer 更新 state]
+        T --> U[(saveState<br/>localStorage)]
+    end
+    U -.自動載入.-> C
+
+    %% ───── 交付 / 備份 ─────
+    T --> V[匯出專案 JSON]
+    V -. 匯入專案 .-> E
+    P3 --> W1[交付：規格文件 .md]
+    P4 --> W2[交付：流程圖 .mmd]
+    P2 --> W3[交付：畫面 Wireframe]
+
+    classDef src fill:#eef2ff,stroke:#6366f1,color:#1e1b4b
+    classDef proc fill:#ecfeff,stroke:#0891b2,color:#083344
+    classDef out fill:#f0fdf4,stroke:#16a34a,color:#052e16
+    classDef store fill:#fef9c3,stroke:#ca8a04,color:#422006
+    class F1,F2,F3 src
+    class G1,G2,G3,H,I1,I2,J,K,L,N,O1,O2,O3 proc
+    class P1,P2,P3,P4,W1,W2,W3,V out
+    class S,T,U store

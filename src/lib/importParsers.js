@@ -1,23 +1,47 @@
 // 匯入解析：將 Excel / CSV / PDF 轉成「原始列資料」或「原始文字」，
 // 後續再交給 requirementExtractor 轉成結構化需求。
-import * as XLSX from 'xlsx'
+// 注意：xlsx / pdfjs 皆「選檔時才動態載入」，以縮小首包、降低行動瀏覽器
+// 從檔案選擇器返回時被回收重整的機率。
+
+function countNonEmpty(row) {
+  return (row || []).filter((c) => String(c).trim() !== '').length
+}
+
+// 從前幾列中挑出最可能的表頭列：取「非空欄位數最多」的那一列。
+// 這樣報價單上方的標題列（只有一格有字）就不會被誤判成表頭。
+function pickHeaderIndex(aoa) {
+  const limit = Math.min(aoa.length, 12)
+  let bestIdx = -1
+  let bestCount = 0
+  for (let i = 0; i < limit; i++) {
+    const c = countNonEmpty(aoa[i])
+    if (c > bestCount) {
+      bestCount = c
+      bestIdx = i
+    }
+  }
+  // 全部都空 → 退回第一個有字的列
+  if (bestIdx < 0) bestIdx = aoa.findIndex((r) => countNonEmpty(r) > 0)
+  return bestIdx < 0 ? 0 : bestIdx
+}
 
 // 解析 Excel / CSV。回傳 { headers: string[], rows: object[] }
 export async function parseSpreadsheet(file) {
+  const XLSX = await import('xlsx')
   const data = await file.arrayBuffer()
   const wb = XLSX.read(data, { type: 'array' })
   const firstSheet = wb.SheetNames[0]
   const ws = wb.Sheets[firstSheet]
-  // 先取成二維陣列，找出表頭列（第一個非空白列）
+  // 先取成二維陣列，找出最可能的表頭列
   const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false })
   if (!aoa.length) return { headers: [], rows: [] }
 
-  const headerIdx = aoa.findIndex((r) => r.some((c) => String(c).trim() !== ''))
+  const headerIdx = pickHeaderIndex(aoa)
   const headers = (aoa[headerIdx] || []).map((h, i) => String(h).trim() || `欄位${i + 1}`)
   const rows = []
   for (let i = headerIdx + 1; i < aoa.length; i++) {
     const arr = aoa[i]
-    if (!arr || !arr.some((c) => String(c).trim() !== '')) continue
+    if (!arr || countNonEmpty(arr) === 0) continue
     const obj = {}
     headers.forEach((h, idx) => {
       obj[h] = arr[idx] != null ? String(arr[idx]).trim() : ''
