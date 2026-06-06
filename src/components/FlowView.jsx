@@ -3,6 +3,7 @@ import { uid } from '../lib/id.js'
 import { categoryMeta } from '../lib/categories.js'
 import { flowToMarkdown, flowToMermaid } from '../lib/flowGenerator.js'
 import { downloadText } from '../lib/download.js'
+import { Plus, RotateCw, Download, ChevronUp, ChevronDown, X, Circle, ArrowDown, Workflow } from 'lucide-react'
 
 export default function FlowView() {
   const { current, dispatch } = useStore()
@@ -55,20 +56,20 @@ export default function FlowView() {
       <div className="toolbar">
         <strong>流程設計</strong>
         <div className="spacer" />
-        <button onClick={addGroup}>＋ 新增流程節點</button>
-        <button onClick={() => { if (confirm('依目前需求重新產生流程？將覆蓋手動調整。')) dispatch({ type: 'REGENERATE_FLOW' }) }}>↻ 由需求重新產生</button>
-        <button onClick={() => downloadText(`${current.name}-流程設計.md`, flowToMarkdown(current, flow), 'text/markdown')}>⬇ Markdown</button>
-        <button onClick={() => downloadText(`${current.name}-流程圖.mmd`, flowToMermaid(flow), 'text/plain')}>⬇ Mermaid</button>
+        <button onClick={addGroup}><Plus size={15} /> 新增流程節點</button>
+        <button onClick={() => { if (confirm('依目前需求重新產生流程？將覆蓋手動調整。')) dispatch({ type: 'REGENERATE_FLOW' }) }}><RotateCw size={14} /> 由需求重新產生</button>
+        <button onClick={() => downloadText(`${current.name}-流程設計.md`, flowToMarkdown(current, flow), 'text/markdown')}><Download size={15} /> Markdown</button>
+        <button onClick={() => downloadText(`${current.name}-流程圖.mmd`, flowToMermaid(flow), 'text/plain')}><Download size={15} /> Mermaid</button>
       </div>
 
       {groups.length === 0 ? (
-        <div className="empty"><div className="big">🔀</div><div>尚無流程，先建立需求或按「新增流程節點」。</div></div>
+        <div className="empty"><div className="big"><Workflow size={40} /></div><div>尚無流程，先建立需求或按「新增流程節點」。</div></div>
       ) : (
         <div className="doc-layout" style={{ gridTemplateColumns: '1.1fr 0.9fr' }}>
           <div className="panel" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 230px)' }}>
             <div className="flow-canvas">
-              <div className="flow-node terminal">🟢 開始</div>
-              <div className="flow-arrow">↓</div>
+              <div className="flow-node terminal"><Circle size={11} fill="#22c55e" color="#22c55e" /> 開始</div>
+              <div className="flow-arrow"><ArrowDown size={20} /></div>
               {groups.map((g, gi) => {
                 const cat = categoryMeta(g.category)
                 return (
@@ -77,26 +78,26 @@ export default function FlowView() {
                       <div className="fn-head">
                         <span className="tag" style={{ background: cat.color }}>{cat.label}</span>
                         <input value={g.label} onChange={(e) => updateGroup(g.id, { label: e.target.value })} />
-                        <button className="ghost sm" disabled={gi === 0} onClick={() => moveGroup(g.id, -1)}>▲</button>
-                        <button className="ghost sm" disabled={gi === groups.length - 1} onClick={() => moveGroup(g.id, 1)}>▼</button>
-                        <button className="ghost sm danger" onClick={() => delGroup(g.id)}>✕</button>
+                        <button className="ghost sm" disabled={gi === 0} onClick={() => moveGroup(g.id, -1)}><ChevronUp size={14} /></button>
+                        <button className="ghost sm" disabled={gi === groups.length - 1} onClick={() => moveGroup(g.id, 1)}><ChevronDown size={14} /></button>
+                        <button className="ghost sm danger" onClick={() => delGroup(g.id)}><X size={14} /></button>
                       </div>
                       <div className="fn-body">
                         {(g.actions || []).map((a, ai) => (
                           <div className="flow-act" key={a.id}>
                             <span className="num">{ai + 1}</span>
                             <input value={a.label} onChange={(e) => updateAction(g.id, a.id, e.target.value)} />
-                            <button className="ghost sm danger" onClick={() => delAction(g.id, a.id)}>✕</button>
+                            <button className="ghost sm danger" onClick={() => delAction(g.id, a.id)}><X size={13} /></button>
                           </div>
                         ))}
-                        <button className="ghost sm" onClick={() => addAction(g.id)}>＋ 步驟</button>
+                        <button className="ghost sm" onClick={() => addAction(g.id)}><Plus size={13} /> 步驟</button>
                       </div>
                     </div>
-                    <div className="flow-arrow">↓</div>
+                    <div className="flow-arrow"><ArrowDown size={20} /></div>
                   </div>
                 )
               })}
-              <div className="flow-node terminal">🔴 結束</div>
+              <div className="flow-node terminal"><Circle size={11} fill="#ef4444" color="#ef4444" /> 結束</div>
             </div>
           </div>
 

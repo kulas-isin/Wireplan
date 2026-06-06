@@ -1,5 +1,6 @@
 // 將單一 wireframe 元件渲染成「線框視覺」。
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
+import { ChevronUp, ChevronDown, X, Search } from 'lucide-react'
 
 // 取出陣列型屬性的 key（不同元件用不同欄位名）
 export const ARRAY_PROP = {
@@ -30,7 +31,7 @@ function Visual({ cmp }) {
     case 'image':
       return <div className="wb wb-image"><div className="wb-logo">{cmp.label || 'Logo'}</div></div>
     case 'searchbar':
-      return <div className="wb wb-search">🔍 <span style={{ color: '#94a3b8' }}>{cmp.label || '搜尋…'}</span></div>
+      return <div className="wb wb-search"><Search size={13} /> <span style={{ color: '#94a3b8' }}>{cmp.label || '搜尋…'}</span></div>
     case 'field': {
       const ctrl = cmp.control || 'input'
       return (
@@ -114,9 +115,9 @@ export default function WireframeBlock({ cmp, selected, onSelect, onMove, onDele
         <Visual cmp={cmp} />
       </div>
       <div className="wb-tools">
-        <button title="上移" onClick={(e) => { e.stopPropagation(); onMove(-1) }}>▲</button>
-        <button title="下移" onClick={(e) => { e.stopPropagation(); onMove(1) }}>▼</button>
-        <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}>✕</button>
+        <button title="上移" onClick={(e) => { e.stopPropagation(); onMove(-1) }}><ChevronUp size={13} /></button>
+        <button title="下移" onClick={(e) => { e.stopPropagation(); onMove(1) }}><ChevronDown size={13} /></button>
+        <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={13} /></button>
       </div>
     </div>
   )

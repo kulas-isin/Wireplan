@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { COMPONENT_TYPES, newComponent } from '../lib/wireframeTemplates.js'
 import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
+import { Monitor, Smartphone, RotateCw, Plus, LayoutTemplate } from 'lucide-react'
 
 // 常用元件的快速新增按鈕順序
 const QUICK_ADD = ['header', 'field', 'buttonRow', 'table', 'text', 'searchbar', 'statcards', 'chart', 'tabs', 'list', 'steps', 'divider']
@@ -69,20 +70,22 @@ function WireframeFrame({ wireframe, requirement }) {
         />
         <div className="device-toggle">
           <button
+            title="桌機版面"
             className={wireframe.device === 'desktop' ? 'active' : ''}
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device: 'desktop' } }) }}
-          >🖥</button>
+          ><Monitor size={15} /></button>
           <button
+            title="行動版面"
             className={wireframe.device === 'mobile' ? 'active' : ''}
             onClick={(e) => { e.stopPropagation(); dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device: 'mobile' } }) }}
-          >📱</button>
+          ><Smartphone size={15} /></button>
         </div>
         {requirement && (
           <button
             className="ghost sm"
             title="依需求分類重新產生版面"
             onClick={(e) => { e.stopPropagation(); if (confirm('重新產生會覆蓋目前此畫面的調整，確定？')) dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: requirement.id }) }}
-          >↻</button>
+          ><RotateCw size={14} /></button>
         )}
       </div>
 
@@ -109,7 +112,7 @@ function WireframeFrame({ wireframe, requirement }) {
       <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
         {QUICK_ADD.map((t) => (
           <button key={t} title={`新增${COMPONENT_TYPES[t]?.label}`} onClick={() => addComponent(t)}>
-            ＋{COMPONENT_TYPES[t]?.label}
+            <Plus size={12} />{COMPONENT_TYPES[t]?.label}
           </button>
         ))}
       </div>
@@ -124,7 +127,7 @@ export default function WireframeBoard() {
   if (!wireframes.length) {
     return (
       <div className="empty">
-        <div className="big">🖼</div>
+        <div className="big"><LayoutTemplate size={40} /></div>
         <div>尚無 wireframe</div>
         <div className="muted" style={{ marginTop: 8 }}>先在「匯入」或「需求」分頁建立需求，系統會自動產生對應畫面。</div>
       </div>

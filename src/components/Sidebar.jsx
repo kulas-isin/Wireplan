@@ -1,4 +1,5 @@
 import { useStore } from '../store/StoreContext.jsx'
+import { PencilRuler, Plus, X } from 'lucide-react'
 
 export default function Sidebar() {
   const { state, dispatch } = useStore()
@@ -6,7 +7,9 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="logo">
-        Wireplan
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <PencilRuler size={20} /> Wireplan
+        </span>
         <small>報價單 → Wireframe / 規格 / 流程</small>
       </div>
 
@@ -29,7 +32,7 @@ export default function Sidebar() {
                 if (confirm(`確定刪除專案「${p.name}」？`)) dispatch({ type: 'DELETE_PROJECT', id: p.id })
               }}
             >
-              ✕
+              <X size={13} />
             </span>
           </div>
         ))}
@@ -39,7 +42,7 @@ export default function Sidebar() {
         style={{ marginTop: 8, background: '#1e293b', color: '#fff', borderColor: '#334155' }}
         onClick={() => dispatch({ type: 'NEW_PROJECT', name: `新專案 ${state.projects.length + 1}` })}
       >
-        ＋ 新增專案
+        <Plus size={15} /> 新增專案
       </button>
 
       <div className="sidebar-footer">

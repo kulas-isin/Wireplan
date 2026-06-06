@@ -7,13 +7,14 @@ import WireframeBoard from './components/WireframeBoard.jsx'
 import SpecView from './components/SpecView.jsx'
 import FlowView from './components/FlowView.jsx'
 import { downloadText, readFileAsText } from './lib/download.js'
+import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow } from 'lucide-react'
 
 const TABS = [
-  { key: 'import', label: '匯入' },
-  { key: 'requirements', label: '需求' },
-  { key: 'wireframe', label: 'Wireframe' },
-  { key: 'spec', label: '規格文件' },
-  { key: 'flow', label: '流程設計' },
+  { key: 'import', label: '匯入', Icon: FileInput },
+  { key: 'requirements', label: '需求', Icon: ListChecks },
+  { key: 'wireframe', label: 'Wireframe', Icon: LayoutTemplate },
+  { key: 'spec', label: '規格文件', Icon: FileText },
+  { key: 'flow', label: '流程設計', Icon: Workflow },
 ]
 
 export default function App() {
@@ -61,8 +62,8 @@ export default function App() {
           />
           <span className="meta">最後更新：{new Date(current.updatedAt).toLocaleString('zh-TW')}</span>
           <div className="spacer" />
-          <button onClick={() => importRef.current?.click()}>⬆ 匯入專案</button>
-          <button onClick={exportProject}>⬇ 匯出專案</button>
+          <button onClick={() => importRef.current?.click()}><Upload size={15} /> 匯入專案</button>
+          <button onClick={exportProject}><Download size={15} /> 匯出專案</button>
           <input
             ref={importRef}
             type="file"
@@ -75,7 +76,7 @@ export default function App() {
         <div className="tabs">
           {TABS.map((t) => (
             <div key={t.key} className={'tab' + (tab === t.key ? ' active' : '')} onClick={() => setTab(t.key)}>
-              {t.label}
+              <t.Icon size={15} /> {t.label}
               {counts[t.key] != null && counts[t.key] > 0 && <span className="badge">{counts[t.key]}</span>}
             </div>
           ))}

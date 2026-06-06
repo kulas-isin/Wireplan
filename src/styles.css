@@ -32,7 +32,14 @@ button {
   padding: 6px 12px;
   font-size: 13px;
   transition: all 0.12s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
 }
+button svg { flex-shrink: 0; }
+.tab svg { vertical-align: -2px; }
 button:hover { background: #f8fafc; border-color: #cbd5e1; }
 button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
 button.primary:hover { background: #4338ca; }
@@ -103,6 +110,7 @@ label.field > span { display: block; font-size: 12px; color: var(--muted); margi
 .tab {
   padding: 10px 16px; font-size: 13px; color: var(--muted); cursor: pointer;
   border-bottom: 2px solid transparent; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
 .tab:hover { color: var(--text); }
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
@@ -221,7 +229,8 @@ table.req tr:hover td { background: #fafbfc; }
 /* Flow editor */
 .flow-canvas { display: flex; flex-direction: column; align-items: center; gap: 0; }
 .flow-node { background: var(--panel); border: 1.5px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); min-width: 280px; max-width: 420px; }
-.flow-node.terminal { border-radius: 24px; background: #0f172a; color: #fff; text-align: center; padding: 8px 20px; min-width: auto; font-weight: 600; }
+.flow-node.terminal { border-radius: 24px; background: #0f172a; color: #fff; text-align: center; padding: 8px 20px; min-width: auto; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+.flow-arrow { display: flex; justify-content: center; }
 .flow-node .fn-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .flow-node .fn-head input { font-weight: 600; border: none; padding: 2px 4px; }
 .flow-node .fn-body { padding: 8px 12px; }
@@ -239,3 +248,46 @@ table.req tr:hover td { background: #fafbfc; }
 .device-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
 .device-toggle button { border: none; border-radius: 0; padding: 4px 10px; font-size: 12px; }
 .device-toggle button.active { background: var(--primary); color: #fff; }
+
+/* ───────── RWD：平板 / 手機 ───────── */
+@media (max-width: 820px) {
+  .app { flex-direction: column; height: 100vh; }
+
+  /* 側欄轉成可橫向捲動的頂部列 */
+  .sidebar {
+    width: 100%; height: auto; flex-direction: row; align-items: center;
+    gap: 8px; padding: 8px 10px; overflow-x: auto; flex-shrink: 0;
+  }
+  .sidebar .logo { padding: 0 6px 0 2px; font-size: 15px; white-space: nowrap; }
+  .sidebar .logo small { display: none; }
+  .sidebar .section-title, .sidebar-footer { display: none; }
+  .sidebar > div { flex-direction: row !important; gap: 6px; overflow: visible !important; }
+  .sidebar .proj-item { white-space: nowrap; }
+  .sidebar > button { margin-top: 0 !important; white-space: nowrap; flex-shrink: 0; }
+
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .topbar .proj-name { min-width: 120px; font-size: 15px; }
+  .topbar .meta { display: none; }
+
+  .tabs { overflow-x: auto; padding: 0 10px; -webkit-overflow-scrolling: touch; }
+  .tab { padding: 10px 12px; }
+
+  .content { padding: 12px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .wf-board { grid-template-columns: 1fr; }
+
+  /* 文件：上下堆疊 */
+  .doc-layout { grid-template-columns: 1fr !important; height: auto; }
+  .doc-editor textarea { height: 44vh; }
+  .doc-preview { height: auto; max-height: 60vh; }
+
+  /* 寬表格可橫向捲動 */
+  .panel { overflow-x: auto; }
+  table.req { min-width: 640px; }
+}
+
+@media (max-width: 480px) {
+  .toolbar { gap: 6px; }
+  .wf-board { gap: 12px; }
+  .add-cmp-bar button { font-size: 10px; padding: 3px 6px; }
+}

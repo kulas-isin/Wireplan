@@ -7,6 +7,7 @@ import {
   requirementsFromText,
 } from '../lib/requirementExtractor.js'
 import { categoryMeta, CATEGORY_LIST } from '../lib/categories.js'
+import { UploadCloud, FileSpreadsheet, Sparkles } from 'lucide-react'
 
 const FIELD_LABELS = {
   name: '功能名稱 *',
@@ -115,7 +116,7 @@ export default function ImportPanel({ onDone }) {
               onDragLeave={() => setDrag(false)}
               onDrop={(e) => { e.preventDefault(); setDrag(false); handleFiles(e.dataTransfer.files) }}
             >
-              <div className="big">📥</div>
+              <div className="big"><UploadCloud size={40} /></div>
               <div>點擊或拖曳檔案到此</div>
               <div style={{ fontSize: 12, marginTop: 4 }}>Excel / CSV / PDF</div>
               <input
@@ -139,8 +140,8 @@ export default function ImportPanel({ onDone }) {
               />
             </label>
             <div className="row">
-              <button className="primary" onClick={handleTextParse}>解析文字</button>
-              <button onClick={loadSample}>載入範例</button>
+              <button className="primary" onClick={handleTextParse}><FileSpreadsheet size={15} /> 解析文字</button>
+              <button onClick={loadSample}><Sparkles size={15} /> 載入範例</button>
             </div>
           </div>
         </div>

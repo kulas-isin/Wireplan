@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList } from 'lucide-react'
 
 function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
@@ -15,8 +16,8 @@ function RequirementRow({ req, index, total }) {
       <tr>
         <td>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <button className="ghost sm" disabled={index === 0} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}>▲</button>
-            <button className="ghost sm" disabled={index === total - 1} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}>▼</button>
+            <button className="ghost sm" disabled={index === 0} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={14} /></button>
+            <button className="ghost sm" disabled={index === total - 1} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={14} /></button>
           </div>
         </td>
         <td style={{ width: '24%' }}>
@@ -43,8 +44,8 @@ function RequirementRow({ req, index, total }) {
         <td>
           <div className="req-actions">
             <button className="sm" onClick={() => setOpen((o) => !o)}>{open ? '收合' : '詳細'}</button>
-            <button className="sm" title="依分類重新產生 wireframe" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}>↻ 版面</button>
-            <button className="sm danger" onClick={() => { if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}>✕</button>
+            <button className="sm" title="依分類重新產生 wireframe" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 版面</button>
+            <button className="sm danger" title="刪除" onClick={() => { if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
           </div>
         </td>
       </tr>
@@ -70,7 +71,7 @@ function RequirementRow({ req, index, total }) {
               </label>
             </div>
             <div className="row" style={{ paddingBottom: 8 }}>
-              <button className="sm" onClick={() => dispatch({ type: 'REDETECT_CATEGORY', id: req.id })}>🔍 重新自動判斷分類</button>
+              <button className="sm" onClick={() => dispatch({ type: 'REDETECT_CATEGORY', id: req.id })}><Wand2 size={13} /> 重新自動判斷分類</button>
             </div>
           </td>
         </tr>
@@ -90,10 +91,10 @@ export default function RequirementsEditor() {
   if (!reqs.length) {
     return (
       <div className="empty">
-        <div className="big">📋</div>
+        <div className="big"><ClipboardList size={40} /></div>
         <div>尚無需求項目</div>
         <div style={{ marginTop: 12 }}>
-          <button className="primary" onClick={addBlank}>＋ 手動新增需求</button>
+          <button className="primary" onClick={addBlank}><Plus size={15} /> 手動新增需求</button>
         </div>
         <div className="muted" style={{ marginTop: 8 }}>或切換到「匯入」分頁匯入報價單。</div>
       </div>
@@ -105,8 +106,8 @@ export default function RequirementsEditor() {
       <div className="toolbar">
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
-        <button onClick={addBlank}>＋ 新增需求</button>
-        <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}>↻ 重新產生流程</button>
+        <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
+        <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="req">

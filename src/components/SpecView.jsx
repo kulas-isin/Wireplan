@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { generateSpec } from '../lib/specGenerator.js'
 import { renderMarkdown } from '../lib/markdown.js'
 import { downloadText } from '../lib/download.js'
+import { RotateCw, Pencil, Download } from 'lucide-react'
 
 export default function SpecView() {
   const { current, dispatch } = useStore()
@@ -23,12 +24,12 @@ export default function SpecView() {
         <div className="spacer" />
         {isOverride ? (
           <button onClick={() => { if (confirm('放棄手動編輯，改回依需求自動產生？')) dispatch({ type: 'SET_SPEC_OVERRIDE', value: null }) }}>
-            ↻ 重新由需求產生
+            <RotateCw size={14} /> 重新由需求產生
           </button>
         ) : (
-          <button onClick={() => dispatch({ type: 'SET_SPEC_OVERRIDE', value: generated })}>✎ 切換為手動編輯</button>
+          <button onClick={() => dispatch({ type: 'SET_SPEC_OVERRIDE', value: generated })}><Pencil size={14} /> 切換為手動編輯</button>
         )}
-        <button className="primary" onClick={() => downloadText(`${current.name}-規格文件.md`, md, 'text/markdown')}>⬇ 匯出 Markdown</button>
+        <button className="primary" onClick={() => downloadText(`${current.name}-規格文件.md`, md, 'text/markdown')}><Download size={15} /> 匯出 Markdown</button>
       </div>
 
       <div className="doc-layout">
