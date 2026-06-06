@@ -90,7 +90,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       </label>
 
       <label className="field">
-        <span>對齊</span>
+        <span>對齊／位置{(cmp.width || 'full') !== 'full' ? '（半/分欄時決定靠左右）' : ''}</span>
         <div className="wseg">
           {ALIGNS.map((a) => (
             <button key={a.key} className={(cmp.align || 'left') === a.key ? 'active' : ''} onClick={() => update({ align: a.key })}>{a.label}</button>

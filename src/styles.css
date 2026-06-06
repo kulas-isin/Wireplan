@@ -242,7 +242,8 @@ table.req tr:hover td { background: #fafdfb; }
 .wf-side .add-cmp-bar, .wf-content-col .add-cmp-bar { background: transparent; }
 
 /* 多欄寬度 */
-.wf-item { position: relative; }
+.wf-item { position: relative; cursor: grab; }
+.wf-item.dragging { cursor: grabbing; }
 .wf-item.w-full { flex: 0 0 100%; max-width: 100%; }
 .wf-item.w-half { flex: 0 0 calc(50% - 4px); max-width: calc(50% - 4px); }
 .wf-item.w-third { flex: 0 0 calc(33.333% - 6px); max-width: calc(33.333% - 6px); }

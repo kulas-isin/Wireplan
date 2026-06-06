@@ -2,7 +2,7 @@
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Copy, X, Image as ImageIcon, Check } from 'lucide-react'
+import { Copy, X, Image as ImageIcon, Check } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -370,6 +370,12 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
     transition,
     borderRadius: 8,
   }
+  // 非整列寬度時，用「對齊」決定欄位在列中的位置（靠右/置中）
+  const notFull = (cmp.width || 'full') !== 'full'
+  const al = cmp.align || 'left'
+  if (notFull && al === 'right') style.marginLeft = 'auto'
+  if (notFull && al === 'center') { style.marginLeft = 'auto'; style.marginRight = 'auto' }
+
   return (
     <div
       ref={setNodeRef}
@@ -377,15 +383,14 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
       className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${selected ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.() }}
+      {...attributes}
+      {...listeners}
     >
       <div className="wb-ad" style={{ pointerEvents: 'none' }}>
         <Visual cmp={cmp} />
       </div>
-      <span className="drag-handle" title="拖曳排序" {...attributes} {...listeners}>
-        <GripVertical size={15} />
-      </span>
       {selected && <span className="wf-badge">{COMPONENT_TYPES[cmp.type]?.label || cmp.type}</span>}
-      <div className="wb-tools">
+      <div className="wb-tools" onPointerDown={(e) => e.stopPropagation()}>
         <button title="複製" onClick={(e) => { e.stopPropagation(); onDuplicate() }}><Copy size={13} /></button>
         <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={14} /></button>
       </div>
