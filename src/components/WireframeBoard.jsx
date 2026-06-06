@@ -7,7 +7,7 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, LayoutTemplate } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate } from 'lucide-react'
 
 const WIDTHS = [
   { key: 'full', label: '整列' },
@@ -120,6 +120,9 @@ function WireframeFrame({ wireframe, requirement }) {
             onClick={(e) => { e.stopPropagation(); if (confirm('重新產生會覆蓋目前此畫面的調整，確定？')) dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: requirement.id }) }}
           ><RotateCw size={14} /></button>
         )}
+        <button className="ghost sm danger" title="刪除畫面"
+          onClick={(e) => { e.stopPropagation(); if (confirm(`刪除畫面「${wireframe.name}」？`)) dispatch({ type: 'DELETE_WIREFRAME', id: wireframe.id }) }}
+        ><Trash2 size={14} /></button>
       </div>
 
       <div className={'wf-canvas' + (wireframe.device === 'mobile' ? ' mobile' : '')}>
@@ -163,7 +166,7 @@ function WireframeFrame({ wireframe, requirement }) {
 }
 
 export default function WireframeBoard() {
-  const { current } = useStore()
+  const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
 
   if (!wireframes.length) {
@@ -172,6 +175,9 @@ export default function WireframeBoard() {
         <div className="big"><LayoutTemplate size={40} /></div>
         <div>尚無 wireframe</div>
         <div className="muted" style={{ marginTop: 8 }}>先在「匯入」或「需求」分頁建立需求，系統會自動產生對應畫面。</div>
+        <div style={{ marginTop: 12 }}>
+          <button className="primary" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: '新畫面 1' })}><Plus size={15} /> 新增空白畫面</button>
+        </div>
       </div>
     )
   }
@@ -182,7 +188,9 @@ export default function WireframeBoard() {
     <div>
       <div className="toolbar">
         <strong>畫面 Wireframe（{wireframes.length} 個）</strong>
-        <div className="muted" style={{ fontSize: 12 }}>拖曳左上把手排序、點元件可設寬度與內容、可複製元件或整頁。</div>
+        <button className="sm" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /> 新增空白畫面</button>
+        <div className="spacer" />
+        <div className="muted" style={{ fontSize: 12 }}>拖曳左上把手排序、點元件可設寬度與內容、可複製或刪除整頁。</div>
       </div>
       <div className="wf-board">
         {wireframes.map((wf) => (

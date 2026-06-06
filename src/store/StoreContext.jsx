@@ -193,6 +193,23 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
+    case 'DELETE_WIREFRAME': {
+      const wireframes = cur.wireframes.filter((w) => w.id !== action.id)
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'ADD_BLANK_WIREFRAME': {
+      const wf = {
+        id: uid('wf'),
+        requirementId: null,
+        name: action.name || '新畫面',
+        device: 'desktop',
+        template: 'generic',
+        components: [{ id: uid('cmp'), type: 'header', label: '頁面標題', width: 'full' }],
+      }
+      return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, wf] }))
+    }
+
     case 'UPDATE_FLOW':
       return replaceCurrent(touch({ ...cur, flow: action.flow }))
 
