@@ -102,11 +102,11 @@ function Visual({ cmp }) {
     // ── 導覽 ──
     case 'nav': {
       const items = arr(cmp, splitLabel(cmp.label, ['首頁', '功能一', '功能二', '功能三'])).map((t, i) => ({ key: String(i), label: t }))
-      return <Menu mode="horizontal" selectedKeys={['0']} items={items} style={{ borderRadius: 8, lineHeight: '40px' }} />
+      return <Menu mode="horizontal" selectedKeys={[String(cmp.active ?? 0)]} items={items} style={{ borderRadius: 8, lineHeight: '40px' }} />
     }
     case 'sidenav': {
       const items = arr(cmp, ['儀表板', '訂單管理', '商品管理', '會員', '報表', '設定']).map((t, i) => ({ key: String(i), label: t }))
-      return <Menu mode="inline" selectedKeys={['0']} items={items} style={{ borderRadius: 8, maxWidth: 220 }} />
+      return <Menu mode="inline" selectedKeys={[String(cmp.active ?? 0)]} items={items} style={{ borderRadius: 8, maxWidth: 220 }} />
     }
     case 'breadcrumb': {
       const items = arr(cmp, splitLabel(cmp.label, ['首頁', '列表', '詳情'])).map((t) => ({ title: t }))
@@ -114,11 +114,11 @@ function Visual({ cmp }) {
     }
     case 'tabs': {
       const items = arr(cmp, ['頁籤一', '頁籤二', '頁籤三']).map((t, i) => ({ key: String(i), label: t }))
-      return <Tabs items={items} size="small" />
+      return <Tabs items={items} size="small" activeKey={String(cmp.active ?? 0)} />
     }
     case 'steps': {
       const steps = arr(cmp, ['填寫', '確認', '完成']).map((s) => ({ title: s }))
-      return <Steps size="small" current={0} items={steps} />
+      return <Steps size="small" current={cmp.active ?? 0} items={steps} />
     }
     case 'pagination':
       return <div style={{ textAlign: 'center' }}><Pagination size="small" total={50} defaultCurrent={1} /></div>
@@ -174,12 +174,14 @@ function Visual({ cmp }) {
       return (
         <div style={{ textAlign: align }}>
           {cmp.label && <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}</T.Text>}
-          <Radio.Group options={options} defaultValue={options[0]} />
+          <Radio.Group options={options} value={options[cmp.active ?? 0]} />
         </div>
       )
     }
-    case 'segmented':
-      return <Segmented options={arr(cmp, ['全部', '進行中', '已完成'])} />
+    case 'segmented': {
+      const segs = arr(cmp, ['全部', '進行中', '已完成'])
+      return <Segmented options={segs} value={segs[cmp.active ?? 0]} />
+    }
     case 'datepicker':
       return (
         <div>
@@ -361,30 +363,31 @@ function Visual({ cmp }) {
   }
 }
 
-export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete }) {
+export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete, onDoubleClick }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    outline: selected ? '2px solid var(--primary)' : 'none',
     borderRadius: 8,
   }
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}`}
+      className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${selected ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
+      onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.() }}
     >
       <div className="wb-ad" style={{ pointerEvents: 'none' }}>
         <Visual cmp={cmp} />
       </div>
       <span className="drag-handle" title="拖曳排序" {...attributes} {...listeners}>
-        <GripVertical size={13} />
+        <GripVertical size={15} />
       </span>
+      {selected && <span className="wf-badge">{COMPONENT_TYPES[cmp.type]?.label || cmp.type}</span>}
       <div className="wb-tools">
-        <button title="複製" onClick={(e) => { e.stopPropagation(); onDuplicate() }}><Copy size={12} /></button>
-        <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={13} /></button>
+        <button title="複製" onClick={(e) => { e.stopPropagation(); onDuplicate() }}><Copy size={13} /></button>
+        <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={14} /></button>
       </div>
     </div>
   )

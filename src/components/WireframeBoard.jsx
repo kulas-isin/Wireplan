@@ -7,7 +7,7 @@ import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平 + 緊湊小尺寸）
@@ -42,46 +42,64 @@ const ALIGNS = [
   { key: 'right', label: '靠右' },
 ]
 
-function ComponentEditor({ wireframe, cmp, layout, onClose }) {
+// 有「作用中/選取項」概念的元件
+const ACTIVE_TYPES = new Set(['tabs', 'steps', 'nav', 'sidenav', 'segmented', 'radio'])
+const ARR_LABEL = { columns: '欄位', buttons: '按鈕', items: '項目', options: '選項', fields: '欄位', cards: '卡片', steps: '步驟', tabs: '頁籤' }
+
+// 逐項編輯清單（新增/刪除/排序）
+function ItemsEditor({ values, onChange }) {
+  const set = (i, v) => onChange(values.map((x, j) => (j === i ? v : x)))
+  const move = (i, d) => { const a = [...values]; const t = i + d; if (t < 0 || t >= a.length) return;[a[i], a[t]] = [a[t], a[i]]; onChange(a) }
+  return (
+    <div className="items-ed">
+      {values.map((v, i) => (
+        <div className="item-row" key={i}>
+          <input value={v} onChange={(e) => set(i, e.target.value)} />
+          <button className="ghost sm" title="上移" disabled={i === 0} onClick={() => move(i, -1)}><ChevronUp size={13} /></button>
+          <button className="ghost sm" title="下移" disabled={i === values.length - 1} onClick={() => move(i, 1)}><ChevronDown size={13} /></button>
+          <button className="ghost sm danger" title="刪除" onClick={() => onChange(values.filter((_, j) => j !== i))}><X size={13} /></button>
+        </div>
+      ))}
+      <button className="sm" onClick={() => onChange([...values, '新項目'])}><Plus size={13} /> 新增項目</button>
+    </div>
+  )
+}
+
+function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
   const { dispatch } = useStore()
   const arrKey = ARRAY_PROP[cmp.type]
+  const items = arrKey ? (cmp[arrKey] || []) : []
   const update = (patch) => dispatch({ type: 'UPDATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id, patch })
 
   return (
-    <div style={{ borderTop: '1px solid var(--border)', padding: '12px', background: '#fffdf5', fontSize: 12 }}>
-      <div style={{ fontWeight: 700, marginBottom: 8 }}>
-        編輯元件：{COMPONENT_TYPES[cmp.type]?.label || cmp.type}
-      </div>
+    <div className="props-body">
+      <div className="props-title">{COMPONENT_TYPES[cmp.type]?.label || cmp.type}</div>
 
-      <label className="field" style={{ marginBottom: 8 }}>
+      <label className="field">
         <span>標籤 / 標題文字</span>
-        <input value={cmp.label || ''} onChange={(e) => update({ label: e.target.value })} />
+        <input ref={labelRef} value={cmp.label || ''} onChange={(e) => update({ label: e.target.value })} />
       </label>
 
-      <label className="field" style={{ marginBottom: 8 }}>
+      <label className="field">
         <span>寬度</span>
         <div className="wseg">
           {WIDTHS.map((w) => (
-            <button key={w.key} className={(cmp.width || 'full') === w.key ? 'active' : ''} onClick={() => update({ width: w.key })}>
-              {w.label}
-            </button>
+            <button key={w.key} className={(cmp.width || 'full') === w.key ? 'active' : ''} onClick={() => update({ width: w.key })}>{w.label}</button>
           ))}
         </div>
       </label>
 
-      <label className="field" style={{ marginBottom: 8 }}>
+      <label className="field">
         <span>對齊</span>
         <div className="wseg">
           {ALIGNS.map((a) => (
-            <button key={a.key} className={(cmp.align || 'left') === a.key ? 'active' : ''} onClick={() => update({ align: a.key })}>
-              {a.label}
-            </button>
+            <button key={a.key} className={(cmp.align || 'left') === a.key ? 'active' : ''} onClick={() => update({ align: a.key })}>{a.label}</button>
           ))}
         </div>
       </label>
 
       {layout === 'sidebar' && (
-        <label className="field" style={{ marginBottom: 8 }}>
+        <label className="field">
           <span>所屬區域</span>
           <div className="wseg">
             <button className={(cmp.region || 'content') === 'content' ? 'active' : ''} onClick={() => update({ region: 'content' })}>內容區</button>
@@ -91,7 +109,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose }) {
       )}
 
       {cmp.type === 'field' && (
-        <label className="field" style={{ marginBottom: 8 }}>
+        <label className="field">
           <span>欄位型別</span>
           <select value={cmp.control || 'input'} onChange={(e) => update({ control: e.target.value })}>
             <option value="input">單行輸入</option>
@@ -104,20 +122,24 @@ function ComponentEditor({ wireframe, cmp, layout, onClose }) {
       )}
 
       {arrKey && (
-        <label className="field" style={{ marginBottom: 0 }}>
-          <span>{arrKey === 'columns' ? '欄位（逗號分隔）' : arrKey === 'buttons' ? '按鈕（逗號分隔）' : '項目（逗號分隔）'}</span>
-          <input
-            value={(cmp[arrKey] || []).join(', ')}
-            onChange={(e) => update({ [arrKey]: e.target.value.split(',').map((s) => s.trim()).filter(Boolean) })}
-          />
+        <div className="field">
+          <span>{ARR_LABEL[arrKey] || '項目'}</span>
+          <ItemsEditor values={items} onChange={(v) => update({ [arrKey]: v })} />
+        </div>
+      )}
+
+      {ACTIVE_TYPES.has(cmp.type) && items.length > 0 && (
+        <label className="field">
+          <span>{cmp.type === 'steps' ? '目前步驟' : '作用中項目'}</span>
+          <select value={cmp.active ?? 0} onChange={(e) => update({ active: Number(e.target.value) })}>
+            {items.map((it, i) => <option key={i} value={i}>{it || `項目 ${i + 1}`}</option>)}
+          </select>
         </label>
       )}
 
-      <div className="row" style={{ marginTop: 12, gap: 6 }}>
+      <div className="row" style={{ marginTop: 14, gap: 6 }}>
         <button className="sm" onClick={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}><Copy size={13} /> 複製</button>
         <button className="sm danger" onClick={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); onClose?.() }}><Trash2 size={13} /> 刪除</button>
-        <div className="spacer" />
-        <button className="sm" onClick={() => onClose?.()}>完成</button>
       </div>
     </div>
   )
@@ -127,6 +149,7 @@ function WireframeFrame({ wireframe, requirement }) {
   const { dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
+  const labelRef = useRef(null)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
   const sensors = useSensors(
@@ -172,20 +195,15 @@ function WireframeFrame({ wireframe, requirement }) {
   const contentItems = wireframe.components.filter((c) => c.region !== 'sidebar')
 
   const blockNode = (cmp) => (
-    <Fragment key={cmp.id}>
-      <WireframeBlock
-        cmp={cmp}
-        selected={selectedCmp === cmp.id}
-        onSelect={() => setSelectedCmp(cmp.id)}
-        onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
-        onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
-      />
-      {selectedCmp === cmp.id && (
-        <div className="wf-item w-full" onClick={(e) => e.stopPropagation()}>
-          <ComponentEditor wireframe={wireframe} cmp={cmp} layout={layout} onClose={() => setSelectedCmp(null)} />
-        </div>
-      )}
-    </Fragment>
+    <WireframeBlock
+      key={cmp.id}
+      cmp={cmp}
+      selected={selectedCmp === cmp.id}
+      onSelect={() => setSelectedCmp(cmp.id)}
+      onDoubleClick={() => { setSelectedCmp(cmp.id); setTimeout(() => labelRef.current?.focus(), 30) }}
+      onDuplicate={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}
+      onDelete={() => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id }); setSelectedCmp(null) }}
+    />
   )
 
   const column = (items, region, mobile) => (
@@ -218,7 +236,10 @@ function WireframeFrame({ wireframe, requirement }) {
     </div>
   )
 
+  const selectedComp = wireframe.components.find((c) => c.id === selectedCmp)
+
   return (
+    <div className="wf-edit-row">
     <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
         <span className="wf-dots"><i /><i /><i /></span>
@@ -253,6 +274,16 @@ function WireframeFrame({ wireframe, requirement }) {
       ) : (
         column(wireframe.components, 'content', wireframe.device === 'mobile')
       )}
+    </div>
+    {selectedComp && (
+      <aside className="wf-props" onClick={(e) => e.stopPropagation()}>
+        <div className="wf-props-head">
+          <span>元件設定</span>
+          <button className="ghost sm" title="關閉" onClick={() => setSelectedCmp(null)}><X size={15} /></button>
+        </div>
+        <ComponentEditor wireframe={wireframe} cmp={selectedComp} layout={layout} labelRef={labelRef} onClose={() => setSelectedCmp(null)} />
+      </aside>
+    )}
     </div>
   )
 }
