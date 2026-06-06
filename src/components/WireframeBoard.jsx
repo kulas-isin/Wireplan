@@ -10,9 +10,22 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
-// 套用品牌綠主題給 wireframe 內的 antd 元件
+// UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平）
 const WF_THEME = {
-  token: { colorPrimary: '#2e9e5b', borderRadius: 8, fontFamily: 'inherit' },
+  token: {
+    colorPrimary: '#103d2e',
+    colorText: '#16241d',
+    colorTextHeading: '#103d2e',
+    colorBorder: '#dbe3de',
+    borderRadius: 8,
+    fontFamily: 'inherit',
+  },
+  components: {
+    Button: { borderRadius: 999, controlHeight: 40, fontWeight: 600, defaultColor: '#103d2e', defaultBorderColor: '#103d2e', primaryShadow: 'none', defaultShadow: 'none' },
+    Card: { boxShadowTertiary: 'none' },
+    Input: { activeShadow: 'none' },
+    Segmented: { itemSelectedBg: '#103d2e', itemSelectedColor: '#fff' },
+  },
 }
 
 const WIDTHS = [

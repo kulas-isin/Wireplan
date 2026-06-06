@@ -303,6 +303,19 @@ table.req tr:hover td { background: #fafdfb; }
 .wb-ad-overlay:has(.wb-ad-drawer) { justify-content: flex-end; padding: 0; }
 .wb-ad-drawer { background: #fff; box-shadow: -8px 0 28px rgba(0,0,0,0.15); padding: 20px; width: 260px; border-radius: 0 10px 10px 0; }
 
+/* UX Deliverables 風格（wireframe 內） */
+.wb-ph { background: #9fb6ab; border-radius: 8px; min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #16241d; }
+.wb-ph-cap { font-size: 12px; color: #16241d; }
+.wb-stats { display: flex; gap: 28px; flex-wrap: wrap; padding: 4px 0; }
+.wb-stat2 .n { font-size: 30px; font-weight: 800; color: #103d2e; line-height: 1.1; }
+.wb-stat2 .cap { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8a82; margin-top: 4px; }
+.wb-checklist { display: flex; flex-direction: column; gap: 9px; }
+.wb-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #16241d; }
+.wb-check svg { color: #103d2e; flex-shrink: 0; }
+.wb-ad h4.ant-typography, .wb-ad h5.ant-typography { color: #103d2e; font-weight: 800; }
+.wb-ad .ant-card { box-shadow: none; }
+.wb-ad-header { padding: 4px 2px 12px; border-bottom: 2px solid #103d2e; }
+
 /* Document (spec / flow) */
 .doc-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 100%; }
 .doc-editor textarea { width: 100%; height: calc(100vh - 270px); font-family: 'SF Mono', 'Consolas', monospace; font-size: 12.5px; line-height: 1.6; }

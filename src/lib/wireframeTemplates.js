@@ -77,7 +77,7 @@ const pageHead = (title, crumb) => c('pageHeader', title, { sub: crumb })
 const adminPage = (title, crumb, content) => ({
   layout: 'sidebar',
   components: [
-    c('image', 'Logo', { region: 'sidebar', align: 'center' }),
+    c('header', 'LOGO', { region: 'sidebar' }),
     c('sidenav', '', { region: 'sidebar', items: ['儀表板', '訂單管理', '商品管理', '會員', '報表', '設定'] }),
     appbar(),
     pageHead(title, crumb),

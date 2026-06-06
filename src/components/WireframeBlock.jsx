@@ -2,7 +2,7 @@
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical, Copy, X } from 'lucide-react'
+import { GripVertical, Copy, X, Image as ImageIcon, Check } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -93,8 +93,9 @@ function Visual({ cmp }) {
       return <Divider style={{ margin: '6px 0' }}>{cmp.label || null}</Divider>
     case 'image':
       return (
-        <div style={{ display: 'flex', justifyContent: justify }}>
-          <Avatar shape="square" size={48} style={{ background: '#e7eae8', color: '#69756e' }}>{cmp.label || 'Logo'}</Avatar>
+        <div className="wb-ph">
+          <ImageIcon size={30} strokeWidth={1.6} />
+          {cmp.label && cmp.label !== '圖片/Logo' ? <span className="wb-ph-cap">{cmp.label}</span> : null}
         </div>
       )
 
@@ -128,11 +129,11 @@ function Visual({ cmp }) {
     case 'field': {
       const ctrl = cmp.control || 'input'
       const control =
-        ctrl === 'textarea' ? <Input.TextArea rows={2} placeholder={cmp.label} />
-        : ctrl === 'select' ? <Select style={{ width: '100%' }} placeholder={cmp.label} options={[]} />
-        : ctrl === 'password' ? <Input.Password placeholder={cmp.label} />
+        ctrl === 'textarea' ? <Input.TextArea rows={2} variant="underlined" placeholder={cmp.label} />
+        : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={cmp.label} options={[]} />
+        : ctrl === 'password' ? <Input.Password variant="underlined" placeholder={cmp.label} />
         : ctrl === 'toggle' ? <Switch defaultChecked />
-        : <Input placeholder={cmp.label} />
+        : <Input variant="underlined" placeholder={cmp.label} />
       return (
         <div style={{ textAlign: align }}>
           <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}</T.Text>
@@ -147,7 +148,7 @@ function Visual({ cmp }) {
           {fields.map((f, i) => (
             <div key={i}>
               <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{f}</T.Text>
-              <Input placeholder={f} />
+              <Input variant="underlined" placeholder={f} />
             </div>
           ))}
         </div>
@@ -237,12 +238,14 @@ function Visual({ cmp }) {
     }
     case 'statcards': {
       const cards = arr(cmp, ['指標一', '指標二', '指標三', '指標四'])
+      const nums = ['82%', '1,280', '100+', '$3.75']
       return (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="wb-stats">
           {cards.map((c, i) => (
-            <Card size="small" key={i} style={{ flex: '1 1 120px' }}>
-              <Statistic title={c} value={[1280, 53, 92, 4.6][i % 4]} />
-            </Card>
+            <div className="wb-stat2" key={i}>
+              <div className="n">{nums[i % nums.length]}</div>
+              <div className="cap">{c}</div>
+            </div>
           ))}
         </div>
       )
@@ -268,7 +271,13 @@ function Visual({ cmp }) {
     }
     case 'list': {
       const items = arr(cmp, ['項目一', '項目二', '項目三'])
-      return <List size="small" bordered dataSource={items} renderItem={(it) => <List.Item>{it}</List.Item>} />
+      return (
+        <div className="wb-checklist">
+          {items.map((it, i) => (
+            <div className="wb-check" key={i}><Check size={15} strokeWidth={2.4} /> <span>{it}</span></div>
+          ))}
+        </div>
+      )
     }
     case 'descriptions': {
       const items = arr(cmp, ['姓名:王小明', '狀態:啟用', '建立日:2026-01-01']).map((kv, i) => {
