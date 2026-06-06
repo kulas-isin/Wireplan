@@ -259,6 +259,12 @@ table.req tr:hover td { background: #fafdfb; }
 .wb-ad-header { padding: 4px 2px 10px; border-bottom: 2px solid var(--neutral-dark); }
 .wb-ad-chart { height: 110px; display: flex; align-items: flex-end; gap: 5px; }
 .wb-ad-chart > div { flex: 1; background: var(--primary); opacity: 0.75; border-radius: 4px 4px 0 0; }
+.wb-ad-appbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: #fff; border: 1px solid #f0f0f0; border-radius: 10px; }
+/* 對話框 / 抽屜的內嵌示意 */
+.wb-ad-overlay { background: rgba(20,39,28,0.12); border-radius: 10px; padding: 24px; display: flex; }
+.wb-ad-modal { background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.18); padding: 22px 24px; width: 100%; max-width: 420px; margin: 0 auto; }
+.wb-ad-overlay:has(.wb-ad-drawer) { justify-content: flex-end; padding: 0; }
+.wb-ad-drawer { background: #fff; box-shadow: -8px 0 28px rgba(0,0,0,0.15); padding: 20px; width: 260px; border-radius: 0 10px 10px 0; }
 
 /* Document (spec / flow) */
 .doc-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; height: 100%; }

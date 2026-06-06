@@ -3,29 +3,63 @@
 import { uid } from './id.js'
 
 // 支援的元件型別（renderer 需對應實作）。group 供元件庫面板分組。
+// 涵蓋 Ant Design 主要元件集。
 export const COMPONENT_TYPES = {
-  header: { label: '頁首/標題列', group: '版面' },
-  nav: { label: '導覽列', group: '版面' },
-  breadcrumb: { label: '麵包屑', group: '版面' },
-  tabs: { label: '頁籤', group: '版面' },
+  // 版面
+  header: { label: '頁面標題', group: '版面' },
+  pageHeader: { label: '頁首(麵包屑+操作)', group: '版面' },
+  topbar: { label: '頂部列(頭像)', group: '版面' },
   divider: { label: '分隔線', group: '版面' },
-  searchbar: { label: '搜尋列', group: '表單' },
-  filter: { label: '篩選器', group: '表單' },
-  field: { label: '輸入欄位', group: '表單' },
-  buttonRow: { label: '按鈕列', group: '表單' },
-  table: { label: '資料表格', group: '資料' },
-  pagination: { label: '分頁', group: '資料' },
-  statcards: { label: '統計卡片', group: '資料' },
-  chart: { label: '圖表', group: '資料' },
-  cardlist: { label: '卡片清單', group: '資料' },
-  list: { label: '項目清單', group: '資料' },
-  steps: { label: '步驟列', group: '其他' },
-  text: { label: '文字段落', group: '其他' },
-  image: { label: '圖片/Logo', group: '其他' },
+  text: { label: '文字段落', group: '版面' },
+  image: { label: '圖片/Logo', group: '版面' },
+  // 導覽
+  nav: { label: '水平選單', group: '導覽' },
+  sidenav: { label: '側邊選單', group: '導覽' },
+  breadcrumb: { label: '麵包屑', group: '導覽' },
+  tabs: { label: '頁籤', group: '導覽' },
+  steps: { label: '步驟列', group: '導覽' },
+  pagination: { label: '分頁', group: '導覽' },
+  dropdown: { label: '下拉按鈕', group: '導覽' },
+  // 資料輸入
+  field: { label: '輸入欄位', group: '資料輸入' },
+  formgrid: { label: '表單分欄', group: '資料輸入' },
+  searchbar: { label: '搜尋列', group: '資料輸入' },
+  filter: { label: '篩選器', group: '資料輸入' },
+  checkbox: { label: '多選框', group: '資料輸入' },
+  radio: { label: '單選框', group: '資料輸入' },
+  segmented: { label: '分段控制', group: '資料輸入' },
+  datepicker: { label: '日期選擇', group: '資料輸入' },
+  daterange: { label: '日期區間', group: '資料輸入' },
+  number: { label: '數字輸入', group: '資料輸入' },
+  slider: { label: '滑桿', group: '資料輸入' },
+  rate: { label: '評分', group: '資料輸入' },
+  upload: { label: '檔案上傳', group: '資料輸入' },
+  buttonRow: { label: '按鈕列', group: '資料輸入' },
+  // 資料展示
+  table: { label: '資料表格', group: '資料展示' },
+  statcards: { label: '統計卡片', group: '資料展示' },
+  chart: { label: '圖表', group: '資料展示' },
+  cardlist: { label: '卡片群', group: '資料展示' },
+  list: { label: '項目清單', group: '資料展示' },
+  descriptions: { label: '描述清單', group: '資料展示' },
+  tags: { label: '狀態標籤', group: '資料展示' },
+  avatar: { label: '頭像', group: '資料展示' },
+  timeline: { label: '時間軸', group: '資料展示' },
+  progress: { label: '進度條', group: '資料展示' },
+  collapse: { label: '摺疊面板', group: '資料展示' },
+  tree: { label: '樹狀清單', group: '資料展示' },
+  calendar: { label: '月曆', group: '資料展示' },
+  empty: { label: '空狀態', group: '資料展示' },
+  // 回饋
+  alert: { label: '警示訊息', group: '回饋' },
+  modal: { label: '對話框', group: '回饋' },
+  drawer: { label: '側邊抽屜', group: '回饋' },
+  result: { label: '結果頁', group: '回饋' },
+  skeleton: { label: '骨架屏', group: '回饋' },
 }
 
 // 依 group 整理出元件庫面板用的分組清單
-export const COMPONENT_GROUPS = ['版面', '表單', '資料', '其他'].map((g) => ({
+export const COMPONENT_GROUPS = ['版面', '導覽', '資料輸入', '資料展示', '回饋'].map((g) => ({
   group: g,
   types: Object.entries(COMPONENT_TYPES).filter(([, v]) => v.group === g).map(([k]) => k),
 }))
