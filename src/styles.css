@@ -14,6 +14,7 @@
   --accent-dark: #df523a;
   --accent-soft: #ffe7e1;
   --neutral-dark: #313c36;  /* wireframe 頁首等中性深色 */
+  --wf-h: 70vh;             /* 單一畫面的固定檢視高度 */
   --danger: #e5484d;
   --warn: #d9a400;
   --radius: 16px;
@@ -167,10 +168,11 @@ table.req tr:hover td { background: #fafdfb; }
 .req-actions { display: flex; gap: 4px; }
 
 /* ── Wireframe ── */
-.wf-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 22px; align-items: start; }
+.wf-board { display: grid; grid-template-columns: repeat(auto-fill, minmax(720px, 1fr)); gap: 22px; align-items: start; }
 .wf-frame {
   border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
   box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
+  scroll-margin-top: 64px; /* 跳轉時避開置頂的快速切換列 */
 }
 /* 瀏覽器視窗感的標題列 */
 .wf-titlebar { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
@@ -178,15 +180,16 @@ table.req tr:hover td { background: #fafdfb; }
 .wf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #cbd2cd; display: block; }
 .wf-titlebar input { border: none; background: transparent; font-weight: 700; padding: 4px 6px; border-radius: 8px; font-size: 14px; }
 .wf-titlebar input:focus { background: #fff; box-shadow: none; }
-.wf-canvas { padding: 20px; background: #f7f8f7; min-height: 320px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+.wf-canvas { padding: 20px; background: #f7f8f7; min-height: 280px; max-height: var(--wf-h); overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
 .wf-canvas.mobile { max-width: 320px; margin: 0 auto; border: 10px solid var(--neutral-dark); border-radius: 32px; padding: 16px; }
 
 /* 兩欄 admin 版面 */
 .wf-admin { display: flex; align-items: stretch; }
 .wf-side { width: 240px; flex-shrink: 0; border-right: 1px solid var(--border); background: #fbfcfb; }
-.wf-side .wf-canvas { background: #fbfcfb; min-height: 100%; padding: 16px 14px; gap: 8px; }
+.wf-side .wf-canvas { background: #fbfcfb; height: var(--wf-h); padding: 16px 14px; gap: 8px; }
 .wf-side .wf-item { flex: 0 0 100% !important; max-width: 100% !important; }
 .wf-content-col { flex: 1; min-width: 0; }
+.wf-content-col .wf-canvas { height: var(--wf-h); }
 .wf-colwrap { display: flex; flex-direction: column; }
 .wf-side .add-cmp-bar, .wf-content-col .add-cmp-bar { background: transparent; }
 
@@ -249,9 +252,14 @@ table.req tr:hover td { background: #fafdfb; }
   background: #fff; border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); padding: 12px; width: min(420px, 90%); margin-bottom: 6px;
 }
-/* 畫面快速跳轉列 */
-.wf-jump { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-.wf-jump button { background: var(--surface); border-color: var(--border); }
+/* 畫面快速跳轉列（置頂固定、單行可橫向捲） */
+.wf-jump {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; flex-wrap: nowrap; gap: 6px; margin: 0 -20px 14px; padding: 10px 20px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.wf-jump button { background: var(--surface); border-color: var(--border); white-space: nowrap; flex-shrink: 0; }
 .wf-jump button:hover { background: var(--primary-soft); border-color: var(--accent); }
 .palette-group { margin-bottom: 8px; }
 .palette-group .pg-title { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
