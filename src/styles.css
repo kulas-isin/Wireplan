@@ -7,9 +7,9 @@
   --border: #e5e8e6;
   --text: #15211b;
   --muted: #6b7d74;
-  --primary: #2e9e5b;       /* 主綠 */
-  --primary-dark: #25844c;
-  --primary-soft: #e7f6ec;  /* 淺綠底（focus / 綠色 hover） */
+  --primary: #103d2e;       /* 深綠主色（與 wireframe 一致） */
+  --primary-dark: #0b2c20;
+  --primary-soft: #e9f1ec;  /* 淺綠底（focus / 綠色 hover） */
   --accent: #f4694f;        /* 撞色：珊瑚橙 */
   --accent-dark: #df523a;
   --accent-soft: #ffe7e1;
@@ -53,7 +53,7 @@ button {
 }
 button:hover { background: var(--surface); border-color: #cdd5cf; }
 button svg { flex-shrink: 0; }
-button.primary { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 6px rgba(46,158,91,0.25); }
+button.primary { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 6px rgba(16,61,46,0.22); }
 button.primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
 button.accent { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 2px 6px rgba(244,105,79,0.28); }
 button.accent:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
@@ -109,7 +109,7 @@ label.field > span { display: block; font-size: 12px; color: var(--muted); margi
   padding: 7px 12px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; flex-shrink: 0;
 }
 .proj-item:hover { background: #ffffff; }
-.proj-item.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(46,158,91,0.3); }
+.proj-item.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(16,61,46,0.28); }
 .proj-item .del { opacity: 0; display: inline-flex; }
 .proj-item:hover .del { opacity: 0.7; }
 .sidebar > .proj-list { display: flex; flex-direction: row; gap: 6px; align-items: center; overflow-x: auto; }
