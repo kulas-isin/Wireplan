@@ -2,30 +2,36 @@
 // 每個 wireframe 是可編輯的元件陣列，UI 端負責渲染與增刪改排序。
 import { uid } from './id.js'
 
-// 支援的元件型別（renderer 需對應實作）
+// 支援的元件型別（renderer 需對應實作）。group 供元件庫面板分組。
 export const COMPONENT_TYPES = {
-  header: { label: '頁首/標題列', icon: '▭' },
-  nav: { label: '導覽列', icon: '☰' },
-  breadcrumb: { label: '麵包屑', icon: '›' },
-  searchbar: { label: '搜尋列', icon: '🔍' },
-  filter: { label: '篩選器', icon: '⛃' },
-  field: { label: '輸入欄位', icon: '▭' },
-  buttonRow: { label: '按鈕列', icon: '▢▢' },
-  table: { label: '資料表格', icon: '▦' },
-  pagination: { label: '分頁', icon: '◄►' },
-  statcards: { label: '統計卡片', icon: '▣▣' },
-  chart: { label: '圖表', icon: '📊' },
-  cardlist: { label: '卡片清單', icon: '▢▢▢' },
-  steps: { label: '步驟列', icon: '①②③' },
-  tabs: { label: '頁籤', icon: '▭▭' },
-  list: { label: '項目清單', icon: '☰' },
-  text: { label: '文字段落', icon: '¶' },
-  image: { label: '圖片/Logo', icon: '🖼' },
-  divider: { label: '分隔線', icon: '—' },
+  header: { label: '頁首/標題列', group: '版面' },
+  nav: { label: '導覽列', group: '版面' },
+  breadcrumb: { label: '麵包屑', group: '版面' },
+  tabs: { label: '頁籤', group: '版面' },
+  divider: { label: '分隔線', group: '版面' },
+  searchbar: { label: '搜尋列', group: '表單' },
+  filter: { label: '篩選器', group: '表單' },
+  field: { label: '輸入欄位', group: '表單' },
+  buttonRow: { label: '按鈕列', group: '表單' },
+  table: { label: '資料表格', group: '資料' },
+  pagination: { label: '分頁', group: '資料' },
+  statcards: { label: '統計卡片', group: '資料' },
+  chart: { label: '圖表', group: '資料' },
+  cardlist: { label: '卡片清單', group: '資料' },
+  list: { label: '項目清單', group: '資料' },
+  steps: { label: '步驟列', group: '其他' },
+  text: { label: '文字段落', group: '其他' },
+  image: { label: '圖片/Logo', group: '其他' },
 }
 
+// 依 group 整理出元件庫面板用的分組清單
+export const COMPONENT_GROUPS = ['版面', '表單', '資料', '其他'].map((g) => ({
+  group: g,
+  types: Object.entries(COMPONENT_TYPES).filter(([, v]) => v.group === g).map(([k]) => k),
+}))
+
 function c(type, label, extra = {}) {
-  return { id: uid('cmp'), type, label, ...extra }
+  return { id: uid('cmp'), type, label, width: 'full', ...extra }
 }
 
 // 各分類的範本產生器。傳入 requirement，回傳元件陣列。

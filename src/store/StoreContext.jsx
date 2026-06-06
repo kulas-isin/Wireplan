@@ -153,6 +153,46 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
+    case 'REORDER_COMPONENTS': {
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        const byId = new Map(w.components.map((c) => [c.id, c]))
+        const arr = action.orderedIds.map((id) => byId.get(id)).filter(Boolean)
+        for (const c of w.components) if (!action.orderedIds.includes(c.id)) arr.push(c)
+        return { ...w, components: arr }
+      })
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'DUPLICATE_COMPONENT': {
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        const idx = w.components.findIndex((c) => c.id === action.componentId)
+        if (idx < 0) return w
+        const copy = { ...w.components[idx], id: uid('cmp') }
+        const arr = [...w.components]
+        arr.splice(idx + 1, 0, copy)
+        return { ...w, components: arr }
+      })
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'DUPLICATE_WIREFRAME': {
+      const src = cur.wireframes.find((w) => w.id === action.id)
+      if (!src) return state
+      const copy = {
+        ...src,
+        id: uid('wf'),
+        requirementId: null,
+        name: `${src.name} (複本)`,
+        components: src.components.map((c) => ({ ...c, id: uid('cmp') })),
+      }
+      const idx = cur.wireframes.findIndex((w) => w.id === action.id)
+      const wireframes = [...cur.wireframes]
+      wireframes.splice(idx + 1, 0, copy)
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
     case 'UPDATE_FLOW':
       return replaceCurrent(touch({ ...cur, flow: action.flow }))
 

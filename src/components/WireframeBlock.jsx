@@ -1,6 +1,10 @@
 // 將單一 wireframe 元件渲染成「線框視覺」。
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
-import { ChevronUp, ChevronDown, X, Search } from 'lucide-react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { GripVertical, Copy, X, Search } from 'lucide-react'
+
+const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter' }
 
 // 取出陣列型屬性的 key（不同元件用不同欄位名）
 export const ARRAY_PROP = {
@@ -108,15 +112,27 @@ function Visual({ cmp }) {
   }
 }
 
-export default function WireframeBlock({ cmp, selected, onSelect, onMove, onDelete }) {
+export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    outline: selected ? '2px solid var(--primary)' : 'none',
+    borderRadius: 8,
+  }
   return (
-    <div style={{ position: 'relative' }} onClick={(e) => { e.stopPropagation(); onSelect() }}>
-      <div className={selected ? 'wb-wrap selected' : 'wb-wrap'} style={{ outline: selected ? '2px solid var(--primary)' : 'none', borderRadius: 6 }}>
-        <Visual cmp={cmp} />
-      </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}`}
+      onClick={(e) => { e.stopPropagation(); onSelect() }}
+    >
+      <Visual cmp={cmp} />
+      <span className="drag-handle" title="拖曳排序" {...attributes} {...listeners}>
+        <GripVertical size={13} />
+      </span>
       <div className="wb-tools">
-        <button title="上移" onClick={(e) => { e.stopPropagation(); onMove(-1) }}><ChevronUp size={13} /></button>
-        <button title="下移" onClick={(e) => { e.stopPropagation(); onMove(1) }}><ChevronDown size={13} /></button>
+        <button title="複製" onClick={(e) => { e.stopPropagation(); onDuplicate() }}><Copy size={12} /></button>
         <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={13} /></button>
       </div>
     </div>

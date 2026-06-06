@@ -47,7 +47,7 @@ export default function App() {
   const counts = {
     requirements: current.requirements.length,
     wireframe: current.wireframes.length,
-    flow: (current.flow?.steps || []).filter((s) => s.kind === 'group').length,
+    flow: (current.flow?.nodes || []).filter((n) => n.type === 'screen' || n.type === 'decision').length,
   }
 
   return (
