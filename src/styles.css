@@ -206,7 +206,7 @@ table.req tr:hover td { background: #fafdfb; }
 .wf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #cbd2cd; display: block; }
 .wf-titlebar input { border: none; background: transparent; font-weight: 700; padding: 4px 6px; border-radius: 8px; font-size: 14px; }
 .wf-titlebar input:focus { background: #fff; box-shadow: none; }
-.wf-canvas { padding: 16px; background: #ffffff; min-height: 240px; max-height: var(--wf-h); overflow-y: auto; display: flex; flex-wrap: wrap; gap: 12px; align-content: flex-start; }
+.wf-canvas { padding: 16px; background: #ffffff; min-height: 240px; max-height: var(--wf-h); overflow-y: auto; display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
 .wf-canvas.mobile { max-width: 320px; margin: 0 auto; border: 10px solid var(--neutral-dark); border-radius: 32px; padding: 16px; }
 
 /* 兩欄 admin 版面 */
@@ -312,13 +312,15 @@ table.req tr:hover td { background: #fafdfb; }
 /* UX Deliverables 風格（wireframe 內） */
 .wb-ph { background: #9fb6ab; border-radius: 8px; min-height: 130px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #16241d; }
 .wb-ph-cap { font-size: 12px; color: #16241d; }
-.wb-stats { display: flex; gap: 20px; flex-wrap: wrap; padding: 2px 0; }
-.wb-stat2 .n { font-size: 30px; font-weight: 800; color: #103d2e; line-height: 1.1; }
-.wb-stat2 .cap { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8a82; margin-top: 4px; }
-.wb-checklist { display: flex; flex-direction: column; gap: 9px; }
-.wb-check { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #16241d; }
+.wb-stats { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 0; }
+.wb-stat2 .n { font-size: 22px; font-weight: 800; color: #103d2e; line-height: 1.1; }
+.wb-stat2 .cap { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: #7b8a82; margin-top: 3px; }
+.wb-checklist { display: flex; flex-direction: column; gap: 6px; }
+.wb-check { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #16241d; }
 .wb-check svg { color: #103d2e; flex-shrink: 0; }
 .wb-ad h4.ant-typography, .wb-ad h5.ant-typography { color: #103d2e; font-weight: 800; }
+.wb-ad h4.ant-typography { font-size: 17px; margin-bottom: 0; }
+.wb-ad h5.ant-typography { font-size: 14px; margin-bottom: 0; }
 .wb-ad .ant-card { box-shadow: none; }
 .wb-ad-header { padding: 2px 2px 8px; border-bottom: 2px solid #103d2e; }
 

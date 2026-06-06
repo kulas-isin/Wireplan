@@ -10,7 +10,7 @@ import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
 import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
-// UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平）
+// UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平 + 緊湊小尺寸）
 const WF_THEME = {
   token: {
     colorPrimary: '#103d2e',
@@ -18,10 +18,11 @@ const WF_THEME = {
     colorTextHeading: '#103d2e',
     colorBorder: '#dbe3de',
     borderRadius: 8,
+    fontSize: 13,
     fontFamily: 'inherit',
   },
   components: {
-    Button: { borderRadius: 999, controlHeight: 40, fontWeight: 600, defaultColor: '#103d2e', defaultBorderColor: '#103d2e', primaryShadow: 'none', defaultShadow: 'none' },
+    Button: { borderRadius: 999, controlHeight: 32, fontWeight: 600, defaultColor: '#103d2e', defaultBorderColor: '#103d2e', primaryShadow: 'none', defaultShadow: 'none' },
     Card: { boxShadowTertiary: 'none' },
     Input: { activeShadow: 'none' },
     Segmented: { itemSelectedBg: '#103d2e', itemSelectedColor: '#fff' },
@@ -286,7 +287,7 @@ export default function WireframeBoard() {
   const selected = wireframes.find((w) => w.id === selectedId) || wireframes[0]
 
   return (
-    <ConfigProvider theme={WF_THEME}>
+    <ConfigProvider theme={WF_THEME} componentSize="small">
       <div className="wf-studio">
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
