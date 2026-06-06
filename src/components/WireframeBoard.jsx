@@ -104,6 +104,7 @@ function WireframeFrame({ wireframe, requirement }) {
   return (
     <div className="wf-frame" onClick={() => setSelectedCmp(null)}>
       <div className="wf-titlebar">
+        <span className="wf-dots"><i /><i /><i /></span>
         {cat && <span className="tag" style={{ background: cat.color }}>{cat.label}</span>}
         <input
           value={wireframe.name}

@@ -241,7 +241,7 @@ export default function ImportPanel({ onDone }) {
                   附加到現有需求
                 </label>
                 <div style={{ flex: 1 }} />
-                <button className="primary" onClick={doImport}>
+                <button className="accent" onClick={doImport}>
                   匯入 {preview.length} 項並產生 Wireframe / 流程
                 </button>
               </div>
