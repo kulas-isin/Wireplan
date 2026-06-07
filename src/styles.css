@@ -271,9 +271,12 @@ table.req tr:hover td { background: #fafdfb; }
 .wf-item.w-third { flex: 0 0 calc(33.333% - (var(--col-gap, 8px) * 2 / 3)); max-width: calc(33.333% - (var(--col-gap, 8px) * 2 / 3)); }
 .wf-item.w-quarter { flex: 0 0 calc(25% - (var(--col-gap, 8px) * 3 / 4)); max-width: calc(25% - (var(--col-gap, 8px) * 3 / 4)); }
 .wf-item.w-fill { flex: 1 1 0; min-width: 0; max-width: none; }
-/* 縱向容器：寬度限制保留，但不要把分數套在主軸(高度)上 */
-.wf-row-col > .wf-item { flex-basis: auto !important; flex-grow: 0 !important; }
-.wf-row-col > .wf-item.w-fill { flex-grow: 1 !important; }
+/* 縱向容器：直接以明確寬度控制子元件寬度（不依賴 stretch/flex-basis） */
+.wf-row-col > .wf-item { flex: 0 0 auto !important; max-width: none !important; }
+.wf-row-col > .wf-item.w-full, .wf-row-col > .wf-item.w-fill { width: 100%; }
+.wf-row-col > .wf-item.w-half { width: 50%; }
+.wf-row-col > .wf-item.w-third { width: 33.333%; }
+.wf-row-col > .wf-item.w-quarter { width: 25%; }
 .wf-canvas.mobile .wf-item { flex: 0 0 100% !important; max-width: 100% !important; }
 .wf-item.dragging { opacity: 0.5; }
 

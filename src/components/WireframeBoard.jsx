@@ -149,7 +149,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
           </label>
           <label className="field">
             <span>交叉軸對齊（{(cmp.direction || 'row') === 'column' ? '左右' : '上下'}）</span>
-            <select value={cmp.valign || ((cmp.direction || 'row') === 'column' ? 'stretch' : 'top')} onChange={(e) => update({ valign: e.target.value })}>
+            <select value={cmp.valign || 'top'} onChange={(e) => update({ valign: e.target.value })}>
               <option value="top">起點</option>
               <option value="center">置中</option>
               <option value="bottom">末端</option>
@@ -297,7 +297,7 @@ function RowItem({ cmp, ed }) {
       className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
     >
-      <div className={'wf-row' + (cmp.direction === 'column' ? ' wf-row-col' : '')} style={{ flexDirection: cmp.direction === 'column' ? 'column' : 'row', gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, padding: PAD[cmp.pad || 'none'], justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || (cmp.direction === 'column' ? 'stretch' : 'top')] }}>
+      <div className={'wf-row' + (cmp.direction === 'column' ? ' wf-row-col' : '')} style={{ flexDirection: cmp.direction === 'column' ? 'column' : 'row', gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, padding: PAD[cmp.pad || 'none'], justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || 'top'] }}>
         <SortableContext items={children.map((c) => c.id)} strategy={rectSortingStrategy}>
           {children.map((ch) => <Node key={ch.id} cmp={ch} ed={ed} />)}
         </SortableContext>
