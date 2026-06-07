@@ -9,8 +9,9 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu } from 'lucide-react'
-import { ConfigProvider } from 'antd'
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson } from 'lucide-react'
+import { ConfigProvider, Modal, Input } from 'antd'
+import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 
 // wireframe 配色主題（和諧自然的成套色票）
 export const WF_PALETTES = [
@@ -714,7 +715,34 @@ export default function WireframeBoard() {
   const wireframes = current.wireframes || []
   const [selectedId, setSelectedId] = useState(null)
   const [navOpen, setNavOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 820 : true))
+  const [importOpen, setImportOpen] = useState(false)
+  const [importText, setImportText] = useState('')
+  const [importErr, setImportErr] = useState('')
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 820
+
+  const doImport = () => {
+    let json
+    try { json = JSON.parse(importText) } catch (e) { setImportErr('JSON 格式錯誤：' + e.message); return }
+    let wfs
+    try { wfs = normalizeWireframes(json) } catch (e) { setImportErr('解析失敗：' + e.message); return }
+    if (!wfs.length) { setImportErr('找不到任何畫面'); return }
+    dispatch({ type: 'ADD_WIREFRAME', wireframes: wfs })
+    setImportOpen(false); setImportText(''); setImportErr('')
+  }
+
+  const importModal = (
+    <Modal title="匯入畫面 JSON" open={importOpen} onOk={doImport} okText="匯入"
+      cancelText="取消" onCancel={() => { setImportOpen(false); setImportErr('') }} width={640}>
+      <p style={{ fontSize: 12, color: '#888', margin: '0 0 8px' }}>
+        貼上符合 schema 的 JSON（單一畫面、陣列、或 {'{ wireframes:[...] }'} 皆可），未支援的元件會自動降級成文字佔位。
+      </p>
+      <button className="sm" style={{ marginBottom: 8 }} onClick={() => { setImportText(JSON.stringify(SAMPLE_WIREFRAME, null, 2)); setImportErr('') }}>填入範例（歌曲管理）</button>
+      <Input.TextArea value={importText} onChange={(e) => { setImportText(e.target.value); setImportErr('') }}
+        rows={14} placeholder='{ "name": "...", "layout": "sidebar", "components": [ ... ] }'
+        style={{ fontFamily: 'monospace', fontSize: 12 }} />
+      {importErr && <div style={{ color: '#d4380d', fontSize: 12, marginTop: 8 }}>{importErr}</div>}
+    </Modal>
+  )
 
   // 新增 / 複製畫面後自動選取最新的那一個
   const prevLen = useRef(wireframes.length)
@@ -729,9 +757,11 @@ export default function WireframeBoard() {
         <div className="big"><LayoutTemplate size={40} /></div>
         <div>尚無 wireframe</div>
         <div className="muted" style={{ marginTop: 8 }}>先在「匯入」或「需求」分頁建立需求，系統會自動產生對應畫面。</div>
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center' }}>
           <button className="primary" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: '新畫面 1' })}><Plus size={15} /> 新增空白畫面</button>
+          <button className="sm" onClick={() => setImportOpen(true)}><FileJson size={15} /> 匯入畫面 JSON</button>
         </div>
+        {importModal}
       </div>
     )
   }
@@ -755,6 +785,7 @@ export default function WireframeBoard() {
             <strong style={{ fontSize: 13 }}>畫面（{wireframes.length}）</strong>
             <span className="ws-actions">
               <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
+              <button className="sm" title="匯入畫面 JSON" onClick={() => setImportOpen(true)}><FileJson size={14} /></button>
               <button className="ghost sm" title="收合清單" onClick={() => setNavOpen(false)}><PanelLeftClose size={15} /></button>
             </span>
           </div>
@@ -793,6 +824,7 @@ export default function WireframeBoard() {
         <main className="wf-stage">
           <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} />
         </main>
+        {importModal}
       </div>
     </ConfigProvider>
   )

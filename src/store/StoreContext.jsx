@@ -278,6 +278,11 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, wf] }))
     }
 
+    case 'ADD_WIREFRAME': {
+      const incoming = action.wireframes || (action.wireframe ? [action.wireframe] : [])
+      return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, ...incoming] }))
+    }
+
     case 'SAVE_BLOCK': {
       const block = { id: uid('blk'), name: action.name || '未命名區塊', node: treeClone(action.node) }
       return replaceCurrent(touch({ ...cur, blocks: [...(cur.blocks || []), block] }))
