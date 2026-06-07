@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
+import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, newComponent } from '../lib/wireframeTemplates.js'
 import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
@@ -8,7 +9,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react'
+import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X, GripVertical, Save } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -169,15 +170,32 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       )}
 
       {cmp.type === 'field' && (
+        <>
+          <label className="field">
+            <span>欄位型別</span>
+            <select value={cmp.control || 'input'} onChange={(e) => update({ control: e.target.value })}>
+              <option value="input">單行輸入</option>
+              <option value="textarea">多行輸入</option>
+              <option value="select">下拉選單</option>
+              <option value="password">密碼</option>
+              <option value="toggle">開關</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>狀態</span>
+            <div className="wseg">
+              {[['', '一般'], ['disabled', '停用'], ['error', '錯誤']].map(([k, t]) => (
+                <button key={k || 'n'} className={(cmp.status || '') === k ? 'active' : ''} onClick={() => update({ status: k })}>{t}</button>
+              ))}
+            </div>
+          </label>
+        </>
+      )}
+
+      {cmp.type === 'table' && (
         <label className="field">
-          <span>欄位型別</span>
-          <select value={cmp.control || 'input'} onChange={(e) => update({ control: e.target.value })}>
-            <option value="input">單行輸入</option>
-            <option value="textarea">多行輸入</option>
-            <option value="select">下拉選單</option>
-            <option value="password">密碼</option>
-            <option value="toggle">開關</option>
-          </select>
+          <span>列數（資料筆數）</span>
+          <input type="number" min={0} max={12} value={cmp.rows ?? 3} onChange={(e) => update({ rows: Number(e.target.value) })} />
         </label>
       )}
 
@@ -200,6 +218,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       {cmp.type !== 'row' && (
         <button className="sm" style={{ marginTop: 10, width: '100%' }} onClick={() => dispatch({ type: 'WRAP_IN_ROW', wireframeId: wireframe.id, componentId: cmp.id })}><Columns2 size={13} /> 包成列容器（可並排）</button>
       )}
+      <button className="sm" style={{ marginTop: 8, width: '100%' }} onClick={() => { const n = window.prompt('區塊名稱', COMPONENT_TYPES[cmp.type]?.label || '區塊'); if (n) dispatch({ type: 'SAVE_BLOCK', name: n, node: cmp }) }}><Save size={13} /> 存成可重用區塊</button>
 
       <div className="row" style={{ marginTop: 10, gap: 6 }}>
         <button className="sm" onClick={() => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: cmp.id })}><Copy size={13} /> 複製</button>
@@ -227,15 +246,31 @@ function findById(list, id) {
   for (const c of list) { if (c.id === id) return c; if (c.children) { const f = findById(c.children, id); if (f) return f } }
   return null
 }
+function cloneTree(node) {
+  return { ...node, id: uid('cmp'), children: node.children ? node.children.map(cloneTree) : undefined }
+}
 function siblingsOf(list, id, parentId = null) {
   if (list.some((c) => c.id === id)) return { parentId, ids: list.map((c) => c.id) }
   for (const c of list) { if (c.children) { const r = siblingsOf(c.children, id, c.id); if (r) return r } }
   return null
 }
 
-function Palette({ onPick }) {
+function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
   return (
     <div className="palette-pop" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      {blocks.length > 0 && (
+        <div className="palette-group">
+          <div className="pg-title">我的區塊</div>
+          <div className="pg-items">
+            {blocks.map((bk) => (
+              <span key={bk.id} className="blk-chip">
+                <button onClick={() => onPickBlock(bk)}>＋{bk.name}</button>
+                <button className="blk-del" title="刪除區塊" onClick={() => onDeleteBlock(bk.id)}><X size={11} /></button>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {COMPONENT_GROUPS.map((g) => (
         <div className="palette-group" key={g.group}>
           <div className="pg-title">{g.group}</div>
@@ -275,7 +310,7 @@ function RowItem({ cmp, ed }) {
         <button title="複製" onClick={(e) => { e.stopPropagation(); ed.dup(cmp.id) }}><Copy size={13} /></button>
         <button title="刪除" onClick={(e) => { e.stopPropagation(); ed.del(cmp.id) }}><X size={14} /></button>
       </div>
-      {ed.paletteOpen === cmp.id && <Palette onPick={(t) => ed.addComponent(t, cmp.region, cmp.id)} />}
+      {ed.paletteOpen === cmp.id && <Palette onPick={(t) => ed.addComponent(t, cmp.region, cmp.id)} blocks={ed.blocks} onPickBlock={(bk) => ed.addBlock(bk, cmp.region, cmp.id)} onDeleteBlock={ed.deleteBlock} />}
     </div>
   )
 }
@@ -295,7 +330,7 @@ function Node({ cmp, ed }) {
 }
 
 function WireframeFrame({ wireframe, requirement }) {
-  const { dispatch } = useStore()
+  const { current, dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const labelRef = useRef(null)
@@ -329,15 +364,25 @@ function WireframeFrame({ wireframe, requirement }) {
     dispatch({ type: 'REORDER_COMPONENTS', wireframeId: wireframe.id, parentId: sa.parentId, orderedIds: ids })
   }
 
+  const addBlock = (block, region = 'content', parentId = null) => {
+    const node = cloneTree(block.node)
+    dispatch({ type: 'ADD_COMPONENT', wireframeId: wireframe.id, component: node, parentId })
+    setSelectedCmp(node.id)
+    setPaletteOpen(null)
+  }
+
   const ed = {
     selectedCmp,
     paletteOpen,
+    blocks: current.blocks || [],
     select: (id) => setSelectedCmp(id),
     rename: (id) => { setSelectedCmp(id); setTimeout(() => labelRef.current?.focus(), 30) },
     dup: (id) => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: id }),
     del: (id) => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: id }); setSelectedCmp(null) },
     openPalette: (id) => setPaletteOpen((o) => (o === id ? null : id)),
     addComponent,
+    addBlock,
+    deleteBlock: (id) => dispatch({ type: 'DELETE_BLOCK', id }),
   }
 
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
@@ -367,10 +412,24 @@ function WireframeFrame({ wireframe, requirement }) {
       </div>
       <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
         <button className="primary sm" onClick={() => setPaletteOpen((o) => (o === region ? null : region))}><Plus size={14} /> 新增{region === 'sidebar' ? '側欄' : ''}元件</button>
-        {paletteOpen === region && <Palette onPick={(t) => addComponent(t, region)} />}
+        {paletteOpen === region && <Palette onPick={(t) => addComponent(t, region)} blocks={ed.blocks} onPickBlock={(bk) => addBlock(bk, region, null)} onDeleteBlock={ed.deleteBlock} />}
       </div>
     </div>
   )
+
+  // 鍵盤快捷鍵：Delete 刪除、⌘/Ctrl+D 複製、Esc 取消選取（編輯文字時不觸發）
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target.tagName || '').toLowerCase()
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return
+      if (!selectedCmp) return
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: selectedCmp }); setSelectedCmp(null) }
+      else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: selectedCmp }) }
+      else if (e.key === 'Escape') { setSelectedCmp(null) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selectedCmp, wireframe.id])
 
   const selectedComp = findById(wireframe.components, selectedCmp)
 

@@ -256,6 +256,15 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, wf] }))
     }
 
+    case 'SAVE_BLOCK': {
+      const block = { id: uid('blk'), name: action.name || '未命名區塊', node: treeClone(action.node) }
+      return replaceCurrent(touch({ ...cur, blocks: [...(cur.blocks || []), block] }))
+    }
+
+    case 'DELETE_BLOCK': {
+      return replaceCurrent(touch({ ...cur, blocks: (cur.blocks || []).filter((b) => b.id !== action.id) }))
+    }
+
     case 'UPDATE_FLOW':
       return replaceCurrent(touch({ ...cur, flow: action.flow }))
 

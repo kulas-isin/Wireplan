@@ -128,16 +128,19 @@ function Visual({ cmp }) {
     // ── 資料輸入 ──
     case 'field': {
       const ctrl = cmp.control || 'input'
+      const st = cmp.status
+      const ip = { variant: 'underlined', placeholder: cmp.label, status: st === 'error' ? 'error' : undefined, disabled: st === 'disabled' }
       const control =
-        ctrl === 'textarea' ? <Input.TextArea rows={2} variant="underlined" placeholder={cmp.label} />
-        : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={cmp.label} options={[]} />
-        : ctrl === 'password' ? <Input.Password variant="underlined" placeholder={cmp.label} />
-        : ctrl === 'toggle' ? <Switch defaultChecked />
-        : <Input variant="underlined" placeholder={cmp.label} />
+        ctrl === 'textarea' ? <Input.TextArea rows={2} {...ip} />
+        : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={cmp.label} status={st === 'error' ? 'error' : undefined} disabled={st === 'disabled'} options={[]} />
+        : ctrl === 'password' ? <Input.Password {...ip} />
+        : ctrl === 'toggle' ? <Switch defaultChecked disabled={st === 'disabled'} />
+        : <Input {...ip} />
       return (
         <div style={{ textAlign: align }}>
-          <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}</T.Text>
+          <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}{st === 'error' && <span style={{ color: '#cf1322' }}> *</span>}</T.Text>
           {control}
+          {st === 'error' && <T.Text style={{ fontSize: 11, color: '#cf1322' }}>此欄位有誤</T.Text>}
         </div>
       )
     }
@@ -231,7 +234,8 @@ function Visual({ cmp }) {
     // ── 資料展示 ──
     case 'table': {
       const cols = arr(cmp, ['名稱', '狀態', '建立時間', '操作']).map((c, i) => ({ title: c, dataIndex: `c${i}`, key: i }))
-      const rows = [0, 1, 2].map((r) => {
+      const rowN = Math.max(0, Math.min(12, cmp.rows ?? 3))
+      const rows = Array.from({ length: rowN }, (_, r) => r).map((r) => {
         const row = { key: r }
         cols.forEach((c) => { row[c.dataIndex] = '—' })
         return row
