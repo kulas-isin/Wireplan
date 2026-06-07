@@ -21,6 +21,10 @@ import { COMPONENT_TYPES } from './wireframeTemplates.js'
 //   // 陣列型資料依 type 用對應 key：items/columns/buttons/fields/cards/tags/options/steps/tabs…
 //   // 其餘屬性（rows/selectable/pager/chartType/percent…）直接帶上即可
 //   // 表格操作欄：columns 內含「操作」欄、或設 showActions:true，搭配 actions:[...] 與 actionStyle:'link'|'button'|'icon'
+//   // 表格進階：sortable / fixedCols / hoverActions / selectable / pager（皆 boolean）
+//   // formgrid：cols:1~4；欄名後綴 * = 必填、:select/:date/:number/:textarea = 指定型別
+//   // pageHeader：actions:[...] 右上角操作鈕（末顆或含「＋/新增」自動主要鈕）
+//   // toolbar：showSearch / searchText / filters:[...] / actions:[...]（搜尋+篩選+操作一整列）
 // }
 // 可傳單一物件、陣列、或 { wireframes:[...] }。
 

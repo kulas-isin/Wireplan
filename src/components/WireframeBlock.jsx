@@ -74,10 +74,10 @@ const NAV_ICONS = [LayoutDashboard, BarChart3, Music2, Users, ListMusic, FileTex
 // 操作欄按鈕：自動把破壞性動作標紅、可選文字連結 / 按鈕 / 圖示樣式
 const DANGER_RE = /刪除|移除|刪掉|停用|封存|下架|清除|撤銷|delete|remove/i
 const ACTION_ICON = { 編輯: Pencil, 修改: Pencil, 刪除: Trash2, 移除: Trash2, 查看: Eye, 檢視: Eye, 詳情: Eye, 下架: ArrowDownToLine, 上架: ArrowUpToLine, 審核: Check, 通過: Check, 複製: Copy, 設定: Settings }
-export function renderActions(labels, style = 'link') {
+export function renderActions(labels, style = 'link', hover = false) {
   const items = (labels && labels.length) ? labels : ['編輯', '刪除']
   return (
-    <Space size={style === 'icon' ? 4 : 2}>
+    <Space className={hover ? 'wb-rowact' : undefined} size={style === 'icon' ? 4 : 2}>
       {items.map((l, i) => {
         const danger = DANGER_RE.test(l)
         if (style === 'icon') {
@@ -109,17 +109,25 @@ function Visual({ cmp }) {
     case 'pageHeader': {
       const crumbs = splitLabel(cmp.sub, ['首頁', '管理']).map((t) => ({ title: t }))
       const showActions = cmp.showActions ?? true
+      const acts = cmp.actions && cmp.actions.length ? cmp.actions : null
       return (
         <div>
           <Breadcrumb items={crumbs} style={{ marginBottom: 6 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <T.Title level={4} style={{ margin: 0 }}>{cmp.label || '頁面標題'}</T.Title>
-            {showActions && (
+            {showActions && (acts ? (
+              <Space>
+                {acts.map((a, i) => {
+                  const primary = i === acts.length - 1 || /＋|\+|新增|建立|新建|add|create/i.test(a)
+                  return <Button key={i} type={primary ? 'primary' : 'default'} danger={DANGER_RE.test(a)}>{a}</Button>
+                })}
+              </Space>
+            ) : (
               <Space>
                 <Button>{cmp.secondaryText || '次要'}</Button>
                 <Button type="primary">{cmp.primaryText || '主要動作'}</Button>
               </Space>
-            )}
+            ))}
           </div>
         </div>
       )
@@ -185,6 +193,9 @@ function Visual({ cmp }) {
         : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={ph} status={st === 'error' ? 'error' : undefined} disabled={st === 'disabled'} options={[]} />
         : ctrl === 'password' ? <Input.Password {...ip} />
         : ctrl === 'toggle' ? <Switch defaultChecked disabled={st === 'disabled'} />
+        : ctrl === 'date' ? <DatePicker style={{ width: '100%' }} variant="underlined" placeholder={ph} disabled={st === 'disabled'} status={st === 'error' ? 'error' : undefined} />
+        : ctrl === 'daterange' ? <RangePicker style={{ width: '100%' }} variant="underlined" disabled={st === 'disabled'} />
+        : ctrl === 'number' ? <InputNumber style={{ width: '100%' }} variant="underlined" placeholder={ph} disabled={st === 'disabled'} status={st === 'error' ? 'error' : undefined} />
         : <Input {...ip} />
       return (
         <div style={{ textAlign: align }}>
@@ -196,15 +207,29 @@ function Visual({ cmp }) {
       )
     }
     case 'formgrid': {
-      const fields = arr(cmp, ['姓名', '電話', 'Email', '部門'])
+      const fields = arr(cmp, ['姓名', '電話', 'Email*', '部門'])
+      const cols = Math.max(1, Math.min(4, cmp.cols ?? 2))
+      // 欄位字尾加 * = 必填；字尾加 :型別（如 部門:select、生日:date）指定控制項
       return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 16px' }}>
-          {fields.map((f, i) => (
-            <div key={i}>
-              <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{f}</T.Text>
-              <Input variant="underlined" placeholder={f} />
-            </div>
-          ))}
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: '10px 16px' }}>
+          {fields.map((f, i) => {
+            const req = /\*\s*$/.test(f)
+            let name = f.replace(/\*\s*$/, '')
+            let kind = 'input'
+            const m = name.match(/:(\w+)\s*$/)
+            if (m) { kind = m[1]; name = name.replace(/:\w+\s*$/, '') }
+            const inp = kind === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={name} options={[]} />
+              : kind === 'date' ? <DatePicker style={{ width: '100%' }} variant="underlined" placeholder={name} />
+              : kind === 'textarea' ? <Input.TextArea rows={2} variant="underlined" placeholder={name} />
+              : kind === 'number' ? <InputNumber style={{ width: '100%' }} variant="underlined" placeholder={name} />
+              : <Input variant="underlined" placeholder={name} />
+            return (
+              <div key={i}>
+                <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{name}{req && <span style={{ color: '#cf1322' }}> *</span>}</T.Text>
+                {inp}
+              </div>
+            )
+          })}
         </div>
       )
     }
@@ -213,6 +238,27 @@ function Visual({ cmp }) {
     case 'filter': {
       const fields = arr(cmp, ['狀態', '日期區間', '分類'])
       return <Space wrap>{fields.map((f, i) => <Select key={i} placeholder={f} style={{ minWidth: 130 }} options={[]} />)}</Space>
+    }
+    case 'toolbar': {
+      const filters = cmp.filters && cmp.filters.length ? cmp.filters : ['狀態', '分類']
+      const acts = cmp.actions && cmp.actions.length ? cmp.actions : []
+      const showSearch = cmp.showSearch ?? true
+      return (
+        <div className="wb-toolbar">
+          <div className="wb-tb-left">
+            {showSearch && <Input.Search placeholder={cmp.searchText || '搜尋…'} allowClear enterButton style={{ width: 200 }} />}
+            {filters.map((f, i) => <Select key={i} placeholder={f} style={{ minWidth: 120 }} options={[]} />)}
+          </div>
+          {acts.length > 0 && (
+            <div className="wb-tb-right">
+              <Space>{acts.map((a, i) => {
+                const primary = i === acts.length - 1 || /＋|\+|新增|建立|匯入|匯出|add|create|import|export/i.test(a)
+                return <Button key={i} type={primary ? 'primary' : 'default'} danger={DANGER_RE.test(a)}>{a}</Button>
+              })}</Space>
+            </div>
+          )}
+        </div>
+      )
     }
     case 'checkbox': {
       const options = arr(cmp, ['選項一', '選項二', '選項三'])
@@ -286,16 +332,25 @@ function Visual({ cmp }) {
     case 'table': {
       const titles = arr(cmp, ['名稱', '狀態', '建立時間', '操作'])
       const actStyle = cmp.actionStyle || 'link'
+      const { sortable, fixedCols, hoverActions } = cmp
+      const actW = actStyle === 'icon' ? 96 : 120
       const cols = titles.map((c, i) => {
         const role = colRole(c)
         const col = { title: c, dataIndex: `c${i}`, key: i }
-        if (role === 'actions') { col.render = () => renderActions(cmp.actions, actStyle); col.width = actStyle === 'icon' ? 96 : undefined }
-        else if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
+        if (role === 'actions') {
+          col.render = () => renderActions(cmp.actions, actStyle, hoverActions)
+          col.width = actW
+          if (fixedCols) col.fixed = 'right'
+        } else {
+          if (sortable) { col.sorter = () => 0; col.showSorterTooltip = false }
+          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
+          if (fixedCols && i === 0) { col.fixed = 'left'; col.width = 160 }
+        }
         return col
       })
       // 開啟「顯示操作欄」且欄位中沒有操作欄 → 自動補一欄
       if (cmp.showActions && !titles.some((t) => colRole(t) === 'actions')) {
-        cols.push({ title: '操作', dataIndex: '__act', key: '__act', width: actStyle === 'icon' ? 96 : undefined, render: () => renderActions(cmp.actions, actStyle) })
+        cols.push({ title: '操作', dataIndex: '__act', key: '__act', width: actW, fixed: fixedCols ? 'right' : undefined, render: () => renderActions(cmp.actions, actStyle, hoverActions) })
       }
       const rowN = Math.max(0, Math.min(12, cmp.rows ?? (hifi ? 6 : 3)))
       const rows = Array.from({ length: rowN }, (_, r) => r).map((r) => {
@@ -304,13 +359,16 @@ function Visual({ cmp }) {
         return row
       })
       return (
-        <Table
-          size={cmp.size || 'small'}
-          pagination={cmp.pager ? { pageSize: rowN, total: 128, showSizeChanger: false } : false}
-          rowSelection={cmp.selectable ? {} : undefined}
-          columns={cols}
-          dataSource={rows}
-        />
+        <div className={hoverActions ? 'wb-hoveract' : undefined}>
+          <Table
+            size={cmp.size || 'small'}
+            pagination={cmp.pager ? { pageSize: rowN, total: 128, showSizeChanger: false } : false}
+            rowSelection={cmp.selectable ? {} : undefined}
+            columns={cols}
+            dataSource={rows}
+            scroll={fixedCols ? { x: 'max-content' } : undefined}
+          />
+        </div>
       )
     }
     case 'statcards': {

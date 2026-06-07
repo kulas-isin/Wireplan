@@ -26,6 +26,7 @@ export const COMPONENT_TYPES = {
   formgrid: { label: '表單分欄', group: '資料輸入' },
   searchbar: { label: '搜尋列', group: '資料輸入' },
   filter: { label: '篩選器', group: '資料輸入' },
+  toolbar: { label: '工具列(搜尋+篩選+操作)', group: '資料輸入' },
   checkbox: { label: '多選框', group: '資料輸入' },
   radio: { label: '單選框', group: '資料輸入' },
   segmented: { label: '分段控制', group: '資料輸入' },
@@ -81,8 +82,6 @@ export const PROP_SCHEMA = {
   ],
   table: [
     { key: 'size', label: '尺寸', control: 'select', default: 'small', options: sel(['small', '緊湊'], ['middle', '一般']) },
-    { key: 'selectable', label: '可勾選列', control: 'toggle', default: false },
-    { key: 'pager', label: '顯示分頁', control: 'toggle', default: false },
   ],
   chart: [
     { key: 'chartType', label: '圖表類型', control: 'select', default: 'bar', options: sel(['bar', '長條'], ['line', '折線'], ['area', '面積'], ['pie', '圓餅']) },

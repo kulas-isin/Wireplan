@@ -65,7 +65,10 @@ export function cellContent(role, i) {
     case 'category':
       return pick(CATS, i)
     case 'person':
-      return pick(PEOPLE, i)
+      return React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
+        React.createElement(Avatar, { size: 20, style: { background: '#dfe7f5', color: '#3a5a9b', fontSize: 10, flexShrink: 0 } }, pick(PEOPLE, i).slice(0, 1)),
+        pick(PEOPLE, i),
+      )
     case 'album':
       return pick(ALBUMS, i)
     case 'name':

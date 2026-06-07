@@ -327,6 +327,9 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
               <option value="input">單行輸入</option>
               <option value="textarea">多行輸入</option>
               <option value="select">下拉選單</option>
+              <option value="date">日期</option>
+              <option value="daterange">日期區間</option>
+              <option value="number">數字</option>
               <option value="password">密碼</option>
               <option value="toggle">開關</option>
             </select>
@@ -368,6 +371,58 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
               ))}
             </div>
           </label>
+          <div className="field">
+            <span>進階</span>
+            <div className="trait-toggles">
+              {[['sortable', '可排序欄'], ['fixedCols', '固定首欄/操作欄'], ['hoverActions', '操作鈕滑入才顯示'], ['selectable', '可勾選列'], ['pager', '顯示分頁']].map(([k, t]) => (
+                <button key={k} className={'tgl' + (cmp[k] ? ' on' : '')} onClick={() => update({ [k]: !cmp[k] })}>{cmp[k] ? '✓ ' : ''}{t}</button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {cmp.type === 'formgrid' && (
+        <label className="field">
+          <span>每列欄數</span>
+          <div className="wseg">
+            {[1, 2, 3, 4].map((n) => (
+              <button key={n} className={(cmp.cols ?? 2) === n ? 'active' : ''} onClick={() => update({ cols: n })}>{n}</button>
+            ))}
+          </div>
+          <p className="field-hint">欄位名稱可加後綴：<b>*</b> = 必填、<b>:select / :date / :number / :textarea</b> = 指定型別。例：<code>生日:date</code>、<code>Email*</code></p>
+        </label>
+      )}
+
+      {cmp.type === 'pageHeader' && (
+        <div className="field">
+          <span>右上角操作按鈕</span>
+          <ItemsEditor values={cmp.actions || []} onChange={(v) => update({ actions: v })} />
+          <p className="field-hint">最後一顆（或含「＋/新增/建立」字樣）自動為主要鈕；破壞性動作自動標紅。留空則用下方的主要/次要鈕設定。</p>
+        </div>
+      )}
+
+      {cmp.type === 'toolbar' && (
+        <>
+          <label className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ marginBottom: 0 }}>顯示搜尋框</span>
+            <div className="wseg">
+              <button className={(cmp.showSearch ?? true) ? 'active' : ''} onClick={() => update({ showSearch: true })}>開</button>
+              <button className={!(cmp.showSearch ?? true) ? 'active' : ''} onClick={() => update({ showSearch: false })}>關</button>
+            </div>
+          </label>
+          <label className="field">
+            <span>搜尋框提示文字</span>
+            <input value={cmp.searchText || ''} placeholder="搜尋…" onChange={(e) => update({ searchText: e.target.value })} />
+          </label>
+          <div className="field">
+            <span>篩選下拉（左側）</span>
+            <ItemsEditor values={cmp.filters || ['狀態', '分類']} onChange={(v) => update({ filters: v })} />
+          </div>
+          <div className="field">
+            <span>操作按鈕（右側）</span>
+            <ItemsEditor values={cmp.actions || ['匯出', '＋ 新增']} onChange={(v) => update({ actions: v })} />
+          </div>
         </>
       )}
 
