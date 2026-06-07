@@ -13,7 +13,7 @@ import {
 } from 'antd'
 
 const { RangePicker } = DatePicker
-const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill' }
+const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill', hug: 'w-hug', fixed: 'w-fixed' }
 const TAG_COLORS = ['green', 'blue', 'gold', 'red', 'purple', 'cyan']
 
 // 取出陣列型屬性的 key（不同元件用不同欄位名）
@@ -435,6 +435,7 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
     borderRadius: 8,
     ...styleFromCmp(cmp),
   }
+  if (cmp.width === 'fixed' && cmp.widthPx) style.width = Number(cmp.widthPx)
   // 非整列寬度時，用「對齊」決定欄位在列中的位置（靠右/置中）
   const notFull = (cmp.width || 'full') !== 'full'
   const al = cmp.align || 'left'

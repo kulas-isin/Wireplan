@@ -274,6 +274,18 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wf-color input[type=color] { width: 100%; height: 28px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; }
 .wf-color-clr { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 2px; display: inline-flex; }
 
+/* Figma 式對齊網格 */
+.align-row { display: flex; gap: 10px; align-items: stretch; }
+.align-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 2px; width: 86px; height: 64px; background: #fff; border: 1px solid var(--wf-chrome-border); border-radius: 8px; padding: 3px; flex-shrink: 0; }
+.ag-cell { border: none; background: transparent; border-radius: 4px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.ag-cell i { width: 5px; height: 5px; border-radius: 50%; background: #c2ccc6; transition: all 0.12s; }
+.ag-cell:hover i { background: var(--primary); }
+.ag-cell.on { background: var(--primary-soft); }
+.ag-cell.on i { background: var(--primary); width: 7px; height: 7px; }
+.align-opts { display: flex; flex-direction: column; gap: 4px; justify-content: center; flex: 1; }
+.align-opts .sm { width: 100%; }
+.align-opts .sm.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
 /* 選取標記 + 拖曳把手 */
 .wf-item.selected { outline: 2px solid var(--primary); outline-offset: 2px; }
 .wf-badge { position: absolute; top: -10px; left: 8px; background: var(--primary); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 6px; z-index: 4; }
@@ -362,12 +374,15 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wf-item.w-third { flex: 0 0 calc(33.333% - (var(--col-gap, 8px) * 2 / 3)); max-width: calc(33.333% - (var(--col-gap, 8px) * 2 / 3)); }
 .wf-item.w-quarter { flex: 0 0 calc(25% - (var(--col-gap, 8px) * 3 / 4)); max-width: calc(25% - (var(--col-gap, 8px) * 3 / 4)); }
 .wf-item.w-fill { flex: 1 1 0; min-width: 0; max-width: none; }
+.wf-item.w-hug { flex: 0 0 auto; width: max-content; max-width: 100%; }
+.wf-item.w-fixed { flex: 0 0 auto; max-width: 100%; }
 /* 縱向容器：直接以明確寬度控制子元件寬度（不依賴 stretch/flex-basis） */
 .wf-row-col > .wf-item { flex: 0 0 auto !important; max-width: none !important; }
 .wf-row-col > .wf-item.w-full, .wf-row-col > .wf-item.w-fill { width: 100%; }
 .wf-row-col > .wf-item.w-half { width: 50%; }
 .wf-row-col > .wf-item.w-third { width: 33.333%; }
 .wf-row-col > .wf-item.w-quarter { width: 25%; }
+.wf-row-col > .wf-item.w-hug { width: max-content !important; max-width: 100% !important; }
 .wf-canvas.mobile .wf-item { flex: 0 0 100% !important; max-width: 100% !important; }
 .wf-item.dragging { opacity: 0.5; }
 

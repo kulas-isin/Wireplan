@@ -43,14 +43,6 @@ const makeWfTheme = (primary) => ({
   },
 })
 
-const WIDTHS = [
-  { key: 'full', label: '整列' },
-  { key: 'half', label: '½' },
-  { key: 'third', label: '⅓' },
-  { key: 'quarter', label: '¼' },
-  { key: 'fill', label: '填滿' },
-]
-
 const ALIGNS = [
   { key: 'left', label: '靠左' },
   { key: 'center', label: '置中' },
@@ -164,6 +156,30 @@ function LayerTree({ components, ed }) {
   )
 }
 
+// 3×3 對齊網格（依方向把視覺位置對映到主軸/交叉軸，類似 Figma）
+function AlignGrid({ cmp, update }) {
+  const isCol = cmp.direction === 'column'
+  const main = toMain(cmp)
+  const cross = toCross(cmp)
+  const order = ['start', 'center', 'end']
+  const hVal = isCol ? cross : main
+  const vVal = isCol ? main : cross
+  const selCol = order.indexOf(hVal)
+  const selRow = order.indexOf(vVal)
+  const setCell = (r, c) => {
+    const h = order[c], v = order[r]
+    if (isCol) update({ alignCross: h, alignMain: v })
+    else update({ alignMain: h, alignCross: v })
+  }
+  return (
+    <div className="align-grid">
+      {[0, 1, 2].map((r) => [0, 1, 2].map((c) => (
+        <button key={`${r}-${c}`} type="button" className={'ag-cell' + (r === selRow && c === selCol ? ' on' : '')} onClick={() => setCell(r, c)}><i /></button>
+      )))}
+    </div>
+  )
+}
+
 function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
   const { dispatch } = useStore()
   const arrKey = ARRAY_PROP[cmp.type]
@@ -181,11 +197,19 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
 
       <label className="field">
         <span>寬度</span>
-        <div className="wseg">
-          {WIDTHS.map((w) => (
-            <button key={w.key} className={(cmp.width || 'full') === w.key ? 'active' : ''} onClick={() => update({ width: w.key })}>{w.label}</button>
+        <div className="wseg" style={{ marginBottom: 4 }}>
+          {[['fill', '填滿'], ['hug', '隨內容'], ['fixed', '固定']].map(([k, t]) => (
+            <button key={k} className={(cmp.width || 'full') === k ? 'active' : ''} onClick={() => update({ width: k })}>{t}</button>
           ))}
         </div>
+        <div className="wseg">
+          {[['full', '整列'], ['half', '½'], ['third', '⅓'], ['quarter', '¼']].map(([k, t]) => (
+            <button key={k} className={(cmp.width || 'full') === k ? 'active' : ''} onClick={() => update({ width: k })}>{t}</button>
+          ))}
+        </div>
+        {cmp.width === 'fixed' && (
+          <input type="number" min={20} style={{ marginTop: 4 }} placeholder="寬度 px" value={cmp.widthPx ?? 200} onChange={(e) => update({ widthPx: Number(e.target.value) })} />
+        )}
       </label>
 
       <label className="field">
@@ -200,45 +224,57 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       {cmp.type === 'row' && (
         <>
           <label className="field">
-            <span>方向</span>
+            <span>排列方向 (Flow)</span>
             <div className="wseg">
-              <button className={(cmp.direction || 'row') === 'row' ? 'active' : ''} onClick={() => update({ direction: 'row' })}>橫向</button>
-              <button className={cmp.direction === 'column' ? 'active' : ''} onClick={() => update({ direction: 'column' })}>縱向</button>
+              <button className={(cmp.direction || 'row') === 'row' ? 'active' : ''} onClick={() => update({ direction: 'row' })}>橫向 →</button>
+              <button className={cmp.direction === 'column' ? 'active' : ''} onClick={() => update({ direction: 'column' })}>縱向 ↓</button>
+              <button className={cmp.wrap ? 'active' : ''} title="超出時換行" onClick={() => update({ wrap: !cmp.wrap })}>↵ 換行</button>
             </div>
           </label>
-          <label className="field">
-            <span>子元件間距</span>
-            <div className="wseg">
-              {[['sm', '緊'], ['md', '中'], ['lg', '鬆']].map(([k, t]) => (
-                <button key={k} className={(cmp.gap || 'md') === k ? 'active' : ''} onClick={() => update({ gap: k })}>{t}</button>
-              ))}
+
+          <div className="field">
+            <span>對齊 (Alignment)</span>
+            <div className="align-row">
+              <AlignGrid cmp={cmp} update={update} />
+              <div className="align-opts">
+                <button type="button" className={toMain(cmp) === 'between' ? 'sm active' : 'sm'} onClick={() => update({ alignMain: toMain(cmp) === 'between' ? 'start' : 'between' })}>平均分佈</button>
+                <button type="button" className={toCross(cmp) === 'stretch' ? 'sm active' : 'sm'} onClick={() => update({ alignCross: toCross(cmp) === 'stretch' ? 'start' : 'stretch' })}>拉伸填滿</button>
+              </div>
             </div>
-          </label>
-          <label className="field">
-            <span>內距 (padding)</span>
-            <div className="wseg">
-              {[['none', '無'], ['sm', '小'], ['md', '中'], ['lg', '大']].map(([k, t]) => (
-                <button key={k} className={(cmp.pad || 'none') === k ? 'active' : ''} onClick={() => update({ pad: k })}>{t}</button>
-              ))}
+          </div>
+
+          <div className="field">
+            <span>間距 (Gap)</span>
+            <div className="wf-grid2">
+              <label className="field sm" style={{ marginBottom: 0 }}><span>{cmp.wrap ? '欄間距' : '間距'}</span>
+                <input type="number" min={0} value={gapPx(cmp.gap)} onChange={(e) => update({ gap: Number(e.target.value) })} />
+              </label>
+              {cmp.wrap && (
+                <label className="field sm" style={{ marginBottom: 0 }}><span>列間距</span>
+                  <input type="number" min={0} value={gapPx(cmp.gapCross ?? cmp.gap)} onChange={(e) => update({ gapCross: Number(e.target.value) })} />
+                </label>
+              )}
             </div>
-          </label>
-          <label className="field">
-            <span>主軸對齊（{(cmp.direction || 'row') === 'column' ? '上下' : '左右'}）</span>
-            <select value={cmp.justify || 'left'} onChange={(e) => update({ justify: e.target.value })}>
-              <option value="left">起點</option>
-              <option value="center">置中</option>
-              <option value="right">末端</option>
-              <option value="between">平均分佈</option>
-            </select>
-          </label>
-          <label className="field">
-            <span>交叉軸對齊（{(cmp.direction || 'row') === 'column' ? '左右' : '上下'}）</span>
-            <select value={cmp.valign || 'top'} onChange={(e) => update({ valign: e.target.value })}>
-              <option value="top">起點</option>
-              <option value="center">置中</option>
-              <option value="bottom">末端</option>
-              <option value="stretch">拉伸</option>
-            </select>
+          </div>
+
+          <div className="field">
+            <span>內距 (Padding)</span>
+            <div className="wf-grid2">
+              <label className="field sm" style={{ marginBottom: 0 }}><span>水平</span>
+                <input type="number" min={0} value={padPx(cmp.padX ?? cmp.pad)} onChange={(e) => update({ padX: Number(e.target.value) })} />
+              </label>
+              <label className="field sm" style={{ marginBottom: 0 }}><span>垂直</span>
+                <input type="number" min={0} value={padPx(cmp.padY ?? cmp.pad)} onChange={(e) => update({ padY: Number(e.target.value) })} />
+              </label>
+            </div>
+          </div>
+
+          <label className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ marginBottom: 0 }}>裁切溢出內容</span>
+            <div className="wseg">
+              <button className={cmp.clip ? 'active' : ''} onClick={() => update({ clip: true })}>開</button>
+              <button className={!cmp.clip ? 'active' : ''} onClick={() => update({ clip: false })}>關</button>
+            </div>
           </label>
         </>
       )}
@@ -339,9 +375,17 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
 const DEV_W = { tablet: 860, mobile: 420 }
 const GAP = { sm: 8, md: 16, lg: 28 }
 const PAD = { none: 0, sm: 8, md: 16, lg: 24 }
+// 數值化 gap / padding（相容舊的字串預設）
+const gapPx = (v) => (typeof v === 'number' ? v : GAP[v ?? 'md'] ?? 16)
+const padPx = (v) => (typeof v === 'number' ? v : PAD[v ?? 'none'] ?? 0)
+// 對齊：新版以 alignMain / alignCross（start/center/end/between/stretch）為準，相容舊 justify/valign
+const toMain = (cmp) => cmp.alignMain ?? ({ left: 'start', center: 'center', right: 'end', between: 'between' }[cmp.justify] ?? 'start')
+const toCross = (cmp) => cmp.alignCross ?? ({ top: 'start', center: 'center', bottom: 'end', stretch: 'stretch' }[cmp.valign] ?? 'start')
+const MAIN_CSS = { start: 'flex-start', center: 'center', end: 'flex-end', between: 'space-between' }
+const CROSS_CSS = { start: 'flex-start', center: 'center', end: 'flex-end', stretch: 'stretch' }
 const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end', between: 'space-between' }
 const VALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end', stretch: 'stretch' }
-const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill' }
+const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill', hug: 'w-hug', fixed: 'w-fixed' }
 
 function itemMargin(cmp) {
   const s = {}
@@ -397,8 +441,24 @@ function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
 function RowItem({ cmp, ed }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
   const style = { transform: CSS.Transform.toString(transform), transition, borderRadius: 8, ...itemMargin(cmp), ...styleFromCmp(cmp) }
+  if (cmp.width === 'fixed' && cmp.widthPx) style.width = Number(cmp.widthPx)
   const children = cmp.children || []
   const sel = ed.selectedCmp === cmp.id
+  const isCol = cmp.direction === 'column'
+  const g = gapPx(cmp.gap)
+  const gCross = cmp.wrap ? gapPx(cmp.gapCross ?? cmp.gap) : g
+  const px = padPx(cmp.padX ?? cmp.pad)
+  const py = padPx(cmp.padY ?? cmp.pad)
+  const rowStyle = {
+    flexDirection: isCol ? 'column' : 'row',
+    flexWrap: cmp.wrap ? 'wrap' : 'nowrap',
+    gap: `${gCross}px ${g}px`,
+    '--col-gap': `${g}px`,
+    padding: `${py}px ${px}px`,
+    justifyContent: MAIN_CSS[toMain(cmp)],
+    alignItems: CROSS_CSS[toCross(cmp)],
+    overflow: cmp.clip ? 'hidden' : undefined,
+  }
   return (
     <div
       ref={setNodeRef}
@@ -406,7 +466,7 @@ function RowItem({ cmp, ed }) {
       className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
     >
-      <div className={'wf-row' + (cmp.direction === 'column' ? ' wf-row-col' : '')} style={{ flexDirection: cmp.direction === 'column' ? 'column' : 'row', gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, padding: PAD[cmp.pad || 'none'], justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || 'top'] }}>
+      <div className={'wf-row' + (isCol ? ' wf-row-col' : '')} style={rowStyle}>
         <SortableContext items={children.map((c) => c.id)} strategy={rectSortingStrategy}>
           {children.map((ch) => <Node key={ch.id} cmp={ch} ed={ed} />)}
         </SortableContext>
