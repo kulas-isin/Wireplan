@@ -337,6 +337,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
   )
 }
 
+const DEV_W = { tablet: 860, mobile: 420 }
 const GAP = { sm: 8, md: 16, lg: 28 }
 const PAD = { none: 0, sm: 8, md: 16, lg: 24 }
 const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end', between: 'space-between' }
@@ -561,7 +562,9 @@ function WireframeFrame({ wireframe, requirement }) {
       </button>
       {layersOpen && <LayerTree components={wireframe.components} ed={ed} />}
     </aside>
-    <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
+    <div className={`wf-frame dev-${wireframe.device || 'desktop'}`} id={`wf-${wireframe.id}`}
+      style={DEV_W[wireframe.device] ? { maxWidth: DEV_W[wireframe.device], margin: '0 auto' } : undefined}
+      onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
         <span className="wf-dots"><i /><i /><i /></span>
         {cat && <span className="tag" style={{ background: cat.color }}>{cat.label}</span>}
@@ -573,8 +576,9 @@ function WireframeFrame({ wireframe, requirement }) {
           {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
         </button>
         <div className="device-toggle">
-          <button title="桌機版面" className={wireframe.device === 'desktop' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('desktop') }}><Monitor size={15} /></button>
-          <button title="行動版面" className={wireframe.device === 'mobile' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('mobile') }}><Smartphone size={15} /></button>
+          <button title="桌機（全寬）" className={(wireframe.device || 'desktop') === 'desktop' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('desktop') }}><Monitor size={15} /></button>
+          <button title="平板（860px）" className={wireframe.device === 'tablet' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('tablet') }}><Tablet size={15} /></button>
+          <button title="手機（420px）" className={wireframe.device === 'mobile' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('mobile') }}><Smartphone size={15} /></button>
         </div>
         <button className="ghost sm" title="複製整頁" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'DUPLICATE_WIREFRAME', id: wireframe.id }) }}><Copy size={14} /></button>
         {requirement && (

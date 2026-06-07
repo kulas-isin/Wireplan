@@ -273,6 +273,11 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
   overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);
 }
+/* RWD 裝置預覽：限制畫面框寬度，手機框收成單欄 */
+.wf-frame.dev-tablet, .wf-frame.dev-mobile { transition: max-width 0.2s ease; }
+.wf-frame.dev-mobile .wf-admin { flex-direction: column; }
+.wf-frame.dev-mobile .wf-side { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+.wf-frame.dev-mobile .wf-content-col .wf-canvas .wf-item { width: 100% !important; }
 /* 瀏覽器視窗感的標題列（乾淨白底） */
 .wf-titlebar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .wf-dots { display: flex; gap: 5px; flex-shrink: 0; }
