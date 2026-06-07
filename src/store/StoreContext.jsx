@@ -42,6 +42,15 @@ function treeInsertAfter(list, id, node) {
   }
   return out
 }
+// 在 id 之前插入 node（同層）
+function treeInsertBefore(list, id, node) {
+  const out = []
+  for (const c of list) {
+    if (c.id === id) out.push(node)
+    out.push(c.children ? { ...c, children: treeInsertBefore(c.children, id, node) } : c)
+  }
+  return out
+}
 // 將 node 加入指定父容器的 children（parentId 為 null 代表頂層）
 function treeAddChild(list, parentId, node) {
   if (!parentId) return [...list, node]
@@ -197,6 +206,19 @@ function reducer(state, action) {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeReorder(w.components, action.parentId || null, action.orderedIds) } : w,
       )
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'MOVE_COMPONENT': {
+      // 跨容器移動：把 activeId 移到 overId 之前，並套用目標 region
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        const node = treeFind(w.components, action.activeId)
+        if (!node) return w
+        const removed = treeRemove(w.components, action.activeId)
+        const moved = { ...node, region: action.region }
+        return { ...w, components: treeInsertBefore(removed, action.overId, moved) }
+      })
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 

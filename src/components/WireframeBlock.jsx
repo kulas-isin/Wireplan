@@ -1,4 +1,5 @@
 // 將單一 wireframe 元件以 Ant Design 高保真渲染（涵蓋 antd 主要元件集）。
+import { useRef } from 'react'
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -406,8 +407,28 @@ function Visual({ cmp }) {
   }
 }
 
-export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete, onDoubleClick }) {
+// 拖曳右邊把手調整寬度：依容器比例吸附到 ¼ / ⅓ / ½ / 整列
+function startWidthResize(e, el, current, onResize) {
+  e.stopPropagation(); e.preventDefault()
+  const container = el?.parentElement
+  if (!container) return
+  const rect = container.getBoundingClientRect()
+  let last = current
+  const pick = (frac) => (frac <= 0.30 ? 'quarter' : frac <= 0.42 ? 'third' : frac <= 0.66 ? 'half' : 'full')
+  const onMove = (ev) => {
+    const frac = (ev.clientX - rect.left) / rect.width
+    const w = pick(frac)
+    if (w !== last) { last = w; onResize?.(w) }
+  }
+  const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
+}
+
+export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete, onDoubleClick, onResize }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
+  const domRef = useRef(null)
+  const setRefs = (el) => { setNodeRef(el); domRef.current = el }
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -422,7 +443,7 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       style={style}
       className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${selected ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
@@ -438,6 +459,9 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
         <button title="複製" onClick={(e) => { e.stopPropagation(); onDuplicate() }}><Copy size={13} /></button>
         <button title="刪除" onClick={(e) => { e.stopPropagation(); onDelete() }}><X size={14} /></button>
       </div>
+      {selected && onResize && (
+        <span className="wf-resize" title="拖曳調整寬度" onPointerDown={(e) => startWidthResize(e, domRef.current, cmp.width || 'full', onResize)} />
+      )}
     </div>
   )
 }

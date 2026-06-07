@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Palette as PaletteIcon } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -127,7 +127,6 @@ function StyleEditor({ cmp, update }) {
   )
 }
 
-const LAYER_ICON = { row: <Columns2 size={12} />, image: <PaletteIcon size={12} /> }
 // 圖層 / 結構樹：完整顯示巢狀元件，可點選、收合、上下排序、刪除
 function LayerRow({ cmp, depth, ed, collapsed, toggle }) {
   const kids = cmp.children || []
@@ -435,6 +434,7 @@ function Node({ cmp, ed }) {
       onDoubleClick={() => ed.rename(cmp.id)}
       onDuplicate={() => ed.dup(cmp.id)}
       onDelete={() => ed.del(cmp.id)}
+      onResize={(w) => ed.setWidth(cmp.id, w)}
     />
   )
 }
@@ -461,12 +461,25 @@ function WireframeFrame({ wireframe, requirement }) {
     setPaletteOpen(null)
   }
 
+  const regionOf = (id) => (findById(wireframe.components, id)?.region) || 'content'
+
   const onDragEnd = (event) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
     const sa = siblingsOf(wireframe.components, active.id)
     const so = siblingsOf(wireframe.components, over.id)
-    if (!sa || !so || sa.parentId !== so.parentId) return // 跨容器拖曳暫不支援
+    if (!sa || !so) return
+
+    // 跨容器 → 移動到 over 之前；同為頂層但跨區域（內容↔側欄）也視為移動
+    const crossContainer = sa.parentId !== so.parentId
+    const crossRegion = sa.parentId === null && so.parentId === null && regionOf(active.id) !== regionOf(over.id)
+    if (crossContainer || crossRegion) {
+      const region = so.parentId === null ? regionOf(over.id) : undefined
+      dispatch({ type: 'MOVE_COMPONENT', wireframeId: wireframe.id, activeId: active.id, overId: over.id, region })
+      return
+    }
+
+    // 同層重排
     const ids = [...sa.ids]
     const oi = ids.indexOf(active.id)
     const ni = ids.indexOf(over.id)
@@ -500,6 +513,7 @@ function WireframeFrame({ wireframe, requirement }) {
       ;[ids[i], ids[t]] = [ids[t], ids[i]]
       dispatch({ type: 'REORDER_COMPONENTS', wireframeId: wireframe.id, parentId: sib.parentId, orderedIds: ids })
     },
+    setWidth: (id, width) => dispatch({ type: 'UPDATE_COMPONENT', wireframeId: wireframe.id, componentId: id, patch: { width } }),
     openPalette: (id) => setPaletteOpen((o) => (o === id ? null : id)),
     addComponent,
     addBlock,
@@ -525,11 +539,9 @@ function WireframeFrame({ wireframe, requirement }) {
     <div className="wf-colwrap">
       <div className={'wf-canvas' + (mobile ? ' mobile' : '')}>
         {items.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 16, width: '100%' }}>{region === 'sidebar' ? '側邊欄為空' : '空白，點下方新增'}</div>}
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={items.map((c) => c.id)} strategy={rectSortingStrategy}>
-            {items.map((c) => <Node key={c.id} cmp={c} ed={ed} />)}
-          </SortableContext>
-        </DndContext>
+        <SortableContext items={items.map((c) => c.id)} strategy={rectSortingStrategy}>
+          {items.map((c) => <Node key={c.id} cmp={c} ed={ed} />)}
+        </SortableContext>
       </div>
       <div className="add-cmp-bar" onClick={(e) => e.stopPropagation()}>
         <button className="primary sm" onClick={() => setPaletteOpen((o) => (o === region ? null : region))}><Plus size={14} /> 新增{region === 'sidebar' ? '側欄' : ''}元件</button>
@@ -591,14 +603,16 @@ function WireframeFrame({ wireframe, requirement }) {
         ><Trash2 size={14} /></button>
       </div>
 
-      {layout === 'sidebar' ? (
-        <div className="wf-admin">
-          <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
-          <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
-        </div>
-      ) : (
-        column(wireframe.components, 'content', wireframe.device === 'mobile')
-      )}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        {layout === 'sidebar' ? (
+          <div className="wf-admin">
+            <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
+            <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
+          </div>
+        ) : (
+          column(wireframe.components, 'content', wireframe.device === 'mobile')
+        )}
+      </DndContext>
     </div>
     {selectedComp && (
       <aside className="wf-props" onClick={(e) => e.stopPropagation()}>
