@@ -11,30 +11,43 @@ import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
-// UX Deliverables 風格主題（深綠 + 藥丸按鈕 + 扁平 + 緊湊小尺寸）
-const WF_THEME = {
+// wireframe 配色主題（和諧自然的成套色票）
+export const WF_PALETTES = [
+  { key: 'forest', name: '森林綠', primary: '#103d2e', sage: '#9fb6ab' },
+  { key: 'slate', name: '石板灰', primary: '#334155', sage: '#aab4c2' },
+  { key: 'indigo', name: '靛藍', primary: '#3730a3', sage: '#aaa9d4' },
+  { key: 'ocean', name: '海洋藍', primary: '#155e75', sage: '#9cc0c9' },
+  { key: 'terracotta', name: '暖陶', primary: '#9a3412', sage: '#d6b1a0' },
+  { key: 'plum', name: '葡萄紫', primary: '#6b2160', sage: '#c6a9c4' },
+  { key: 'mono', name: '墨黑', primary: '#1f2937', sage: '#b4b9c0' },
+]
+const paletteOf = (key) => WF_PALETTES.find((p) => p.key === key) || WF_PALETTES[0]
+
+// 依主色產生 wireframe 的 antd 主題
+const makeWfTheme = (primary) => ({
   token: {
-    colorPrimary: '#103d2e',
+    colorPrimary: primary,
     colorText: '#16241d',
-    colorTextHeading: '#103d2e',
+    colorTextHeading: primary,
     colorBorder: '#dbe3de',
     borderRadius: 8,
     fontSize: 13,
     fontFamily: 'inherit',
   },
   components: {
-    Button: { borderRadius: 999, controlHeight: 32, fontWeight: 600, defaultColor: '#103d2e', defaultBorderColor: '#103d2e', primaryShadow: 'none', defaultShadow: 'none' },
+    Button: { borderRadius: 999, controlHeight: 32, fontWeight: 600, defaultColor: primary, defaultBorderColor: primary, primaryShadow: 'none', defaultShadow: 'none' },
     Card: { boxShadowTertiary: 'none' },
     Input: { activeShadow: 'none' },
-    Segmented: { itemSelectedBg: '#103d2e', itemSelectedColor: '#fff' },
+    Segmented: { itemSelectedBg: primary, itemSelectedColor: '#fff' },
   },
-}
+})
 
 const WIDTHS = [
   { key: 'full', label: '整列' },
   { key: 'half', label: '½' },
   { key: 'third', label: '⅓' },
   { key: 'quarter', label: '¼' },
+  { key: 'fill', label: '填滿' },
 ]
 
 const ALIGNS = [
@@ -102,6 +115,13 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       {cmp.type === 'row' && (
         <>
           <label className="field">
+            <span>方向</span>
+            <div className="wseg">
+              <button className={(cmp.direction || 'row') === 'row' ? 'active' : ''} onClick={() => update({ direction: 'row' })}>橫向</button>
+              <button className={cmp.direction === 'column' ? 'active' : ''} onClick={() => update({ direction: 'column' })}>縱向</button>
+            </div>
+          </label>
+          <label className="field">
             <span>子元件間距</span>
             <div className="wseg">
               {[['sm', '緊'], ['md', '中'], ['lg', '鬆']].map(([k, t]) => (
@@ -110,20 +130,29 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
             </div>
           </label>
           <label className="field">
-            <span>水平分佈</span>
+            <span>內距 (padding)</span>
+            <div className="wseg">
+              {[['none', '無'], ['sm', '小'], ['md', '中'], ['lg', '大']].map(([k, t]) => (
+                <button key={k} className={(cmp.pad || 'none') === k ? 'active' : ''} onClick={() => update({ pad: k })}>{t}</button>
+              ))}
+            </div>
+          </label>
+          <label className="field">
+            <span>主軸對齊（{(cmp.direction || 'row') === 'column' ? '上下' : '左右'}）</span>
             <select value={cmp.justify || 'left'} onChange={(e) => update({ justify: e.target.value })}>
-              <option value="left">靠左</option>
+              <option value="left">起點</option>
               <option value="center">置中</option>
-              <option value="right">靠右</option>
-              <option value="between">兩端對齊</option>
+              <option value="right">末端</option>
+              <option value="between">平均分佈</option>
             </select>
           </label>
           <label className="field">
-            <span>垂直對齊</span>
-            <select value={cmp.valign || 'top'} onChange={(e) => update({ valign: e.target.value })}>
-              <option value="top">頂端</option>
+            <span>交叉軸對齊（{(cmp.direction || 'row') === 'column' ? '左右' : '上下'}）</span>
+            <select value={cmp.valign || ((cmp.direction || 'row') === 'column' ? 'stretch' : 'top')} onChange={(e) => update({ valign: e.target.value })}>
+              <option value="top">起點</option>
               <option value="center">置中</option>
-              <option value="bottom">底端</option>
+              <option value="bottom">末端</option>
+              <option value="stretch">拉伸</option>
             </select>
           </label>
         </>
@@ -181,9 +210,10 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
 }
 
 const GAP = { sm: 8, md: 16, lg: 28 }
+const PAD = { none: 0, sm: 8, md: 16, lg: 24 }
 const JUSTIFY = { left: 'flex-start', center: 'center', right: 'flex-end', between: 'space-between' }
-const VALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
-const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter' }
+const VALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end', stretch: 'stretch' }
+const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill' }
 
 function itemMargin(cmp) {
   const s = {}
@@ -232,7 +262,7 @@ function RowItem({ cmp, ed }) {
       className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
       onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
     >
-      <div className="wf-row" style={{ gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || 'top'] }}>
+      <div className={'wf-row' + (cmp.direction === 'column' ? ' wf-row-col' : '')} style={{ flexDirection: cmp.direction === 'column' ? 'column' : 'row', gap: GAP[cmp.gap || 'md'], '--col-gap': `${GAP[cmp.gap || 'md']}px`, padding: PAD[cmp.pad || 'none'], justifyContent: JUSTIFY[cmp.justify || 'left'], alignItems: VALIGN[cmp.valign || (cmp.direction === 'column' ? 'stretch' : 'top')] }}>
         <SortableContext items={children.map((c) => c.id)} strategy={rectSortingStrategy}>
           {children.map((ch) => <Node key={ch.id} cmp={ch} ed={ed} />)}
         </SortableContext>
@@ -422,10 +452,11 @@ export default function WireframeBoard() {
 
   const reqById = new Map(current.requirements.map((r) => [r.id, r]))
   const selected = wireframes.find((w) => w.id === selectedId) || wireframes[0]
+  const pal = paletteOf(current.wfTheme)
 
   return (
-    <ConfigProvider theme={WF_THEME} componentSize="small">
-      <div className="wf-studio">
+    <ConfigProvider theme={makeWfTheme(pal.primary)} componentSize="small">
+      <div className="wf-studio" style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
             <PanelLeft size={18} />
@@ -439,6 +470,20 @@ export default function WireframeBoard() {
               <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
               <button className="ghost sm" title="收合清單" onClick={() => setNavOpen(false)}><PanelLeftClose size={15} /></button>
             </span>
+          </div>
+          <div className="wf-theme">
+            <div className="wf-theme-label">配色主題</div>
+            <div className="wf-swatches">
+              {WF_PALETTES.map((pt) => (
+                <button
+                  key={pt.key}
+                  className={'wf-swatch' + ((current.wfTheme || 'forest') === pt.key ? ' active' : '')}
+                  title={pt.name}
+                  style={{ background: pt.primary }}
+                  onClick={() => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'wfTheme', value: pt.key })}
+                />
+              ))}
+            </div>
           </div>
           <div className="ws-list">
             {wireframes.map((wf) => {

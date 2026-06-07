@@ -12,7 +12,7 @@ import {
 } from 'antd'
 
 const { RangePicker } = DatePicker
-const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter' }
+const WIDTH_CLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill' }
 const TAG_COLORS = ['green', 'blue', 'gold', 'red', 'purple', 'cyan']
 
 // 取出陣列型屬性的 key（不同元件用不同欄位名）
