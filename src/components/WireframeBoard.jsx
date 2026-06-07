@@ -428,7 +428,8 @@ export default function WireframeBoard() {
   const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
   const [selectedId, setSelectedId] = useState(null)
-  const [navOpen, setNavOpen] = useState(true)
+  const [navOpen, setNavOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 820 : true))
+  const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 820
 
   // 新增 / 複製畫面後自動選取最新的那一個
   const prevLen = useRef(wireframes.length)
@@ -457,6 +458,7 @@ export default function WireframeBoard() {
   return (
     <ConfigProvider theme={makeWfTheme(pal.primary)} componentSize="small">
       <div className="wf-studio" style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
+        {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
             <PanelLeft size={18} />
@@ -493,7 +495,7 @@ export default function WireframeBoard() {
                 <div
                   key={wf.id}
                   className={'wf-screen-item' + (wf.id === selected.id ? ' active' : '')}
-                  onClick={() => setSelectedId(wf.id)}
+                  onClick={() => { setSelectedId(wf.id); if (isMobile()) setNavOpen(false) }}
                 >
                   <span className="dot" style={{ background: cat ? cat.color : '#cbd2cd' }} />
                   <span className="nm">{wf.name || '未命名'}</span>
