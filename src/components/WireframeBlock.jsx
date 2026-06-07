@@ -1,9 +1,11 @@
 // 將單一 wireframe 元件以 Ant Design 高保真渲染（涵蓋 antd 主要元件集）。
 import { useRef } from 'react'
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
+import { useStore } from '../store/StoreContext.jsx'
+import { colRole, cellContent } from '../lib/sampleData.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Copy, X, Image as ImageIcon, Check } from 'lucide-react'
+import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -67,10 +69,14 @@ function splitLabel(label, fallback) {
   return parts.length ? parts : fallback
 }
 
+const NAV_ICONS = [LayoutDashboard, BarChart3, Music2, Users, ListMusic, FileText, Bell, CreditCard, ShieldCheck, Settings]
+
 function Visual({ cmp }) {
   const align = cmp.align || 'left'
   const justify = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
   const T = Typography
+  const { current } = useStore()
+  const hifi = current?.fidelity === 'hifi'
 
   switch (cmp.type) {
     // ── 版面 ──
@@ -125,7 +131,10 @@ function Visual({ cmp }) {
       return <Menu mode="horizontal" selectedKeys={[String(cmp.active ?? 0)]} items={items} style={{ borderRadius: 8, lineHeight: '40px' }} />
     }
     case 'sidenav': {
-      const items = arr(cmp, ['儀表板', '訂單管理', '商品管理', '會員', '報表', '設定']).map((t, i) => ({ key: String(i), label: t }))
+      const items = arr(cmp, ['儀表板', '訂單管理', '商品管理', '會員', '報表', '設定']).map((t, i) => {
+        const Icon = NAV_ICONS[i % NAV_ICONS.length]
+        return { key: String(i), label: t, icon: hifi ? <Icon size={15} /> : undefined }
+      })
       return <Menu mode="inline" selectedKeys={[String(cmp.active ?? 0)]} items={items} style={{ borderRadius: 8, maxWidth: 220 }} />
     }
     case 'breadcrumb': {
@@ -255,17 +264,23 @@ function Visual({ cmp }) {
 
     // ── 資料展示 ──
     case 'table': {
-      const cols = arr(cmp, ['名稱', '狀態', '建立時間', '操作']).map((c, i) => ({ title: c, dataIndex: `c${i}`, key: i }))
-      const rowN = Math.max(0, Math.min(12, cmp.rows ?? 3))
+      const titles = arr(cmp, ['名稱', '狀態', '建立時間', '操作'])
+      const cols = titles.map((c, i) => {
+        const role = colRole(c)
+        const col = { title: c, dataIndex: `c${i}`, key: i }
+        if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
+        return col
+      })
+      const rowN = Math.max(0, Math.min(12, cmp.rows ?? (hifi ? 6 : 3)))
       const rows = Array.from({ length: rowN }, (_, r) => r).map((r) => {
         const row = { key: r }
-        cols.forEach((c) => { row[c.dataIndex] = '—' })
+        cols.forEach((c) => { row[c.dataIndex] = hifi ? '' : '—' })
         return row
       })
       return (
         <Table
           size={cmp.size || 'small'}
-          pagination={cmp.pager ? { pageSize: rowN, total: 50, simple: true } : false}
+          pagination={cmp.pager ? { pageSize: rowN, total: 128, showSizeChanger: false } : false}
           rowSelection={cmp.selectable ? {} : undefined}
           columns={cols}
           dataSource={rows}
@@ -276,13 +291,16 @@ function Visual({ cmp }) {
       const cards = arr(cmp, ['指標一', '指標二', '指標三', '指標四'])
       const nums = ['82%', '1,280', '100+', '$3.75']
       const trends = ['▲ 12%', '▲ 5%', '▼ 3%', '▲ 8%']
+      const spark = [[40, 55, 48, 62, 70], [30, 42, 38, 55, 60], [60, 52, 58, 44, 40], [35, 48, 52, 64, 72]]
+      const showTrend = cmp.showTrend || hifi
       return (
         <div className="wb-stats">
           {cards.map((c, i) => (
             <div className="wb-stat2" key={i}>
+              <div className="cap" style={hifi ? { textTransform: 'none', letterSpacing: 0, color: '#667085', marginBottom: 4 } : undefined}>{c}</div>
               <div className="n">{nums[i % nums.length]}</div>
-              <div className="cap">{c}</div>
-              {cmp.showTrend && <div className="cap" style={{ color: '#3f9b5b' }}>{trends[i % trends.length]}</div>}
+              {showTrend && <div className="cap" style={{ color: trends[i % trends.length].startsWith('▼') ? '#d4380d' : '#3f9b5b', marginTop: 2 }}>{trends[i % trends.length]}<span style={{ color: '#98a2b3' }}> 較上月</span></div>}
+              {hifi && <div className="wb-spark">{spark[i % spark.length].map((h, k) => <i key={k} style={{ height: `${h}%` }} />)}</div>}
             </div>
           ))}
         </div>
@@ -290,26 +308,50 @@ function Visual({ cmp }) {
     }
     case 'chart': {
       const ct = cmp.chartType || 'bar'
-      return (
-        <Card size="small" title={cmp.label || '圖表'}>
-          {ct === 'pie' ? (
-            <div className="wb-ad-pie" />
-          ) : (
-            <div className={'wb-ad-chart' + (ct === 'line' || ct === 'area' ? ' line' : '')}>
-              {[45, 70, 55, 90, 60, 80, 50].map((h, i) => <div key={i} style={{ height: `${h}%` }} />)}
+      const legend = ['本期', '上期', '目標']
+      const xlabels = ['一月', '二月', '三月', '四月', '五月', '六月', '七月']
+      const chartBody = ct === 'pie' ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, justifyContent: 'center' }}>
+          <div className="wb-ad-pie" />
+          {hifi && (
+            <div className="wb-legend col">
+              {[['#3a5a9b', '流行 38%'], ['#7d97c7', '搖滾 28%'], ['#c2cfe6', '其他 34%']].map(([c, t], i) => (
+                <span key={i}><i style={{ background: c }} />{t}</span>
+              ))}
             </div>
           )}
+        </div>
+      ) : (
+        <div className={hifi ? 'wb-chartwrap' : ''}>
+          {hifi && <div className="wb-yaxis"><span>100</span><span>50</span><span>0</span></div>}
+          <div className={'wb-ad-chart' + (ct === 'line' || ct === 'area' ? ' line' : '') + (hifi ? ' hifi' : '')}>
+            {[45, 70, 55, 90, 60, 80, 50].map((h, i) => <div key={i} style={{ height: `${h}%` }} />)}
+          </div>
+          {hifi && <div className="wb-xaxis">{xlabels.map((x, i) => <span key={i}>{x}</span>)}</div>}
+        </div>
+      )
+      return (
+        <Card size="small" title={cmp.label || '圖表'}
+          extra={hifi && ct !== 'pie' ? <div className="wb-legend">{legend.map((l, i) => <span key={i}><i style={{ background: ['#3a5a9b', '#7d97c7', '#c2cfe6'][i] }} />{l}</span>)}</div> : null}>
+          {chartBody}
         </Card>
       )
     }
     case 'cardlist': {
       const cards = arr(cmp, ['卡片一', '卡片二', '卡片三'])
+      const subs = ['更新於 2 小時前', '12,480 次播放', '建立者：王小明', '分類：流行']
       return (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {cards.map((c, i) => (
-            <Card size="small" key={i} style={{ flex: '1 1 140px' }}>
+            <Card size="small" key={i} style={{ flex: '1 1 140px' }}
+              cover={hifi ? <div className="wb-cover" /> : undefined}>
               <T.Text strong>{c}</T.Text>
-              <div style={{ height: 28 }} />
+              {hifi ? (
+                <>
+                  <div style={{ fontSize: 11, color: '#98a2b3', marginTop: 2 }}>{subs[i % subs.length]}</div>
+                  <Tag color={['green', 'blue', 'gold'][i % 3]} style={{ marginTop: 8 }}>{['上架', '精選', '審核中'][i % 3]}</Tag>
+                </>
+              ) : <div style={{ height: 28 }} />}
             </Card>
           ))}
         </div>
