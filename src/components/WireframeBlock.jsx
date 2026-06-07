@@ -45,6 +45,22 @@ function arr(cmp, fallback = []) {
   return v && v.length ? v : fallback
 }
 
+// 將元件的外觀樣式覆寫（cmp.style）轉成 CSS。圖層/樣式面板與渲染共用。
+export function styleFromCmp(cmp) {
+  const st = cmp.style || {}
+  const s = {}
+  if (st.mt != null && st.mt !== '') s.marginTop = Number(st.mt)
+  if (st.mb != null && st.mb !== '') s.marginBottom = Number(st.mb)
+  if (st.p != null && st.p !== '') s.padding = Number(st.p)
+  if (st.fontSize) s.fontSize = Number(st.fontSize)
+  if (st.fontWeight) s.fontWeight = st.fontWeight
+  if (st.color) s.color = st.color
+  if (st.bg) s.background = st.bg
+  if (st.radius != null && st.radius !== '') s.borderRadius = Number(st.radius)
+  if (st.borderW) s.border = `${Number(st.borderW)}px solid ${st.borderColor || '#d9d9d9'}`
+  return s
+}
+
 function splitLabel(label, fallback) {
   const parts = String(label || '').split(/[,，/›>|]/).map((s) => s.trim()).filter(Boolean)
   return parts.length ? parts : fallback
@@ -396,6 +412,7 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
     transform: CSS.Transform.toString(transform),
     transition,
     borderRadius: 8,
+    ...styleFromCmp(cmp),
   }
   // 非整列寬度時，用「對齊」決定欄位在列中的位置（靠右/置中）
   const notFull = (cmp.width || 'full') !== 'full'

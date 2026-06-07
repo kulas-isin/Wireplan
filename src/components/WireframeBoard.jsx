@@ -2,14 +2,14 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
-import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
+import WireframeBlock, { ARRAY_PROP, styleFromCmp } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, X, GripVertical, Save } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Palette as PaletteIcon } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -76,6 +76,91 @@ function ItemsEditor({ values, onChange }) {
         </div>
       ))}
       <button className="sm" onClick={() => onChange([...values, '新項目'])}><Plus size={13} /> 新增項目</button>
+    </div>
+  )
+}
+
+// 外觀樣式面板（間距 / 字級 / 顏色 / 邊框）
+function StyleEditor({ cmp, update }) {
+  const [open, setOpen] = useState(false)
+  const st = cmp.style || {}
+  const set = (k, v) => update({ style: { ...st, [k]: v } })
+  const num = (k, ph) => (
+    <input type="number" placeholder={ph} value={st[k] ?? ''} onChange={(e) => set(k, e.target.value === '' ? '' : Number(e.target.value))} />
+  )
+  const color = (k, def) => (
+    <span className="wf-color">
+      <input type="color" value={st[k] || def} onChange={(e) => set(k, e.target.value)} />
+      {st[k] && <button className="wf-color-clr" title="清除" onClick={() => set(k, '')}><X size={11} /></button>}
+    </span>
+  )
+  const hasAny = Object.values(st).some((v) => v !== '' && v != null)
+  return (
+    <div className={'wf-style' + (open ? ' open' : '')}>
+      <button className="wf-style-head" onClick={() => setOpen((o) => !o)}>
+        <ChevronRight size={13} className="cc" /> 外觀樣式{hasAny && !open ? ' •' : ''}
+      </button>
+      {open && (
+        <div className="wf-style-body">
+          <div className="wf-grid2">
+            <label className="field sm"><span>上間距</span>{num('mt', '0')}</label>
+            <label className="field sm"><span>下間距</span>{num('mb', '0')}</label>
+            <label className="field sm"><span>內距</span>{num('p', '0')}</label>
+            <label className="field sm"><span>圓角</span>{num('radius', '8')}</label>
+            <label className="field sm"><span>字級</span>{num('fontSize', '13')}</label>
+            <label className="field sm"><span>字重</span>
+              <select value={st.fontWeight || ''} onChange={(e) => set('fontWeight', e.target.value)}>
+                <option value="">一般</option>
+                <option value="600">中粗</option>
+                <option value="700">粗體</option>
+              </select>
+            </label>
+            <label className="field sm"><span>文字色</span>{color('color', '#16241d')}</label>
+            <label className="field sm"><span>背景</span>{color('bg', '#ffffff')}</label>
+            <label className="field sm"><span>邊框寬</span>{num('borderW', '0')}</label>
+            <label className="field sm"><span>邊框色</span>{color('borderColor', '#d9d9d9')}</label>
+          </div>
+          {hasAny && <button className="ghost sm" style={{ width: '100%', marginTop: 6 }} onClick={() => update({ style: {} })}>清除全部樣式</button>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const LAYER_ICON = { row: <Columns2 size={12} />, image: <PaletteIcon size={12} /> }
+// 圖層 / 結構樹：完整顯示巢狀元件，可點選、收合、上下排序、刪除
+function LayerRow({ cmp, depth, ed, collapsed, toggle }) {
+  const kids = cmp.children || []
+  const hasKids = kids.length > 0
+  const sel = ed.selectedCmp === cmp.id
+  const name = (cmp.label || '').trim() || COMPONENT_TYPES[cmp.type]?.label || cmp.type
+  const isCol = collapsed.has(cmp.id)
+  return (
+    <>
+      <div className={'lt-row' + (sel ? ' active' : '')} style={{ paddingLeft: 6 + depth * 13 }} onClick={() => ed.select(cmp.id)}>
+        {hasKids
+          ? <button className="lt-caret" onClick={(e) => { e.stopPropagation(); toggle(cmp.id) }}>{isCol ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</button>
+          : <span className="lt-caret sp" />}
+        <span className="lt-name">{name}</span>
+        {cmp.type === 'row' && <span className="lt-tag">列</span>}
+        <span className="lt-ops" onClick={(e) => e.stopPropagation()}>
+          <button title="上移" onClick={() => ed.move(cmp.id, -1)}><ChevronUp size={12} /></button>
+          <button title="下移" onClick={() => ed.move(cmp.id, 1)}><ChevronDown size={12} /></button>
+          <button title="刪除" className="danger" onClick={() => ed.del(cmp.id)}><X size={12} /></button>
+        </span>
+      </div>
+      {hasKids && !isCol && kids.map((ch) => <LayerRow key={ch.id} cmp={ch} depth={depth + 1} ed={ed} collapsed={collapsed} toggle={toggle} />)}
+    </>
+  )
+}
+
+function LayerTree({ components, ed }) {
+  const [collapsed, setCollapsed] = useState(() => new Set())
+  const toggle = (id) => setCollapsed((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  return (
+    <div className="wf-layers-body">
+      {components.length === 0 && <div className="muted" style={{ padding: 10, fontSize: 12 }}>尚無元件</div>}
+      {components.map((c) => <LayerRow key={c.id} cmp={c} depth={0} ed={ed} collapsed={collapsed} toggle={toggle} />)}
     </div>
   )
 }
@@ -237,6 +322,8 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
         )
       })}
 
+      <StyleEditor cmp={cmp} update={update} />
+
       {cmp.type !== 'row' && (
         <button className="sm" style={{ marginTop: 10, width: '100%' }} onClick={() => dispatch({ type: 'WRAP_IN_ROW', wireframeId: wireframe.id, componentId: cmp.id })}><Columns2 size={13} /> 包成列容器（可並排）</button>
       )}
@@ -309,7 +396,7 @@ function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
 
 function RowItem({ cmp, ed }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
-  const style = { transform: CSS.Transform.toString(transform), transition, borderRadius: 8, ...itemMargin(cmp) }
+  const style = { transform: CSS.Transform.toString(transform), transition, borderRadius: 8, ...itemMargin(cmp), ...styleFromCmp(cmp) }
   const children = cmp.children || []
   const sel = ed.selectedCmp === cmp.id
   return (
@@ -355,6 +442,7 @@ function WireframeFrame({ wireframe, requirement }) {
   const { current, dispatch } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
+  const [layersOpen, setLayersOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 1180 : true))
   const labelRef = useRef(null)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
@@ -401,6 +489,16 @@ function WireframeFrame({ wireframe, requirement }) {
     rename: (id) => { setSelectedCmp(id); setTimeout(() => labelRef.current?.focus(), 30) },
     dup: (id) => dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: id }),
     del: (id) => { dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: id }); setSelectedCmp(null) },
+    move: (id, dir) => {
+      const sib = siblingsOf(wireframe.components, id)
+      if (!sib) return
+      const ids = [...sib.ids]
+      const i = ids.indexOf(id)
+      const t = i + dir
+      if (t < 0 || t >= ids.length) return
+      ;[ids[i], ids[t]] = [ids[t], ids[i]]
+      dispatch({ type: 'REORDER_COMPONENTS', wireframeId: wireframe.id, parentId: sib.parentId, orderedIds: ids })
+    },
     openPalette: (id) => setPaletteOpen((o) => (o === id ? null : id)),
     addComponent,
     addBlock,
@@ -457,6 +555,12 @@ function WireframeFrame({ wireframe, requirement }) {
 
   return (
     <div className="wf-edit-row">
+    <aside className={'wf-layers' + (layersOpen ? ' open' : '')} onClick={(e) => e.stopPropagation()}>
+      <button className="wf-layers-toggle" title={layersOpen ? '收合圖層' : '展開圖層'} onClick={() => setLayersOpen((o) => !o)}>
+        <Layers size={15} />{layersOpen && <span>圖層</span>}
+      </button>
+      {layersOpen && <LayerTree components={wireframe.components} ed={ed} />}
+    </aside>
     <div className="wf-frame" id={`wf-${wireframe.id}`} onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
         <span className="wf-dots"><i /><i /><i /></span>

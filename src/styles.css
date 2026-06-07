@@ -207,6 +207,41 @@ table.req tr:hover td { background: #fafdfb; }
 .item-row { display: flex; gap: 4px; align-items: center; }
 .item-row input { flex: 1; }
 
+/* ── 圖層 / 結構樹 ── */
+.wf-layers { flex-shrink: 0; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; align-self: stretch; }
+.wf-layers:not(.open) { width: 40px; }
+.wf-layers.open { width: 210px; }
+.wf-layers-toggle { display: flex; align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: none; border-bottom: 1px solid var(--border); background: transparent; font-weight: 700; font-size: 12px; color: var(--primary); cursor: pointer; }
+.wf-layers:not(.open) .wf-layers-toggle { justify-content: center; padding: 10px 0; border-bottom: none; }
+.wf-layers-body { padding: 4px; }
+.lt-row { display: flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.lt-row:hover { background: var(--primary-soft); }
+.lt-row.active { background: var(--primary); color: #fff; }
+.lt-caret { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: none; background: transparent; color: inherit; cursor: pointer; padding: 0; flex-shrink: 0; }
+.lt-caret.sp { cursor: default; }
+.lt-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lt-tag { font-size: 9px; padding: 0 4px; border-radius: 4px; background: rgba(0,0,0,0.08); flex-shrink: 0; }
+.lt-row.active .lt-tag { background: rgba(255,255,255,0.25); }
+.lt-ops { display: none; gap: 1px; flex-shrink: 0; }
+.lt-row:hover .lt-ops, .lt-row.active .lt-ops { display: inline-flex; }
+.lt-ops button { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: none; background: transparent; color: inherit; cursor: pointer; border-radius: 4px; padding: 0; }
+.lt-ops button:hover { background: rgba(0,0,0,0.12); }
+.lt-row.active .lt-ops button:hover { background: rgba(255,255,255,0.25); }
+
+/* ── 外觀樣式面板 ── */
+.wf-style { margin: 12px 0 4px; border-top: 1px solid var(--border); padding-top: 10px; }
+.wf-style-head { display: flex; align-items: center; gap: 4px; width: 100%; border: none; background: transparent; font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; padding: 2px 0; }
+.wf-style-head .cc { transition: transform 0.15s; }
+.wf-style.open .wf-style-head .cc { transform: rotate(90deg); }
+.wf-style-body { padding-top: 8px; }
+.wf-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+label.field.sm { margin-bottom: 0; }
+label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
+.field.sm input, .field.sm select { padding: 4px 6px; font-size: 12px; }
+.wf-color { display: inline-flex; align-items: center; gap: 4px; }
+.wf-color input[type=color] { width: 100%; height: 28px; padding: 2px; border: 1px solid var(--border); border-radius: 6px; background: #fff; cursor: pointer; }
+.wf-color-clr { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 2px; display: inline-flex; }
+
 /* 選取標記 + 拖曳把手 */
 .wf-item.selected { outline: 2px solid var(--primary); outline-offset: 2px; }
 .wf-badge { position: absolute; top: -10px; left: 8px; background: var(--primary); color: #fff; font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 6px; z-index: 4; }
@@ -216,6 +251,8 @@ table.req tr:hover td { background: #fafdfb; }
 /* 手機版：屬性面板改底部彈出（不佔寬度） */
 @media (max-width: 980px) {
   .wf-edit-row { flex-direction: column; }
+  .wf-layers { width: 100% !important; position: static; max-height: 200px; }
+  .wf-layers:not(.open) .wf-layers-toggle { justify-content: flex-start; padding: 10px 12px; }
   .wf-props {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 64vh;
     border-radius: 18px 18px 0 0; z-index: 60; box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
