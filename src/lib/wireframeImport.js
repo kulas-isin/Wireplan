@@ -20,6 +20,7 @@ import { COMPONENT_TYPES } from './wireframeTemplates.js'
 //   // 列容器排版：direction/wrap/gap/gapCross/padX/padY/alignMain/alignCross/clip
 //   // 陣列型資料依 type 用對應 key：items/columns/buttons/fields/cards/tags/options/steps/tabs…
 //   // 其餘屬性（rows/selectable/pager/chartType/percent…）直接帶上即可
+//   // 表格操作欄：columns 內含「操作」欄、或設 showActions:true，搭配 actions:[...] 與 actionStyle:'link'|'button'|'icon'
 // }
 // 可傳單一物件、陣列、或 { wireframes:[...] }。
 
@@ -85,6 +86,8 @@ export const SAMPLE_WIREFRAME = {
     {
       type: 'table', region: 'content', size: 'small', selectable: true, pager: true, rows: 8,
       columns: ['歌曲', '歌曲編號', '創作者', '所屬歌單', '時長', '播放數', '狀態', '操作'],
+      // 操作欄：命名為「操作」的欄會渲染這些按鈕；actionStyle = link | button | icon
+      actions: ['編輯', '下架', '刪除'], actionStyle: 'link',
     },
   ],
 }

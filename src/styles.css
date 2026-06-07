@@ -453,6 +453,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .blk-chip > button:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
 .blk-chip .blk-del { padding: 4px 6px; border-left: none; border-top-left-radius: 0; border-bottom-left-radius: 0; color: var(--danger); }
 
+.field-hint { font-size: 11px; color: var(--muted); margin: -2px 0 8px; line-height: 1.5; }
+
 /* width / align toggle */
 .wseg { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .wseg button { border: none; border-radius: 0; padding: 5px 10px; font-size: 12px; background: #fff; }

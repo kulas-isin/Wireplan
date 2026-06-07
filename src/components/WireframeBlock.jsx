@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { colRole, cellContent } from '../lib/sampleData.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck } from 'lucide-react'
+import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -70,6 +70,26 @@ function splitLabel(label, fallback) {
 }
 
 const NAV_ICONS = [LayoutDashboard, BarChart3, Music2, Users, ListMusic, FileText, Bell, CreditCard, ShieldCheck, Settings]
+
+// 操作欄按鈕：自動把破壞性動作標紅、可選文字連結 / 按鈕 / 圖示樣式
+const DANGER_RE = /刪除|移除|刪掉|停用|封存|下架|清除|撤銷|delete|remove/i
+const ACTION_ICON = { 編輯: Pencil, 修改: Pencil, 刪除: Trash2, 移除: Trash2, 查看: Eye, 檢視: Eye, 詳情: Eye, 下架: ArrowDownToLine, 上架: ArrowUpToLine, 審核: Check, 通過: Check, 複製: Copy, 設定: Settings }
+export function renderActions(labels, style = 'link') {
+  const items = (labels && labels.length) ? labels : ['編輯', '刪除']
+  return (
+    <Space size={style === 'icon' ? 4 : 2}>
+      {items.map((l, i) => {
+        const danger = DANGER_RE.test(l)
+        if (style === 'icon') {
+          const Ic = ACTION_ICON[l] || MoreHorizontal
+          return <Button key={i} type="text" size="small" danger={danger} title={l} icon={<Ic size={14} />} style={{ padding: '0 4px' }} />
+        }
+        if (style === 'button') return <Button key={i} size="small" danger={danger} style={{ padding: '0 8px' }}>{l}</Button>
+        return <Button key={i} type="link" size="small" danger={danger} style={{ padding: '0 4px', height: 'auto' }}>{l}</Button>
+      })}
+    </Space>
+  )
+}
 
 function Visual({ cmp }) {
   const align = cmp.align || 'left'
@@ -265,12 +285,18 @@ function Visual({ cmp }) {
     // ── 資料展示 ──
     case 'table': {
       const titles = arr(cmp, ['名稱', '狀態', '建立時間', '操作'])
+      const actStyle = cmp.actionStyle || 'link'
       const cols = titles.map((c, i) => {
         const role = colRole(c)
         const col = { title: c, dataIndex: `c${i}`, key: i }
-        if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
+        if (role === 'actions') { col.render = () => renderActions(cmp.actions, actStyle); col.width = actStyle === 'icon' ? 96 : undefined }
+        else if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
         return col
       })
+      // 開啟「顯示操作欄」且欄位中沒有操作欄 → 自動補一欄
+      if (cmp.showActions && !titles.some((t) => colRole(t) === 'actions')) {
+        cols.push({ title: '操作', dataIndex: '__act', key: '__act', width: actStyle === 'icon' ? 96 : undefined, render: () => renderActions(cmp.actions, actStyle) })
+      }
       const rowN = Math.max(0, Math.min(12, cmp.rows ?? (hifi ? 6 : 3)))
       const rows = Array.from({ length: rowN }, (_, r) => r).map((r) => {
         const row = { key: r }

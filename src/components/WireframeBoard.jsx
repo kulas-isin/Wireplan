@@ -343,10 +343,32 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
       )}
 
       {cmp.type === 'table' && (
-        <label className="field">
-          <span>列數（資料筆數）</span>
-          <input type="number" min={0} max={12} value={cmp.rows ?? 3} onChange={(e) => update({ rows: Number(e.target.value) })} />
-        </label>
+        <>
+          <label className="field">
+            <span>列數（資料筆數）</span>
+            <input type="number" min={0} max={12} value={cmp.rows ?? 3} onChange={(e) => update({ rows: Number(e.target.value) })} />
+          </label>
+          <label className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ marginBottom: 0 }}>顯示操作欄</span>
+            <div className="wseg">
+              <button className={cmp.showActions ? 'active' : ''} onClick={() => update({ showActions: true })}>開</button>
+              <button className={!cmp.showActions ? 'active' : ''} onClick={() => update({ showActions: false })}>關</button>
+            </div>
+          </label>
+          <p className="field-hint">提示：欄位清單中命名為「操作」的欄會自動變成按鈕欄；或開啟上方開關自動補一欄。</p>
+          <div className="field">
+            <span>操作按鈕（破壞性動作會自動標紅）</span>
+            <ItemsEditor values={cmp.actions || ['編輯', '刪除']} onChange={(v) => update({ actions: v })} />
+          </div>
+          <label className="field">
+            <span>按鈕樣式</span>
+            <div className="wseg">
+              {[['link', '文字連結'], ['button', '按鈕'], ['icon', '圖示']].map(([k, t]) => (
+                <button key={k} className={(cmp.actionStyle || 'link') === k ? 'active' : ''} onClick={() => update({ actionStyle: k })}>{t}</button>
+              ))}
+            </div>
+          </label>
+        </>
       )}
 
       {arrKey && (
