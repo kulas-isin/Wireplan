@@ -142,6 +142,17 @@ label.field > span { display: block; font-size: 12px; color: var(--muted); margi
 .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 .tab .badge { background: var(--accent-soft); color: var(--accent-dark); border-radius: 999px; padding: 1px 8px; font-size: 11px; margin-left: 4px; font-weight: 700; }
 
+.tabs .spacer { flex: 1; }
+.focus-btn { align-self: center; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 6px; padding: 5px 12px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); border-radius: 999px; background: #fff; color: var(--muted); cursor: pointer; }
+.focus-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+/* 專注模式：隱藏上方品牌列/專案列/分頁列，畫布吃滿視窗 */
+.app.focus { padding: 0; gap: 0; }
+.app.focus .main { border-radius: 0; box-shadow: none; }
+.app.focus .content { padding: 8px; }
+.focus-exit { position: fixed; bottom: 16px; right: 16px; z-index: 80; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; font-size: 12px; font-weight: 600; border: none; border-radius: 999px; background: var(--primary); color: #fff; box-shadow: var(--shadow); cursor: pointer; }
+.focus-exit:hover { filter: brightness(1.08); }
+
 .content { flex: 1; overflow: auto; padding: 16px; background: var(--bg); }
 
 .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
