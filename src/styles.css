@@ -550,10 +550,24 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 卡片群封面縮圖 */
 .wb-cover { height: 72px; background: linear-gradient(135deg, #e7ecf5, #d7e0ef); border-bottom: 1px solid #e7ebf0; }
 
+/* 卡片容器 */
+.wf-cardwrap { cursor: default; }
+.wb-cardbox { border: 1px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; }
+.wb-cardbox-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.wb-cardbox-head .t { font-weight: 700; font-size: 13px; color: var(--neutral-dark); }
+.wb-cardbox-body { display: flex; padding: 14px; width: 100%; align-content: flex-start; }
+.wf-cardwrap:hover > .wf-rowhandle, .wf-cardwrap.selected > .wf-rowhandle { display: inline-flex; }
+.wf-cardwrap.selected .wb-cardbox { border-color: var(--primary); }
+.hifi .wb-cardbox { box-shadow: 0 1px 3px rgba(16,24,40,0.08); border-color: #e7ebf0; }
+.hifi .wb-cardbox-head { border-color: #eef1f4; }
+
 /* 工具列（搜尋 + 篩選 + 操作） */
 .wb-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; width: 100%; }
 .wb-tb-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .wb-tb-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+/* 表格儲存格：縮圖 */
+.wb-cellthumb { display: inline-block; width: 38px; height: 28px; border-radius: 5px; background: linear-gradient(135deg, #e7ecf5, #d2ddef); border: 1px solid #e2e5ec; }
 
 /* 表格：操作鈕滑入才顯示 */
 .wb-hoveract .ant-table-tbody > tr .wb-rowact { opacity: 0; transition: opacity 0.12s ease; }

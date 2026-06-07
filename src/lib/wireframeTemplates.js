@@ -7,6 +7,7 @@ import { uid } from './id.js'
 export const COMPONENT_TYPES = {
   // 版面
   row: { label: '列容器(並排)', group: '版面' },
+  card: { label: '卡片容器', group: '版面' },
   header: { label: '頁面標題', group: '版面' },
   pageHeader: { label: '頁首(麵包屑+操作)', group: '版面' },
   topbar: { label: '頂部列(頭像)', group: '版面' },
@@ -243,6 +244,9 @@ export function regenerateComponents(requirement) {
 export function newComponent(type = 'text') {
   if (type === 'row') {
     return { id: uid('cmp'), type: 'row', label: '', width: 'full', gap: 'md', justify: 'left', valign: 'top', children: [] }
+  }
+  if (type === 'card') {
+    return { id: uid('cmp'), type: 'card', label: '卡片標題', width: 'full', direction: 'column', gap: 12, actions: [], children: [] }
   }
   return c(type, COMPONENT_TYPES[type]?.label || '元件')
 }

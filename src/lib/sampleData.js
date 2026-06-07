@@ -1,6 +1,6 @@
 // 擬真模式用的示意資料產生器：依欄位標題推斷型別，輸出穩定（依列索引）且像真的內容。
 import React from 'react'
-import { Tag, Button, Space, Avatar } from 'antd'
+import { Tag, Button, Space, Avatar, Progress, Rate, Switch } from 'antd'
 
 const SONGS = ['夜空中最亮的星', '起風了', '晴天', '告白氣球', '光年之外', '小幸運', '說好的幸福呢', '體面', '可惜沒如果', '演員', '七里香', '稻香']
 const PEOPLE = ['王小明', '陳怡君', '林志豪', '張雅婷', '李俊宏', '黃淑芬', '吳建德', '劉美玲', '蔡承翰', '鄭家豪', '許文彥', '周品妧']
@@ -15,8 +15,13 @@ const n2 = (x) => String(x).padStart(2, '0')
 export function colRole(title = '') {
   const t = String(title).toLowerCase()
   if (/操作|action|管理|編輯/.test(t)) return 'actions'
+  if (/評分|星等|評價|rating|rate/.test(t)) return 'rate'
+  if (/進度|完成度|達成度|progress/.test(t)) return 'progress'
+  if (/啟用|開關|是否|顯示\/隱藏|上下架|switch|toggle|enabled/.test(t)) return 'switch'
+  if (/連結|網址|link|url|外連/.test(t)) return 'link'
   if (/狀態|status|state/.test(t)) return 'status'
-  if (/頭像|avatar|圖片|封面|縮圖|cover/.test(t)) return 'avatar'
+  if (/頭像|avatar|頭貼|大頭/.test(t)) return 'avatar'
+  if (/縮圖|封面|圖片|相片|商品圖|thumb|cover|image/.test(t)) return 'thumb'
   if (/編號|id|代號|序號|no\.?$|單號/.test(t)) return 'id'
   if (/時長|長度|duration/.test(t)) return 'duration'
   if (/播放|次數|數量|觀看|count|views|銷量|庫存/.test(t)) return 'count'
@@ -46,6 +51,16 @@ export function cellContent(role, i) {
     }
     case 'avatar':
       return React.createElement(Avatar, { size: 'small', style: { background: '#dfe7f5', color: '#3a5a9b', fontSize: 11 } }, pick(PEOPLE, i).slice(0, 1))
+    case 'rate':
+      return React.createElement(Rate, { disabled: true, value: 3 + (i % 3), style: { fontSize: 13 } })
+    case 'progress':
+      return React.createElement(Progress, { percent: 35 + (i * 13) % 60, size: 'small', style: { margin: 0, minWidth: 90 } })
+    case 'switch':
+      return React.createElement(Switch, { size: 'small', defaultChecked: i % 2 === 0 })
+    case 'thumb':
+      return React.createElement('span', { className: 'wb-cellthumb' })
+    case 'link':
+      return React.createElement('a', { style: { color: '#2563eb' } }, '檢視詳情')
     case 'id':
       return `SNG-${String(10231 + i * 7).padStart(5, '0')}`
     case 'duration':

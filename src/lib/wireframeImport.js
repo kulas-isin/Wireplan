@@ -25,6 +25,8 @@ import { COMPONENT_TYPES } from './wireframeTemplates.js'
 //   // formgrid：cols:1~4；欄名後綴 * = 必填、:select/:date/:number/:textarea = 指定型別
 //   // pageHeader：actions:[...] 右上角操作鈕（末顆或含「＋/新增」自動主要鈕）
 //   // toolbar：showSearch / searchText / filters:[...] / actions:[...]（搜尋+篩選+操作一整列）
+//   // card：卡片容器（type:'card'）→ label=標題、actions:[...]=右上操作、direction、gap、children:[...]（放統計/列表/表格…）
+//   // 表格儲存格樣式由欄名決定：進度/評分/啟用/縮圖/連結/狀態/創作者… 自動對應進度條/星等/開關/縮圖/連結/標籤/頭像
 // }
 // 可傳單一物件、陣列、或 { wireframes:[...] }。
 

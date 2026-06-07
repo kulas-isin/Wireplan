@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
-import WireframeBlock, { ARRAY_PROP, styleFromCmp } from './WireframeBlock.jsx'
+import WireframeBlock, { ARRAY_PROP, styleFromCmp, renderActions } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
@@ -164,6 +164,7 @@ function LayerRow({ cmp, depth, ed, collapsed, toggle }) {
           : <span className="lt-caret sp" />}
         <span className="lt-name">{name}</span>
         {cmp.type === 'row' && <span className="lt-tag">列</span>}
+        {cmp.type === 'card' && <span className="lt-tag">卡</span>}
         <span className="lt-ops" onClick={(e) => e.stopPropagation()}>
           <button title="上移" onClick={() => ed.move(cmp.id, -1)}><ChevronUp size={12} /></button>
           <button title="下移" onClick={() => ed.move(cmp.id, 1)}><ChevronDown size={12} /></button>
@@ -309,6 +310,34 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
         </>
       )}
 
+      {cmp.type === 'card' && (
+        <>
+          <label className="field" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ marginBottom: 0 }}>顯示標題列</span>
+            <div className="wseg">
+              <button className={cmp.showHead !== false ? 'active' : ''} onClick={() => update({ showHead: true })}>開</button>
+              <button className={cmp.showHead === false ? 'active' : ''} onClick={() => update({ showHead: false })}>關</button>
+            </div>
+          </label>
+          <div className="field">
+            <span>標題右上角操作</span>
+            <ItemsEditor values={cmp.actions || []} onChange={(v) => update({ actions: v })} />
+          </div>
+          <label className="field">
+            <span>內容排列</span>
+            <div className="wseg">
+              <button className={(cmp.direction || 'column') === 'column' ? 'active' : ''} onClick={() => update({ direction: 'column' })}>直向堆疊</button>
+              <button className={cmp.direction === 'row' ? 'active' : ''} onClick={() => update({ direction: 'row' })}>橫向並排</button>
+            </div>
+          </label>
+          <label className="field">
+            <span>內容間距</span>
+            <input type="number" min={0} value={gapPx(cmp.gap ?? 12)} onChange={(e) => update({ gap: Number(e.target.value) })} />
+          </label>
+          <p className="field-hint">用右上「＋」把統計卡 / 清單 / 表格 / 圖表放進卡片裡。標題就是上方「標籤」欄。</p>
+        </>
+      )}
+
       {layout === 'sidebar' && (
         <label className="field">
           <span>所屬區域</span>
@@ -359,6 +388,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
             </div>
           </label>
           <p className="field-hint">提示：欄位清單中命名為「操作」的欄會自動變成按鈕欄；或開啟上方開關自動補一欄。</p>
+          <p className="field-hint">擬真模式下，欄位名稱會自動決定儲存格樣式：<b>狀態</b>→標籤、<b>創作者/會員</b>→頭像、<b>進度</b>→進度條、<b>評分</b>→星等、<b>啟用</b>→開關、<b>縮圖/封面</b>→圖片、<b>連結</b>→連結、<b>時長/播放數/金額/日期</b>→對應格式。</p>
           <div className="field">
             <span>操作按鈕（破壞性動作會自動標紅）</span>
             <ItemsEditor values={cmp.actions || ['編輯', '刪除']} onChange={(v) => update({ actions: v })} />
@@ -591,8 +621,52 @@ function RowItem({ cmp, ed }) {
   )
 }
 
+function CardItem({ cmp, ed }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, ...itemMargin(cmp), ...styleFromCmp(cmp) }
+  if (cmp.width === 'fixed' && cmp.widthPx) style.width = Number(cmp.widthPx)
+  const children = cmp.children || []
+  const sel = ed.selectedCmp === cmp.id
+  const isCol = (cmp.direction || 'column') === 'column'
+  const g = gapPx(cmp.gap ?? 12)
+  const bodyStyle = { flexDirection: isCol ? 'column' : 'row', flexWrap: cmp.wrap ? 'wrap' : 'nowrap', gap: `${g}px`, '--col-gap': `${g}px` }
+  const acts = cmp.actions && cmp.actions.length ? cmp.actions : null
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`wf-item wf-cardwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
+      onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
+    >
+      <div className="wb-cardbox">
+        {(cmp.label !== '' && cmp.showHead !== false) && (
+          <div className="wb-cardbox-head">
+            <span className="t">{cmp.label || '卡片標題'}</span>
+            {acts && <span className="a" onClick={(e) => e.stopPropagation()}>{renderActions(acts, cmp.actionStyle || 'link')}</span>}
+          </div>
+        )}
+        <div className={'wb-cardbox-body wf-row' + (isCol ? ' wf-row-col' : '')} style={bodyStyle}>
+          <SortableContext items={children.map((c) => c.id)} strategy={rectSortingStrategy}>
+            {children.map((ch) => <Node key={ch.id} cmp={ch} ed={ed} />)}
+          </SortableContext>
+          {children.length === 0 && <div className="wf-row-empty">空白卡片 — 點右上「＋」加入內容（統計／列表／表格…）</div>}
+        </div>
+      </div>
+      <span className="wf-rowhandle" title="拖曳此卡片" {...attributes} {...listeners}><GripVertical size={14} /></span>
+      {sel && <span className="wf-badge">卡片容器</span>}
+      <div className="wb-tools" onPointerDown={(e) => e.stopPropagation()}>
+        <button title="加入內容" onClick={(e) => { e.stopPropagation(); ed.openPalette(cmp.id) }}><Plus size={13} /></button>
+        <button title="複製" onClick={(e) => { e.stopPropagation(); ed.dup(cmp.id) }}><Copy size={13} /></button>
+        <button title="刪除" onClick={(e) => { e.stopPropagation(); ed.del(cmp.id) }}><X size={14} /></button>
+      </div>
+      {ed.paletteOpen === cmp.id && <Palette onPick={(t) => ed.addComponent(t, cmp.region, cmp.id)} blocks={ed.blocks} onPickBlock={(bk) => ed.addBlock(bk, cmp.region, cmp.id)} onDeleteBlock={ed.deleteBlock} />}
+    </div>
+  )
+}
+
 function Node({ cmp, ed }) {
   if (cmp.type === 'row') return <RowItem cmp={cmp} ed={ed} />
+  if (cmp.type === 'card') return <CardItem cmp={cmp} ed={ed} />
   return (
     <WireframeBlock
       cmp={cmp}
