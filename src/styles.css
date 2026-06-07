@@ -489,6 +489,47 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wb-ad .ant-card { box-shadow: none; }
 .wb-ad-header { padding: 2px 2px 8px; border-bottom: 2px solid var(--wf-ink, #103d2e); }
 
+/* ─────────────────────────────────────────────
+   擬真模式 High-Fidelity skin（.hifi root；皮膚層）
+   真實後台質感：灰底頁面 + 白卡 + 實線細邊 + 輕陰影
+   ───────────────────────────────────────────── */
+.hifi .wf-canvas { background: #f3f5f8; gap: 12px; padding: 18px; }
+.hifi .wf-side .wf-canvas { background: #f8fafc; }
+.hifi .wf-titlebar { background: #fff; }
+.hifi .wf-frame { box-shadow: 0 1px 3px rgba(16,24,40,0.08); border: 1px solid #e7ebf0; }
+/* 編輯用的列容器外框收斂為細實線 */
+.hifi .wf-rowwrap { border: 1px solid #eef1f4; }
+.hifi .wf-rowwrap.selected { border-color: var(--wf-ink); }
+
+/* 標題 / 區段底線 */
+.hifi .wb-ad-header { border-bottom: 1px solid #e2e5ec; }
+.hifi .wb-ad h4.ant-typography, .hifi .wb-ad h5.ant-typography { color: #101828; font-weight: 700; }
+
+/* antd 卡片 / 表格 → 白卡 + 細邊 + 輕陰影 */
+.hifi .wb-ad .ant-card { border: 1px solid #e7ebf0; box-shadow: 0 1px 3px rgba(16,24,40,0.08); }
+.hifi .wb-ad .ant-table-wrapper { background: #fff; border: 1px solid #e7ebf0; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(16,24,40,0.06); }
+.hifi .wb-ad .ant-table { background: transparent; }
+
+/* 頂部列：乾淨白底細邊 */
+.hifi .wb-ad-appbar { border: 1px solid #e7ebf0; box-shadow: 0 1px 2px rgba(16,24,40,0.05); }
+
+/* 側邊選單 active：藍底 + 右側強調線（貼近真實後台） */
+.hifi .wf-side .wb-ad .ant-menu-light { background: transparent; border-inline-end: none; }
+.hifi .wf-side .wb-ad .ant-menu-item-selected { border-right: 2px solid var(--wf-ink); border-radius: 6px 0 0 6px; font-weight: 600; }
+
+/* 圖片 / Logo 佔位 → 中性灰，不再用斜紋/草稿色 */
+.hifi .wb-ph { background: #eef1f5; color: #98a2b3; border: 1px solid #e2e5ec; }
+.hifi .wb-ph-cap { color: #98a2b3; }
+
+/* 統計卡 → 白卡 + 中性數字色 */
+.hifi .wb-stats { gap: 12px; }
+.hifi .wb-stat2 { background: #fff; border: 1px solid #e7ebf0; border-radius: 10px; padding: 12px 14px; flex: 1 1 120px; box-shadow: 0 1px 2px rgba(16,24,40,0.05); }
+.hifi .wb-stat2 .n { color: #101828; }
+.hifi .wb-stat2 .cap { color: #667085; }
+
+/* 清單 / 勾選列 → 一般後台列表觀感 */
+.hifi .wb-check { color: #344054; }
+
 /* 配色主題選擇器 */
 .wf-theme { padding: 4px 2px 10px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
 .wf-theme-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }

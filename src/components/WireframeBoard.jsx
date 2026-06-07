@@ -15,6 +15,7 @@ import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js
 
 // wireframe 配色主題（和諧自然的成套色票）
 export const WF_PALETTES = [
+  { key: 'adminblue', name: '後台藍', primary: '#2563eb', sage: '#9db8ee' },
   { key: 'forest', name: '森林綠', primary: '#103d2e', sage: '#9fb6ab' },
   { key: 'slate', name: '石板灰', primary: '#334155', sage: '#aab4c2' },
   { key: 'indigo', name: '靛藍', primary: '#3730a3', sage: '#aaa9d4' },
@@ -26,7 +27,28 @@ export const WF_PALETTES = [
 const paletteOf = (key) => WF_PALETTES.find((p) => p.key === key) || WF_PALETTES[0]
 
 // 依主色產生 wireframe 的 antd 主題
-const makeWfTheme = (primary) => ({
+const makeWfTheme = (primary, hifi) => hifi ? ({
+  // 擬真模式：真實後台質感（實線細邊、白卡輕陰影、方角小圓角、彩色狀態）
+  token: {
+    colorPrimary: primary,
+    colorText: '#1f2733',
+    colorTextHeading: '#101828',
+    colorBorder: '#e2e5ec',
+    colorBorderSecondary: '#eef1f4',
+    colorBgLayout: '#f4f5f7',
+    borderRadius: 6,
+    fontSize: 13,
+    fontFamily: 'inherit',
+    boxShadowTertiary: '0 1px 2px rgba(16,24,40,0.06)',
+  },
+  components: {
+    Button: { borderRadius: 6, controlHeight: 32, fontWeight: 500, primaryShadow: '0 1px 2px rgba(16,24,40,0.10)', defaultShadow: 'none' },
+    Card: { boxShadowTertiary: '0 1px 3px rgba(16,24,40,0.08)' },
+    Table: { headerBg: '#f7f9fb', headerColor: '#475467', borderColor: '#eef1f4', rowHoverBg: '#f7f9fb' },
+    Menu: { itemSelectedBg: hexA(primary, 0.10), itemSelectedColor: primary, itemHeight: 34, itemBorderRadius: 6 },
+    Segmented: { itemSelectedBg: primary, itemSelectedColor: '#fff' },
+  },
+}) : ({
   token: {
     colorPrimary: primary,
     colorText: '#16241d',
@@ -43,6 +65,13 @@ const makeWfTheme = (primary) => ({
     Segmented: { itemSelectedBg: primary, itemSelectedColor: '#fff' },
   },
 })
+
+// hex + alpha → rgba（給選單選中底色用）
+function hexA(hex, a) {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+}
 
 const ALIGNS = [
   { key: 'left', label: '靠左' },
@@ -769,10 +798,11 @@ export default function WireframeBoard() {
   const reqById = new Map(current.requirements.map((r) => [r.id, r]))
   const selected = wireframes.find((w) => w.id === selectedId) || wireframes[0]
   const pal = paletteOf(current.wfTheme)
+  const hifi = current.fidelity === 'hifi'
 
   return (
-    <ConfigProvider theme={makeWfTheme(pal.primary)} componentSize="small">
-      <div className="wf-studio" style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
+    <ConfigProvider theme={makeWfTheme(pal.primary, hifi)} componentSize="small">
+      <div className={'wf-studio' + (hifi ? ' hifi' : '')} style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
         {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
@@ -790,6 +820,11 @@ export default function WireframeBoard() {
             </span>
           </div>
           <div className="wf-theme">
+            <div className="wf-theme-label">擬真度</div>
+            <div className="wseg" style={{ marginBottom: 10 }}>
+              <button className={!hifi ? 'active' : ''} title="線框稿風格" onClick={() => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fidelity', value: 'wire' })}>線框</button>
+              <button className={hifi ? 'active' : ''} title="高擬真後台風格" onClick={() => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fidelity', value: 'hifi' })}>擬真</button>
+            </div>
             <div className="wf-theme-label">配色主題</div>
             <div className="wf-swatches">
               {WF_PALETTES.map((pt) => (
