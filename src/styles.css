@@ -221,6 +221,24 @@ table.req tr:hover td { background: #fafdfb; }
 .item-row { display: flex; gap: 4px; align-items: center; }
 .item-row input { flex: 1; }
 
+/* 屬性面板：緊湊間距（減少捲動） */
+.wf-props { font-size: 12.5px; line-height: 1.3; }
+.wf-props-head { padding: 8px 12px; }
+.wf-props .props-body { padding: 10px 12px 14px; }
+.wf-props .props-title { margin-bottom: 7px; }
+.wf-props label.field { margin-bottom: 6px; }
+.wf-props label.field > span { margin-bottom: 2px; font-size: 11.5px; }
+.wf-props input, .wf-props select, .wf-props textarea { padding: 5px 9px; font-size: 12.5px; border-radius: 8px; }
+.wf-props textarea { min-height: 44px; }
+.wf-props .wseg button { padding: 4px 9px; font-size: 12px; }
+.wf-props .items-ed { gap: 4px; }
+.wf-props button.sm { padding: 4px 8px; }
+.wf-props .item-row .ghost.sm { padding: 4px 5px; }
+.wf-props .wf-style { margin: 8px 0 2px; padding-top: 8px; }
+.wf-props .wf-style-body { padding-top: 6px; }
+.wf-props .wf-grid2 { gap: 5px 8px; }
+.wf-props .row { margin-top: 8px !important; }
+
 /* ── 圖層 / 結構樹 ── */
 .wf-layers { flex-shrink: 0; background: var(--wf-chrome); border: 1px solid var(--wf-chrome-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; align-self: stretch; }
 .wf-layers:not(.open) { width: 40px; }
