@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu } from 'lucide-react'
 import { ConfigProvider } from 'antd'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -444,6 +444,7 @@ function WireframeFrame({ wireframe, requirement }) {
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 1180 : true))
+  const [mobileNav, setMobileNav] = useState(false) // 手機模式側欄抽屜（demo 用）
   const labelRef = useRef(null)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
@@ -534,6 +535,7 @@ function WireframeFrame({ wireframe, requirement }) {
 
   const sidebarItems = wireframe.components.filter((c) => c.region === 'sidebar')
   const contentItems = wireframe.components.filter((c) => c.region !== 'sidebar')
+  const mobileSidebar = layout === 'sidebar' && wireframe.device === 'mobile'
 
   const column = (items, region, mobile) => (
     <div className="wf-colwrap">
@@ -605,10 +607,30 @@ function WireframeFrame({ wireframe, requirement }) {
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         {layout === 'sidebar' ? (
-          <div className="wf-admin">
-            <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
-            <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
-          </div>
+          mobileSidebar ? (
+            <div className="wf-admin wf-admin-m">
+              <div className="wf-content-col">
+                <div className="wf-mbar">
+                  <button className="wf-burger" title="開啟選單" onClick={(e) => { e.stopPropagation(); setMobileNav(true) }}><Menu size={20} /></button>
+                  <span className="wf-mbar-title">{wireframe.name}</span>
+                </div>
+                {column(contentItems, 'content', false)}
+              </div>
+              {mobileNav && <div className="wf-drawer-backdrop" onClick={(e) => { e.stopPropagation(); setMobileNav(false) }} />}
+              <div className={'wf-side wf-drawer' + (mobileNav ? ' open' : '')}>
+                <div className="wf-drawer-head">
+                  <span>選單</span>
+                  <button className="ghost sm" title="關閉選單" onClick={(e) => { e.stopPropagation(); setMobileNav(false) }}><X size={15} /></button>
+                </div>
+                {column(sidebarItems, 'sidebar', false)}
+              </div>
+            </div>
+          ) : (
+            <div className="wf-admin">
+              <div className="wf-side">{column(sidebarItems, 'sidebar', false)}</div>
+              <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
+            </div>
+          )
         ) : (
           column(wireframe.components, 'content', wireframe.device === 'mobile')
         )}

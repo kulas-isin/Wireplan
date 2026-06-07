@@ -296,6 +296,17 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wf-frame.dev-mobile .wf-admin { flex-direction: column; }
 .wf-frame.dev-mobile .wf-side { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 .wf-frame.dev-mobile .wf-content-col .wf-canvas .wf-item { width: 100% !important; }
+
+/* 手機模式：側欄收成漢堡抽屜（demo 點擊互動） */
+.wf-admin.wf-admin-m { position: relative; display: block; }
+.wf-mbar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: #fff; }
+.wf-burger { width: 34px; height: 34px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: var(--neutral-dark); flex-shrink: 0; }
+.wf-burger:hover { background: var(--surface); }
+.wf-mbar-title { font-weight: 700; font-size: 15px; color: var(--neutral-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-drawer-backdrop { position: absolute; inset: 0; background: rgba(20,39,28,0.4); z-index: 30; }
+.wf-frame.dev-mobile .wf-side.wf-drawer { position: absolute; left: 0; top: 0; bottom: 0; width: 78%; max-width: 280px; z-index: 31; background: #fbfcfb; border-right: 1px solid var(--border); border-bottom: none; box-shadow: 4px 0 20px rgba(0,0,0,0.18); transform: translateX(-100%); transition: transform 0.25s ease; overflow-y: auto; }
+.wf-frame.dev-mobile .wf-side.wf-drawer.open { transform: translateX(0); }
+.wf-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 13px; background: #fbfcfb; position: sticky; top: 0; }
 /* 瀏覽器視窗感的標題列（乾淨白底） */
 .wf-titlebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .wf-titlebar input { flex: 1 1 90px; min-width: 60px; width: auto; }
