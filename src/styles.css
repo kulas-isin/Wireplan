@@ -14,6 +14,9 @@
   --accent-dark: #df523a;
   --accent-soft: #ffe7e1;
   --neutral-dark: #313c36;  /* wireframe 頁首等中性深色 */
+  --wf-desk: #e4e8e5;       /* 編輯器桌面底（最暗，襯托白色畫面） */
+  --wf-chrome: #f0f2f0;     /* 工具面板（圖層/清單/屬性）灰底 */
+  --wf-chrome-border: #dbe1dc;
   --wf-h: 70vh;             /* 單一畫面的固定檢視高度 */
   --font-display: 'Space Grotesk', 'Plus Jakarta Sans', -apple-system, 'Noto Sans TC', 'PingFang TC', sans-serif;
   --danger: #e5484d;
@@ -190,12 +193,12 @@ table.req tr:hover td { background: #fafdfb; }
 .req-actions { display: flex; gap: 4px; }
 
 /* ── Wireframe 工作室（左清單 + 右舞台） ── */
-.wf-studio { display: flex; gap: 12px; height: 100%; }
-.wf-screens-toggle { width: 36px; flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; justify-content: center; padding-top: 12px; cursor: pointer; }
-.wf-screens-toggle:hover { background: var(--surface); }
+.wf-studio { display: flex; gap: 10px; height: 100%; background: var(--wf-desk); border-radius: var(--radius); padding: 10px; }
+.wf-screens-toggle { width: 36px; flex-shrink: 0; border: 1px solid var(--wf-chrome-border); border-radius: var(--radius); background: var(--wf-chrome); box-shadow: var(--shadow-sm); display: flex; align-items: flex-start; justify-content: center; padding-top: 12px; cursor: pointer; }
+.wf-screens-toggle:hover { background: #e7eae7; }
 .wf-screens .ws-head .ws-actions { display: flex; gap: 4px; }
 .wf-screens {
-  width: 230px; flex-shrink: 0; background: var(--panel); border: 1px solid var(--border);
+  width: 230px; flex-shrink: 0; background: var(--wf-chrome); border: 1px solid var(--wf-chrome-border);
   border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);
 }
 .wf-screens .ws-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 6px 10px; }
@@ -210,7 +213,7 @@ table.req tr:hover td { background: #fafdfb; }
 /* 編輯列：畫面 + 右側屬性面板 */
 .wf-edit-row { display: flex; gap: 12px; align-items: flex-start; }
 .wf-edit-row > .wf-frame { flex: 1; min-width: 0; }
-.wf-props { width: 286px; flex-shrink: 0; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; }
+.wf-props { width: 286px; flex-shrink: 0; background: var(--wf-chrome); border: 1px solid var(--wf-chrome-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; }
 .wf-props-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 13px; }
 .props-body { padding: 14px; }
 .props-title { font-weight: 700; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 12px; color: var(--primary); }
@@ -219,7 +222,7 @@ table.req tr:hover td { background: #fafdfb; }
 .item-row input { flex: 1; }
 
 /* ── 圖層 / 結構樹 ── */
-.wf-layers { flex-shrink: 0; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; align-self: stretch; }
+.wf-layers { flex-shrink: 0; background: var(--wf-chrome); border: 1px solid var(--wf-chrome-border); border-radius: var(--radius); box-shadow: var(--shadow-sm); position: sticky; top: 0; max-height: calc(100% - 2px); overflow: auto; align-self: stretch; }
 .wf-layers:not(.open) { width: 40px; }
 .wf-layers.open { width: 210px; }
 .wf-layers-toggle { display: flex; align-items: center; gap: 6px; width: 100%; padding: 10px 12px; border: none; border-bottom: 1px solid var(--border); background: transparent; font-weight: 700; font-size: 12px; color: var(--primary); cursor: pointer; }
@@ -285,8 +288,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 }
 
 .wf-frame {
-  border: 1px solid var(--border); border-radius: var(--radius); background: var(--panel);
-  overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-sm);
+  border: 1px solid #d3dad5; border-radius: var(--radius); background: var(--panel);
+  overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 8px 28px rgba(20,39,28,0.12), 0 2px 6px rgba(20,39,28,0.06);
 }
 /* RWD 裝置預覽：限制畫面框寬度，手機框收成單欄 */
 .wf-frame.dev-tablet, .wf-frame.dev-mobile { transition: max-width 0.2s ease; }
@@ -294,7 +297,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wf-frame.dev-mobile .wf-side { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 .wf-frame.dev-mobile .wf-content-col .wf-canvas .wf-item { width: 100% !important; }
 /* 瀏覽器視窗感的標題列（乾淨白底） */
-.wf-titlebar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.wf-titlebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.wf-titlebar input { flex: 1 1 90px; min-width: 60px; width: auto; }
+.wf-titlebar > button, .wf-titlebar .device-toggle { flex-shrink: 0; }
 .wf-dots { display: flex; gap: 5px; flex-shrink: 0; }
 .wf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #cbd2cd; display: block; }
 .wf-titlebar input { border: none; background: transparent; font-weight: 700; padding: 4px 6px; border-radius: 8px; font-size: 14px; }
