@@ -59,6 +59,58 @@ export const COMPONENT_TYPES = {
   skeleton: { label: '骨架屏', group: '回饋' },
 }
 
+// 每個元件「額外可設定屬性」的 schema（驅動屬性面板 + 供 AI/匯入參照）。
+// control: text | number | toggle | select
+const sel = (...pairs) => pairs.map(([v, t]) => ({ v, t }))
+export const PROP_SCHEMA = {
+  topbar: [
+    { key: 'showSearch', label: '顯示搜尋', control: 'toggle', default: true },
+    { key: 'showNotify', label: '顯示通知', control: 'toggle', default: true },
+    { key: 'showAvatar', label: '顯示頭像', control: 'toggle', default: true },
+  ],
+  pageHeader: [
+    { key: 'sub', label: '麵包屑（逗號分隔）', control: 'text' },
+    { key: 'showActions', label: '顯示操作鈕', control: 'toggle', default: true },
+    { key: 'primaryText', label: '主要鈕文字', control: 'text', default: '主要動作' },
+    { key: 'secondaryText', label: '次要鈕文字', control: 'text', default: '次要' },
+  ],
+  field: [
+    { key: 'placeholder', label: '提示文字 (placeholder)', control: 'text' },
+    { key: 'required', label: '必填', control: 'toggle', default: false },
+    { key: 'help', label: '輔助說明', control: 'text' },
+  ],
+  table: [
+    { key: 'size', label: '尺寸', control: 'select', default: 'small', options: sel(['small', '緊湊'], ['middle', '一般']) },
+    { key: 'selectable', label: '可勾選列', control: 'toggle', default: false },
+    { key: 'pager', label: '顯示分頁', control: 'toggle', default: false },
+  ],
+  chart: [
+    { key: 'chartType', label: '圖表類型', control: 'select', default: 'bar', options: sel(['bar', '長條'], ['line', '折線'], ['area', '面積'], ['pie', '圓餅']) },
+  ],
+  alert: [
+    { key: 'alertType', label: '類型', control: 'select', default: 'info', options: sel(['info', '資訊'], ['success', '成功'], ['warning', '警告'], ['error', '錯誤']) },
+    { key: 'showIcon', label: '顯示圖示', control: 'toggle', default: true },
+  ],
+  progress: [
+    { key: 'percent', label: '百分比', control: 'number', default: 60 },
+    { key: 'status', label: '狀態', control: 'select', default: 'normal', options: sel(['normal', '一般'], ['success', '完成'], ['exception', '異常'], ['active', '進行中']) },
+  ],
+  avatar: [
+    { key: 'shape', label: '形狀', control: 'select', default: 'circle', options: sel(['circle', '圓形'], ['square', '方形']) },
+    { key: 'size', label: '尺寸', control: 'select', default: 'default', options: sel(['small', '小'], ['default', '中'], ['large', '大']) },
+  ],
+  image: [
+    { key: 'height', label: '高度(px)', control: 'number', default: 130 },
+  ],
+  statcards: [
+    { key: 'showTrend', label: '顯示趨勢', control: 'toggle', default: false },
+  ],
+  searchbar: [
+    { key: 'enterButton', label: '附搜尋鈕', control: 'toggle', default: true },
+  ],
+}
+
+
 // 依 group 整理出元件庫面板用的分組清單
 export const COMPONENT_GROUPS = ['版面', '導覽', '資料輸入', '資料展示', '回饋'].map((g) => ({
   group: g,

@@ -65,15 +65,18 @@ function Visual({ cmp }) {
       )
     case 'pageHeader': {
       const crumbs = splitLabel(cmp.sub, ['首頁', '管理']).map((t) => ({ title: t }))
+      const showActions = cmp.showActions ?? true
       return (
         <div>
           <Breadcrumb items={crumbs} style={{ marginBottom: 6 }} />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <T.Title level={4} style={{ margin: 0 }}>{cmp.label || '頁面標題'}</T.Title>
-            <Space>
-              <Button>次要</Button>
-              <Button type="primary">主要動作</Button>
-            </Space>
+            {showActions && (
+              <Space>
+                <Button>{cmp.secondaryText || '次要'}</Button>
+                <Button type="primary">{cmp.primaryText || '主要動作'}</Button>
+              </Space>
+            )}
           </div>
         </div>
       )
@@ -83,9 +86,9 @@ function Visual({ cmp }) {
         <div className="wb-ad-appbar">
           <T.Title level={5} style={{ margin: 0 }}>{cmp.label || '系統名稱'}</T.Title>
           <Space size="middle">
-            <Input.Search placeholder="搜尋…" style={{ width: 160 }} />
-            <Badge dot><Avatar size="small" style={{ background: '#e7eae8', color: '#69756e' }}>🔔</Avatar></Badge>
-            <Avatar style={{ background: '#2e9e5b' }}>U</Avatar>
+            {(cmp.showSearch ?? true) && <Input.Search placeholder="搜尋…" style={{ width: 160 }} />}
+            {(cmp.showNotify ?? true) && <Badge dot><Avatar size="small" style={{ background: '#e7eae8', color: '#69756e' }}>🔔</Avatar></Badge>}
+            {(cmp.showAvatar ?? true) && <Avatar style={{ background: '#2e9e5b' }}>U</Avatar>}
           </Space>
         </div>
       )
@@ -93,7 +96,7 @@ function Visual({ cmp }) {
       return <Divider style={{ margin: '6px 0' }}>{cmp.label || null}</Divider>
     case 'image':
       return (
-        <div className="wb-ph">
+        <div className="wb-ph" style={{ minHeight: cmp.height || 130 }}>
           <ImageIcon size={30} strokeWidth={1.6} />
           {cmp.label && cmp.label !== '圖片/Logo' ? <span className="wb-ph-cap">{cmp.label}</span> : null}
         </div>
@@ -129,17 +132,19 @@ function Visual({ cmp }) {
     case 'field': {
       const ctrl = cmp.control || 'input'
       const st = cmp.status
-      const ip = { variant: 'underlined', placeholder: cmp.label, status: st === 'error' ? 'error' : undefined, disabled: st === 'disabled' }
+      const ph = cmp.placeholder || cmp.label
+      const ip = { variant: 'underlined', placeholder: ph, status: st === 'error' ? 'error' : undefined, disabled: st === 'disabled' }
       const control =
         ctrl === 'textarea' ? <Input.TextArea rows={2} {...ip} />
-        : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={cmp.label} status={st === 'error' ? 'error' : undefined} disabled={st === 'disabled'} options={[]} />
+        : ctrl === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={ph} status={st === 'error' ? 'error' : undefined} disabled={st === 'disabled'} options={[]} />
         : ctrl === 'password' ? <Input.Password {...ip} />
         : ctrl === 'toggle' ? <Switch defaultChecked disabled={st === 'disabled'} />
         : <Input {...ip} />
       return (
         <div style={{ textAlign: align }}>
-          <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}{st === 'error' && <span style={{ color: '#cf1322' }}> *</span>}</T.Text>
+          <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{cmp.label}{cmp.required && <span style={{ color: '#cf1322' }}> *</span>}</T.Text>
           {control}
+          {cmp.help && <T.Text type="secondary" style={{ fontSize: 11, display: 'block', marginTop: 2 }}>{cmp.help}</T.Text>}
           {st === 'error' && <T.Text style={{ fontSize: 11, color: '#cf1322' }}>此欄位有誤</T.Text>}
         </div>
       )
@@ -158,7 +163,7 @@ function Visual({ cmp }) {
       )
     }
     case 'searchbar':
-      return <Input.Search placeholder={cmp.label || '搜尋關鍵字…'} enterButton allowClear />
+      return <Input.Search placeholder={cmp.label || '搜尋關鍵字…'} enterButton={cmp.enterButton ?? true} allowClear />
     case 'filter': {
       const fields = arr(cmp, ['狀態', '日期區間', '分類'])
       return <Space wrap>{fields.map((f, i) => <Select key={i} placeholder={f} style={{ minWidth: 130 }} options={[]} />)}</Space>
@@ -240,28 +245,46 @@ function Visual({ cmp }) {
         cols.forEach((c) => { row[c.dataIndex] = '—' })
         return row
       })
-      return <Table size="small" pagination={false} columns={cols} dataSource={rows} />
+      return (
+        <Table
+          size={cmp.size || 'small'}
+          pagination={cmp.pager ? { pageSize: rowN, total: 50, simple: true } : false}
+          rowSelection={cmp.selectable ? {} : undefined}
+          columns={cols}
+          dataSource={rows}
+        />
+      )
     }
     case 'statcards': {
       const cards = arr(cmp, ['指標一', '指標二', '指標三', '指標四'])
       const nums = ['82%', '1,280', '100+', '$3.75']
+      const trends = ['▲ 12%', '▲ 5%', '▼ 3%', '▲ 8%']
       return (
         <div className="wb-stats">
           {cards.map((c, i) => (
             <div className="wb-stat2" key={i}>
               <div className="n">{nums[i % nums.length]}</div>
               <div className="cap">{c}</div>
+              {cmp.showTrend && <div className="cap" style={{ color: '#3f9b5b' }}>{trends[i % trends.length]}</div>}
             </div>
           ))}
         </div>
       )
     }
-    case 'chart':
+    case 'chart': {
+      const ct = cmp.chartType || 'bar'
       return (
         <Card size="small" title={cmp.label || '圖表'}>
-          <div className="wb-ad-chart">{[45, 70, 55, 90, 60, 80, 50].map((h, i) => <div key={i} style={{ height: `${h}%` }} />)}</div>
+          {ct === 'pie' ? (
+            <div className="wb-ad-pie" />
+          ) : (
+            <div className={'wb-ad-chart' + (ct === 'line' || ct === 'area' ? ' line' : '')}>
+              {[45, 70, 55, 90, 60, 80, 50].map((h, i) => <div key={i} style={{ height: `${h}%` }} />)}
+            </div>
+          )}
         </Card>
       )
+    }
     case 'cardlist': {
       const cards = arr(cmp, ['卡片一', '卡片二', '卡片三'])
       return (
@@ -299,7 +322,7 @@ function Visual({ cmp }) {
     case 'avatar':
       return (
         <div style={{ display: 'flex', justifyContent: justify, alignItems: 'center', gap: 8 }}>
-          <Avatar style={{ background: '#2e9e5b' }}>U</Avatar>
+          <Avatar shape={cmp.shape || 'circle'} size={cmp.size || 'default'} style={{ background: '#2e9e5b' }}>U</Avatar>
           {cmp.label && <T.Text>{cmp.label}</T.Text>}
         </div>
       )
@@ -311,7 +334,7 @@ function Visual({ cmp }) {
       return (
         <div>
           {cmp.label && <T.Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 2 }}>{cmp.label}</T.Text>}
-          <Progress percent={Number(cmp.percent) || 60} />
+          <Progress percent={Number(cmp.percent) || 60} status={cmp.status && cmp.status !== 'normal' ? cmp.status : undefined} />
         </div>
       )
     case 'collapse': {
@@ -332,7 +355,7 @@ function Visual({ cmp }) {
 
     // ── 回饋 ──
     case 'alert':
-      return <Alert message={cmp.label || '提示訊息'} type={cmp.alertType || 'info'} showIcon />
+      return <Alert message={cmp.label || '提示訊息'} type={cmp.alertType || 'info'} showIcon={cmp.showIcon ?? true} />
     case 'modal':
       return (
         <div className="wb-ad-overlay">

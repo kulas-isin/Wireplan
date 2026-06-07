@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
-import { COMPONENT_TYPES, COMPONENT_GROUPS, newComponent } from '../lib/wireframeTemplates.js'
+import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
 import WireframeBlock, { ARRAY_PROP } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
@@ -214,6 +214,28 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
           </select>
         </label>
       )}
+
+      {(PROP_SCHEMA[cmp.type] || []).map((p) => {
+        const val = cmp[p.key] ?? p.default
+        return (
+          <label className="field" key={p.key}>
+            <span>{p.label}</span>
+            {p.control === 'text' && <input value={val ?? ''} onChange={(e) => update({ [p.key]: e.target.value })} />}
+            {p.control === 'number' && <input type="number" value={val ?? 0} onChange={(e) => update({ [p.key]: Number(e.target.value) })} />}
+            {p.control === 'select' && (
+              <select value={val} onChange={(e) => update({ [p.key]: e.target.value })}>
+                {p.options.map((o) => <option key={o.v} value={o.v}>{o.t}</option>)}
+              </select>
+            )}
+            {p.control === 'toggle' && (
+              <div className="wseg">
+                <button className={val ? 'active' : ''} onClick={() => update({ [p.key]: true })}>開</button>
+                <button className={!val ? 'active' : ''} onClick={() => update({ [p.key]: false })}>關</button>
+              </div>
+            )}
+          </label>
+        )
+      })}
 
       {cmp.type !== 'row' && (
         <button className="sm" style={{ marginTop: 10, width: '100%' }} onClick={() => dispatch({ type: 'WRAP_IN_ROW', wireframeId: wireframe.id, componentId: cmp.id })}><Columns2 size={13} /> 包成列容器（可並排）</button>
