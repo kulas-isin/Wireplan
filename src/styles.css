@@ -568,6 +568,21 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wb-tb-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .wb-tb-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 
+/* 連結 / 影片 / 地圖 / 輪播 */
+.wb-link { display: inline-flex; align-items: center; gap: 4px; color: #2563eb; font-size: 13px; cursor: pointer; }
+.wb-link:hover { text-decoration: underline; }
+.wb-video { position: relative; }
+.wb-video .wb-play { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.85); color: #2b3a33; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.wb-map { background-color: #e8eef0; background-image: linear-gradient(#dfe7ea 1px, transparent 1px), linear-gradient(90deg, #dfe7ea 1px, transparent 1px); background-size: 22px 22px; color: #5a6b62; }
+.hifi .wb-map { background-color: #eef2f4; }
+.wb-carousel { position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 8px; background: #f3f5f7; overflow: hidden; }
+.wb-cz-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #9aa7a0; height: 100%; }
+.wb-cz-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.9); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; color: #5a6b62; box-shadow: var(--shadow-sm); }
+.wb-cz-nav.prev { left: 8px; } .wb-cz-nav.next { right: 8px; }
+.wb-cz-dots { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 5px; }
+.wb-cz-dots i { width: 6px; height: 6px; border-radius: 50%; background: #c2ccc6; }
+.wb-cz-dots i.on { background: var(--wf-ink, #2563eb); width: 16px; border-radius: 3px; }
+
 /* 表格儲存格：縮圖 */
 .wb-cellthumb { display: inline-block; width: 38px; height: 28px; border-radius: 5px; background: linear-gradient(135deg, #e7ecf5, #d2ddef); border: 1px solid #e2e5ec; }
 

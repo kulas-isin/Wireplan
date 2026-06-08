@@ -14,6 +14,9 @@ export const COMPONENT_TYPES = {
   divider: { label: '分隔線', group: '版面' },
   text: { label: '文字段落', group: '版面' },
   image: { label: '圖片/Logo', group: '版面' },
+  link: { label: '連結', group: '版面' },
+  video: { label: '影片', group: '版面' },
+  map: { label: '地圖', group: '版面' },
   // 導覽
   nav: { label: '水平選單', group: '導覽' },
   sidenav: { label: '側邊選單', group: '導覽' },
@@ -43,6 +46,7 @@ export const COMPONENT_TYPES = {
   statcards: { label: '統計卡片', group: '資料展示' },
   chart: { label: '圖表', group: '資料展示' },
   cardlist: { label: '卡片群', group: '資料展示' },
+  carousel: { label: '輪播圖', group: '資料展示' },
   list: { label: '項目清單', group: '資料展示' },
   descriptions: { label: '描述清單', group: '資料展示' },
   tags: { label: '狀態標籤', group: '資料展示' },
@@ -101,6 +105,21 @@ export const PROP_SCHEMA = {
   ],
   image: [
     { key: 'height', label: '高度(px)', control: 'number', default: 130 },
+  ],
+  link: [
+    { key: 'url', label: '連結網址（提示用）', control: 'text', default: '#' },
+    { key: 'showIcon', label: '顯示外連圖示', control: 'toggle', default: true },
+  ],
+  video: [
+    { key: 'height', label: '高度(px)', control: 'number', default: 170 },
+  ],
+  map: [
+    { key: 'height', label: '高度(px)', control: 'number', default: 190 },
+  ],
+  carousel: [
+    { key: 'height', label: '高度(px)', control: 'number', default: 200 },
+    { key: 'slides', label: '張數（指示點）', control: 'number', default: 3 },
+    { key: 'showArrows', label: '顯示左右箭頭', control: 'toggle', default: true },
   ],
   statcards: [
     { key: 'showTrend', label: '顯示趨勢', control: 'toggle', default: false },

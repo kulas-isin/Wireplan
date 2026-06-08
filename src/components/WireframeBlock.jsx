@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { colRole, cellContent } from '../lib/sampleData.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal } from 'lucide-react'
+import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal, Play, MapPin, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -150,6 +150,28 @@ function Visual({ cmp }) {
         <div className="wb-ph" style={{ minHeight: cmp.height || 130 }}>
           <ImageIcon size={30} strokeWidth={1.6} />
           {cmp.label && cmp.label !== '圖片/Logo' ? <span className="wb-ph-cap">{cmp.label}</span> : null}
+        </div>
+      )
+    case 'link':
+      return (
+        <div style={{ textAlign: align }}>
+          <a className="wb-link" onClick={(e) => e.preventDefault()} href={cmp.url || '#'}>
+            {cmp.label || '連結文字'}{(cmp.showIcon ?? true) && <ExternalLink size={12} />}
+          </a>
+        </div>
+      )
+    case 'video':
+      return (
+        <div className="wb-ph wb-video" style={{ minHeight: cmp.height || 170 }}>
+          <span className="wb-play"><Play size={20} strokeWidth={2} fill="currentColor" /></span>
+          {cmp.label && cmp.label !== '影片' ? <span className="wb-ph-cap">{cmp.label}</span> : null}
+        </div>
+      )
+    case 'map':
+      return (
+        <div className="wb-ph wb-map" style={{ minHeight: cmp.height || 190 }}>
+          <MapPin size={28} strokeWidth={1.8} />
+          {cmp.label && cmp.label !== '地圖' ? <span className="wb-ph-cap">{cmp.label}</span> : null}
         </div>
       )
 
@@ -438,6 +460,18 @@ function Visual({ cmp }) {
               ) : <div style={{ height: 28 }} />}
             </Card>
           ))}
+        </div>
+      )
+    }
+    case 'carousel': {
+      const n = Math.max(1, Math.min(8, cmp.slides ?? 3))
+      const arrows = cmp.showArrows ?? true
+      return (
+        <div className="wb-carousel" style={{ minHeight: cmp.height || 200 }}>
+          {arrows && <span className="wb-cz-nav prev"><ChevronLeft size={18} /></span>}
+          <div className="wb-cz-stage"><ImageIcon size={30} strokeWidth={1.6} />{cmp.label && <span className="wb-ph-cap">{cmp.label}</span>}</div>
+          {arrows && <span className="wb-cz-nav next"><ChevronRight size={18} /></span>}
+          <div className="wb-cz-dots">{Array.from({ length: n }).map((_, i) => <i key={i} className={i === 0 ? 'on' : ''} />)}</div>
         </div>
       )
     }
