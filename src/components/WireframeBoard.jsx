@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
+import { LAYOUT_PRESETS } from '../lib/layoutPresets.js'
 import WireframeBlock, { ARRAY_PROP, styleFromCmp, renderActions } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
@@ -548,6 +549,14 @@ function siblingsOf(list, id, parentId = null) {
 function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
   return (
     <div className="palette-pop" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      <div className="palette-group">
+        <div className="pg-title">版型範本</div>
+        <div className="pg-items">
+          {LAYOUT_PRESETS.map((p) => (
+            <button key={p.key} className="preset" onClick={() => onPickBlock({ name: p.name, node: p.node })}>▥ {p.name}</button>
+          ))}
+        </div>
+      </div>
       {blocks.length > 0 && (
         <div className="palette-group">
           <div className="pg-title">我的區塊</div>
