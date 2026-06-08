@@ -6,11 +6,21 @@ import { LAYOUT_PRESETS } from '../lib/layoutPresets.js'
 import WireframeBlock, { ARRAY_PROP, styleFromCmp, renderActions } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
-  DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors,
+  DndContext, DragOverlay, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors, useDraggable,
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson } from 'lucide-react'
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard } from 'lucide-react'
+
+// 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
+const COMP_ICON = {
+  row: Columns2, card: SquareStack, header: Heading, pageHeader: PanelTop, topbar: PanelTop, divider: Minus, text: Type, image: Image, link: Link, video: Play, map: MapPin,
+  nav: SquareMenu, sidenav: PanelLeft, breadcrumb: ChevronRight, tabs: AppWindow, steps: ListOrdered, pagination: Ellipsis, dropdown: ChevronDown,
+  field: TextCursorInput, formgrid: LayoutGrid, searchbar: Search, filter: Filter, toolbar: SlidersHorizontal, checkbox: SquareCheck, radio: CircleDot, segmented: ToggleLeft, datepicker: Calendar, daterange: CalendarRange, number: Hash, slider: SlidersHorizontal, rate: Star, upload: Upload, buttonRow: MousePointerClick,
+  table: Table, statcards: LayoutDashboard, chart: BarChart3, cardlist: LayoutGrid, carousel: GalleryHorizontalEnd, list: List, descriptions: TableProperties, tags: Tags, avatar: CircleUser, timeline: Activity, progress: CircleGauge, collapse: ChevronsUpDown, tree: ListTree, calendar: Calendar, empty: Inbox,
+  alert: TriangleAlert, modal: AppWindow, drawer: PanelRight, result: CircleCheck, skeleton: LoaderCircle,
+}
 import { ConfigProvider, Modal, Input } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 
@@ -546,18 +556,43 @@ function siblingsOf(list, id, parentId = null) {
   return null
 }
 
+// 可拖曳的元件卡片（點按＝加入；拖曳＝拉到畫面放置）
+function PaletteCard({ type, onPick }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: `new::${type}`, data: { palette: true, type } })
+  const Icon = COMP_ICON[type] || Square
+  return (
+    <button
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={'pal-card' + (isDragging ? ' dragging' : '')}
+      onClick={() => onPick(type)}
+      title={`${COMPONENT_TYPES[type]?.label || type}（點按加入，或拖到畫面）`}
+    >
+      <span className="pc-ico"><Icon size={18} strokeWidth={1.8} /></span>
+      <span className="pc-lbl">{COMPONENT_TYPES[type]?.label || type}</span>
+    </button>
+  )
+}
+
 function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
+  const [q, setQ] = useState('')
+  const ql = q.trim().toLowerCase()
+  const match = (t) => !ql || (COMPONENT_TYPES[t]?.label || '').toLowerCase().includes(ql) || t.toLowerCase().includes(ql)
   return (
     <div className="palette-pop" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-      <div className="palette-group">
-        <div className="pg-title">版型範本</div>
-        <div className="pg-items">
-          {LAYOUT_PRESETS.map((p) => (
-            <button key={p.key} className="preset" onClick={() => onPickBlock({ name: p.name, node: p.node })}>▥ {p.name}</button>
-          ))}
+      <input className="pal-search" placeholder="搜尋元件…" value={q} onChange={(e) => setQ(e.target.value)} />
+      {!ql && (
+        <div className="palette-group">
+          <div className="pg-title">版型範本</div>
+          <div className="pg-items">
+            {LAYOUT_PRESETS.map((p) => (
+              <button key={p.key} className="preset" onClick={() => onPickBlock({ name: p.name, node: p.node })}>▥ {p.name}</button>
+            ))}
+          </div>
         </div>
-      </div>
-      {blocks.length > 0 && (
+      )}
+      {!ql && blocks.length > 0 && (
         <div className="palette-group">
           <div className="pg-title">我的區塊</div>
           <div className="pg-items">
@@ -570,16 +605,19 @@ function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
           </div>
         </div>
       )}
-      {COMPONENT_GROUPS.map((g) => (
-        <div className="palette-group" key={g.group}>
-          <div className="pg-title">{g.group}</div>
-          <div className="pg-items">
-            {g.types.map((t) => (
-              <button key={t} onClick={() => onPick(t)}>＋{COMPONENT_TYPES[t]?.label}</button>
-            ))}
+      {COMPONENT_GROUPS.map((g) => {
+        const types = g.types.filter(match)
+        if (!types.length) return null
+        return (
+          <div className="palette-group" key={g.group}>
+            <div className="pg-title">{g.group}</div>
+            <div className="pal-grid">
+              {types.map((t) => <PaletteCard key={t} type={t} onPick={onPick} />)}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
+      {ql && !COMPONENT_GROUPS.some((g) => g.types.some(match)) && <div className="muted" style={{ fontSize: 12, padding: 6 }}>找不到符合的元件</div>}
     </div>
   )
 }
@@ -695,6 +733,7 @@ function WireframeFrame({ wireframe, requirement }) {
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 1180 : true))
   const [mobileNav, setMobileNav] = useState(false) // 手機模式側欄抽屜（demo 用）
+  const [activeNew, setActiveNew] = useState(null) // 從面板拖曳中的新元件 type
   const labelRef = useRef(null)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
@@ -714,8 +753,30 @@ function WireframeFrame({ wireframe, requirement }) {
 
   const regionOf = (id) => (findById(wireframe.components, id)?.region) || 'content'
 
+  const onDragStart = (event) => {
+    const t = event.active?.data?.current?.palette ? event.active.data.current.type : null
+    setActiveNew(t)
+  }
+
   const onDragEnd = (event) => {
     const { active, over } = event
+    // 從元件面板拖入新元件
+    if (String(active.id).startsWith('new::')) {
+      setActiveNew(null)
+      const type = String(active.id).slice(5)
+      const comp = newComponent(type)
+      const sib = over ? siblingsOf(wireframe.components, over.id) : null
+      if (sib) {
+        if (sib.parentId === null) comp.region = regionOf(over.id)
+        dispatch({ type: 'INSERT_COMPONENT', wireframeId: wireframe.id, component: comp, beforeId: over.id })
+      } else {
+        if (over?.id === 'sidebar') comp.region = 'sidebar'
+        dispatch({ type: 'INSERT_COMPONENT', wireframeId: wireframe.id, component: comp, parentId: null })
+      }
+      setSelectedCmp(comp.id)
+      setPaletteOpen(null)
+      return
+    }
     if (!over || active.id === over.id) return
     const sa = siblingsOf(wireframe.components, active.id)
     const so = siblingsOf(wireframe.components, over.id)
@@ -855,7 +916,7 @@ function WireframeFrame({ wireframe, requirement }) {
         ><Trash2 size={14} /></button>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveNew(null)}>
         {layout === 'sidebar' ? (
           mobileSidebar ? (
             <div className="wf-admin wf-admin-m">
@@ -884,6 +945,14 @@ function WireframeFrame({ wireframe, requirement }) {
         ) : (
           column(wireframe.components, 'content', wireframe.device === 'mobile')
         )}
+        <DragOverlay dropAnimation={null}>
+          {activeNew ? (
+            <div className="pal-card drag-ghost">
+              <span className="pc-ico">{(() => { const Ic = COMP_ICON[activeNew] || Square; return <Ic size={18} strokeWidth={1.8} /> })()}</span>
+              <span className="pc-lbl">{COMPONENT_TYPES[activeNew]?.label || activeNew}</span>
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
     {selectedComp && (

@@ -435,6 +435,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   position: absolute; bottom: 100%; left: 12px; z-index: 20;
   background: #fff; border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); padding: 12px; width: min(420px, 90%); margin-bottom: 6px;
+  max-height: 62vh; overflow-y: auto;
 }
 /* 畫面快速跳轉列（置頂固定、單行可橫向捲） */
 .wf-jump {
@@ -449,6 +450,16 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .palette-group .pg-title { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
 .palette-group .pg-items { display: flex; flex-wrap: wrap; gap: 4px; }
 .palette-group .pg-items button { font-size: 11px; padding: 4px 8px; }
+/* 元件面板：搜尋 + 圖示卡片網格（可拖曳） */
+.pal-search { width: 100%; margin-bottom: 10px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; }
+.pal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pal-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 9px 4px; border: 1px solid var(--border); border-radius: 9px; background: #fff; cursor: grab; text-align: center; transition: all 0.12s; min-height: 58px; }
+.pal-card:hover { border-color: var(--accent); background: var(--primary-soft); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.pal-card:active { cursor: grabbing; }
+.pal-card.dragging { opacity: 0.4; }
+.pal-card .pc-ico { color: var(--primary); display: inline-flex; }
+.pal-card .pc-lbl { font-size: 10.5px; line-height: 1.25; color: var(--neutral-dark); }
+.pal-card.drag-ghost { width: 92px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); cursor: grabbing; background: #fff; }
 .palette-group .pg-items button.preset { background: var(--primary-soft); border-color: var(--accent); font-weight: 600; flex: 1 1 100%; text-align: left; }
 .palette-group .pg-items button.preset:hover { background: var(--primary); color: #fff; }
 .blk-chip { display: inline-flex; align-items: center; gap: 0; }

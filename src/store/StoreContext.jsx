@@ -278,6 +278,16 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, wf] }))
     }
 
+    case 'INSERT_COMPONENT': {
+      // 從元件面板拖曳新增：beforeId 給定則插在該元件之前，否則加進 parentId 容器（或最外層）
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        if (action.beforeId) return { ...w, components: treeInsertBefore(w.components, action.beforeId, action.component) }
+        return { ...w, components: treeAddChild(w.components, action.parentId || null, action.component) }
+      })
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
     case 'ADD_WIREFRAME': {
       const incoming = action.wireframes || (action.wireframe ? [action.wireframe] : [])
       return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, ...incoming] }))
