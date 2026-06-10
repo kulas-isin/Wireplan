@@ -288,6 +288,17 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
+    case 'PASTE_COMPONENT': {
+      // 貼上：node 已在 client 端配好新 id；afterId 給定則插在其後，否則加到最外層
+      const node = action.region ? { ...action.component, region: action.region } : action.component
+      const wireframes = cur.wireframes.map((w) => {
+        if (w.id !== action.wireframeId) return w
+        if (action.afterId) return { ...w, components: treeInsertAfter(w.components, action.afterId, node) }
+        return { ...w, components: treeAddChild(w.components, null, node) }
+      })
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
     case 'ADD_WIREFRAME': {
       const incoming = action.wireframes || (action.wireframe ? [action.wireframe] : [])
       return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, ...incoming] }))

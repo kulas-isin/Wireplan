@@ -563,6 +563,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 卡片群封面縮圖 */
 .wb-cover { height: 72px; background: linear-gradient(135deg, #e7ecf5, #d7e0ef); border-bottom: 1px solid #e7ebf0; }
 
+/* 拖曳新元件：落點指示 + 容器高亮 */
+.wf-dragnew .wf-rowwrap > .wf-row, .wf-dragnew .wf-cardbox { outline: 1px dashed var(--accent); outline-offset: 2px; }
+.wf-item.drop-target::before { content: ''; position: absolute; top: -5px; left: 0; right: 0; height: 3px; border-radius: 3px; background: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); z-index: 6; }
+
 /* 卡片容器 */
 .wf-cardwrap { cursor: default; }
 .wb-cardbox { border: 1px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; }

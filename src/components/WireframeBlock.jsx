@@ -585,7 +585,7 @@ function startWidthResize(e, el, current, onResize) {
   window.addEventListener('pointerup', onUp)
 }
 
-export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, onDelete, onDoubleClick, onResize }) {
+export default function WireframeBlock({ cmp, selected, dropTarget, onSelect, onDuplicate, onDelete, onDoubleClick, onResize }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cmp.id })
   const domRef = useRef(null)
   const setRefs = (el) => { setNodeRef(el); domRef.current = el }
@@ -606,7 +606,7 @@ export default function WireframeBlock({ cmp, selected, onSelect, onDuplicate, o
     <div
       ref={setRefs}
       style={style}
-      className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${selected ? ' selected' : ''}`}
+      className={`wf-item ${WIDTH_CLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${selected ? ' selected' : ''}${dropTarget ? ' drop-target' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect() }}
       onDoubleClick={(e) => { e.stopPropagation(); onDoubleClick?.() }}
       {...attributes}

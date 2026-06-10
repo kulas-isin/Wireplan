@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
 import { LAYOUT_PRESETS } from '../lib/layoutPresets.js'
+import { exportPng, exportHtml } from '../lib/exportWireframe.js'
 import WireframeBlock, { ARRAY_PROP, styleFromCmp, renderActions } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
@@ -11,7 +12,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard } from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -21,7 +22,10 @@ const COMP_ICON = {
   table: Table, statcards: LayoutDashboard, chart: BarChart3, cardlist: LayoutGrid, carousel: GalleryHorizontalEnd, list: List, descriptions: TableProperties, tags: Tags, avatar: CircleUser, timeline: Activity, progress: CircleGauge, collapse: ChevronsUpDown, tree: ListTree, calendar: Calendar, empty: Inbox,
   alert: TriangleAlert, modal: AppWindow, drawer: PanelRight, result: CircleCheck, skeleton: LoaderCircle,
 }
-import { ConfigProvider, Modal, Input } from 'antd'
+
+// 跨畫面共用的元件剪貼簿（複製/貼上）
+let cmpClipboard = null
+import { ConfigProvider, Modal, Input, Dropdown, message } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -647,7 +651,7 @@ function RowItem({ cmp, ed }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
+      className={`wf-item wf-rowwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}${ed.activeNew && ed.dropOverId === cmp.id ? ' drop-target' : ''}`}
       onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
     >
       <div className={'wf-row' + (isCol ? ' wf-row-col' : '')} style={rowStyle}>
@@ -682,7 +686,7 @@ function CardItem({ cmp, ed }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`wf-item wf-cardwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}`}
+      className={`wf-item wf-cardwrap ${WCLASS[cmp.width] || 'w-full'}${isDragging ? ' dragging' : ''}${sel ? ' selected' : ''}${ed.activeNew && ed.dropOverId === cmp.id ? ' drop-target' : ''}`}
       onClick={(e) => { e.stopPropagation(); ed.select(cmp.id) }}
     >
       <div className="wb-cardbox">
@@ -717,6 +721,7 @@ function Node({ cmp, ed }) {
   return (
     <WireframeBlock
       cmp={cmp}
+      dropTarget={ed.activeNew && ed.dropOverId === cmp.id}
       selected={ed.selectedCmp === cmp.id}
       onSelect={() => ed.select(cmp.id)}
       onDoubleClick={() => ed.rename(cmp.id)}
@@ -728,12 +733,14 @@ function Node({ cmp, ed }) {
 }
 
 function WireframeFrame({ wireframe, requirement }) {
-  const { current, dispatch } = useStore()
+  const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
   const [layersOpen, setLayersOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 1180 : true))
   const [mobileNav, setMobileNav] = useState(false) // 手機模式側欄抽屜（demo 用）
   const [activeNew, setActiveNew] = useState(null) // 從面板拖曳中的新元件 type
+  const [dropOverId, setDropOverId] = useState(null) // 拖曳新元件時的落點目標
+  const [exporting, setExporting] = useState(false)
   const labelRef = useRef(null)
   const cat = requirement ? categoryMeta(requirement.category) : null
 
@@ -758,8 +765,14 @@ function WireframeFrame({ wireframe, requirement }) {
     setActiveNew(t)
   }
 
+  const onDragOver = (event) => {
+    if (!activeNew) return
+    setDropOverId(event.over?.id ?? null)
+  }
+
   const onDragEnd = (event) => {
     const { active, over } = event
+    setDropOverId(null)
     // 從元件面板拖入新元件
     if (String(active.id).startsWith('new::')) {
       setActiveNew(null)
@@ -810,6 +823,8 @@ function WireframeFrame({ wireframe, requirement }) {
   const ed = {
     selectedCmp,
     paletteOpen,
+    activeNew,
+    dropOverId,
     blocks: current.blocks || [],
     select: (id) => setSelectedCmp(id),
     rename: (id) => { setSelectedCmp(id); setTimeout(() => labelRef.current?.focus(), 30) },
@@ -863,19 +878,51 @@ function WireframeFrame({ wireframe, requirement }) {
     </div>
   )
 
-  // 鍵盤快捷鍵：Delete 刪除、⌘/Ctrl+D 複製、Esc 取消選取（編輯文字時不觸發）
+  const copyCmp = () => {
+    if (!selectedCmp) return
+    const node = findById(wireframe.components, selectedCmp)
+    if (node) { cmpClipboard = JSON.parse(JSON.stringify(node)); message.success('已複製元件') }
+  }
+  const pasteCmp = () => {
+    if (!cmpClipboard) return
+    const node = cloneTree(cmpClipboard)
+    if (selectedCmp) dispatch({ type: 'PASTE_COMPONENT', wireframeId: wireframe.id, component: node, afterId: selectedCmp, region: regionOf(selectedCmp) })
+    else dispatch({ type: 'PASTE_COMPONENT', wireframeId: wireframe.id, component: node })
+    setSelectedCmp(node.id)
+  }
+
+  // 鍵盤快捷鍵：⌘Z 復原 / ⌘⇧Z(⌘Y) 重做 / ⌘C 複製 / ⌘V 貼上 / Delete 刪除 / ⌘D 原地複製 / Esc 取消
   useEffect(() => {
     const onKey = (e) => {
       const tag = (e.target.tagName || '').toLowerCase()
       if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return
+      const mod = e.metaKey || e.ctrlKey
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return }
+      if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return }
+      if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteCmp(); return }
+      if (mod && e.key.toLowerCase() === 'c') { if (selectedCmp) { e.preventDefault(); copyCmp() } return }
       if (!selectedCmp) return
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); dispatch({ type: 'DELETE_COMPONENT', wireframeId: wireframe.id, componentId: selectedCmp }); setSelectedCmp(null) }
-      else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: selectedCmp }) }
+      else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); dispatch({ type: 'DUPLICATE_COMPONENT', wireframeId: wireframe.id, componentId: selectedCmp }) }
       else if (e.key === 'Escape') { setSelectedCmp(null) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedCmp, wireframe.id])
+  }, [selectedCmp, wireframe.id, undo, redo])
+
+  const doExport = async (kind) => {
+    const elId = `wf-${wireframe.id}`
+    const name = (wireframe.name || 'wireframe').replace(/[\\/:*?"<>|]/g, '_')
+    try {
+      setExporting(true)
+      if (kind === 'png') { await exportPng(elId, name); message.success('已匯出 PNG') }
+      else { exportHtml(elId, name); message.success('已匯出 HTML') }
+    } catch (err) {
+      message.error('匯出失敗：' + (err?.message || err))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const selectedComp = findById(wireframe.components, selectedCmp)
 
@@ -887,7 +934,7 @@ function WireframeFrame({ wireframe, requirement }) {
       </button>
       {layersOpen && <LayerTree components={wireframe.components} ed={ed} />}
     </aside>
-    <div className={`wf-frame dev-${wireframe.device || 'desktop'}`} id={`wf-${wireframe.id}`}
+    <div className={`wf-frame dev-${wireframe.device || 'desktop'}` + (activeNew ? ' wf-dragnew' : '')} id={`wf-${wireframe.id}`}
       style={DEV_W[wireframe.device] ? { maxWidth: DEV_W[wireframe.device], margin: '0 auto' } : undefined}
       onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
@@ -897,6 +944,18 @@ function WireframeFrame({ wireframe, requirement }) {
           value={wireframe.name}
           onChange={(e) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { name: e.target.value } })}
         />
+        <button className="ghost sm" title="復原 (⌘Z)" disabled={!canUndo} onClick={(e) => { e.stopPropagation(); undo() }}><Undo2 size={15} /></button>
+        <button className="ghost sm" title="重做 (⌘⇧Z)" disabled={!canRedo} onClick={(e) => { e.stopPropagation(); redo() }}><Redo2 size={15} /></button>
+        <Dropdown
+          trigger={['click']}
+          disabled={exporting}
+          menu={{ items: [
+            { key: 'png', label: '匯出 PNG 圖片', icon: <Image size={14} /> },
+            { key: 'html', label: '匯出 HTML', icon: <FileCode2 size={14} /> },
+          ], onClick: ({ key }) => doExport(key) }}
+        >
+          <button className="ghost sm" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
+        </Dropdown>
         <button className="ghost sm" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
           {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
         </button>
@@ -916,7 +975,7 @@ function WireframeFrame({ wireframe, requirement }) {
         ><Trash2 size={14} /></button>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveNew(null)}>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveNew(null); setDropOverId(null) }}>
         {layout === 'sidebar' ? (
           mobileSidebar ? (
             <div className="wf-admin wf-admin-m">
