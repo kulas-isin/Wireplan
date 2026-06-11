@@ -7,7 +7,7 @@
         { "type": "nav", "active": 0, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
         { "type": "header", "label": "聽見你的星球 · STAR MUSIC", "align": "center" },
         { "type": "text", "label": "海量正版音樂、精選歌單、MV 與沉浸式播放體驗，一次擁有。", "align": "center" },
-        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] },
+        { "type": "buttonRow", "align": "center", "buttons": ["前往聆聽 ♪ 音樂串流", "App Store 下載", "Google Play 下載"] },
         { "type": "carousel", "label": "主視覺 Banner 輪播", "showArrows": true },
         { "type": "divider" },
         { "type": "header", "label": "訂閱方案" },
@@ -18,6 +18,8 @@
         { "type": "divider" },
         { "type": "header", "label": "音樂串流首頁搶先看" },
         { "type": "cardlist", "cards": ["分類歌單推薦", "熱門歌曲 / 新歌", "精選歌單"] },
+        { "type": "header", "label": "STAR MUSIC App 宣傳片" },
+        { "type": "video", "label": "APP 宣傳片（置於頁面下半部，避免與串流入口過場影片重複觀看）" },
         { "type": "divider" },
         { "type": "text", "label": "© 2026 STAR MUSIC ·  服務條款  ·  隱私權政策  ·  關於我們", "align": "center" }
       ]
