@@ -12,7 +12,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 } from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Music } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -848,6 +848,7 @@ function WireframeFrame({ wireframe, requirement }) {
   }
 
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
+  const toggleTheme = () => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { theme: wireframe.theme === 'music' ? undefined : 'music' } })
 
   const layout = wireframe.layout || 'stack'
   const toggleLayout = () => {
@@ -934,7 +935,7 @@ function WireframeFrame({ wireframe, requirement }) {
       </button>
       {layersOpen && <LayerTree components={wireframe.components} ed={ed} />}
     </aside>
-    <div className={`wf-frame dev-${wireframe.device || 'desktop'}` + (activeNew ? ' wf-dragnew' : '')} id={`wf-${wireframe.id}`}
+    <div className={`wf-frame dev-${wireframe.device || 'desktop'}` + (wireframe.theme === 'music' ? ' theme-music' : '') + (activeNew ? ' wf-dragnew' : '')} id={`wf-${wireframe.id}`}
       style={DEV_W[wireframe.device] ? { maxWidth: DEV_W[wireframe.device], margin: '0 auto' } : undefined}
       onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
@@ -956,6 +957,7 @@ function WireframeFrame({ wireframe, requirement }) {
         >
           <button className="ghost sm" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
         </Dropdown>
+        <button className={'ghost sm' + (wireframe.theme === 'music' ? ' active' : '')} title={wireframe.theme === 'music' ? '切回淺色主題' : '套用深色音樂主題'} onClick={(e) => { e.stopPropagation(); toggleTheme() }}><Music size={15} /></button>
         <button className="ghost sm" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
           {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
         </button>

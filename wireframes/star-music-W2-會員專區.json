@@ -1,0 +1,130 @@
+{
+  "wireframes": [
+    {
+      "name": "W.2.0 登入頁",
+      "device": "desktop",
+      "components": [
+        { "type": "image", "label": "STAR MUSIC", "align": "center" },
+        { "type": "header", "label": "會員登入", "align": "center" },
+        { "type": "segmented", "options": ["手機", "Email"] },
+        { "type": "field", "label": "手機號碼 / Email", "placeholder": "請輸入" },
+        { "type": "field", "label": "密碼", "control": "password" },
+        { "type": "buttonRow", "buttons": ["登入"] },
+        { "type": "divider", "label": "或" },
+        { "type": "buttonRow", "buttons": ["使用 Google 登入", "使用 Apple 登入"] },
+        { "type": "text", "label": "還沒有帳號？前往註冊　|　忘記密碼？", "align": "center" }
+      ]
+    },
+    {
+      "name": "W.2.1 註冊頁",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "註冊帳號", "align": "center" },
+        { "type": "field", "label": "手機號碼", "required": true, "help": "將發送簡訊驗證碼" },
+        { "type": "field", "label": "簡訊驗證碼" },
+        { "type": "field", "label": "密碼", "control": "password", "required": true },
+        { "type": "field", "label": "確認密碼", "control": "password", "required": true },
+        { "type": "checkbox", "options": ["我已閱讀並同意服務條款與隱私權政策"] },
+        { "type": "buttonRow", "buttons": ["註冊"] }
+      ]
+    },
+    {
+      "name": "W.2.2 忘記密碼（手機）",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "忘記密碼", "align": "center" },
+        { "type": "segmented", "active": 0, "options": ["手機", "Email"] },
+        { "type": "field", "label": "手機號碼" },
+        { "type": "field", "label": "簡訊驗證碼" },
+        { "type": "field", "label": "新密碼", "control": "password" },
+        { "type": "buttonRow", "buttons": ["重設密碼"] }
+      ]
+    },
+    {
+      "name": "W.2.2b 忘記密碼（Email）",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "忘記密碼", "align": "center" },
+        { "type": "segmented", "active": 1, "options": ["手機", "Email"] },
+        { "type": "field", "label": "Email" },
+        { "type": "text", "label": "我們將寄送重設密碼連結至你的信箱。" },
+        { "type": "buttonRow", "buttons": ["寄送重設信"] }
+      ]
+    },
+    {
+      "name": "W.2.3 帳號管理",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 0, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "會員資料", "region": "content", "sub": "會員專區,會員資料", "showActions": true, "primaryText": "儲存變更" },
+        { "type": "formgrid", "region": "content", "cols": 2, "fields": ["姓氏", "名字", "手機", "Email", "出生年:select", "暱稱"] },
+        { "type": "buttonRow", "region": "content", "buttons": ["修改密碼"] }
+      ]
+    },
+    {
+      "name": "W.2.4 修改密碼",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 1, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "修改密碼", "region": "content", "sub": "會員專區,修改密碼" },
+        { "type": "field", "label": "目前密碼", "control": "password", "region": "content" },
+        { "type": "field", "label": "新密碼", "control": "password", "region": "content" },
+        { "type": "field", "label": "確認新密碼", "control": "password", "region": "content" },
+        { "type": "buttonRow", "region": "content", "align": "right", "buttons": ["更新密碼"] }
+      ]
+    },
+    {
+      "name": "W.2.5 會員資訊",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 2, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "會員資訊", "region": "content", "sub": "會員專區,會員資訊" },
+        { "type": "descriptions", "label": "目前會員", "region": "content", "items": ["會員等級:Premium", "開始日:2026-01-01", "到期日:2026-12-31", "下次扣款日:2026-12-31"] },
+        { "type": "header", "label": "享有體驗內容", "region": "content" },
+        { "type": "list", "region": "content", "items": ["無廣告聆聽", "高音質串流", "完整歌單與收藏", "MV 觀看"] },
+        { "type": "buttonRow", "region": "content", "buttons": ["升級 / 續訂方案"] }
+      ]
+    },
+    {
+      "name": "W.2.6 訂單紀錄",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 3, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "訂單紀錄", "region": "content", "sub": "會員專區,訂單紀錄" },
+        { "type": "table", "region": "content", "size": "small", "pager": true, "rows": 5, "columns": ["訂單編號", "項目", "金額", "狀態", "建立時間"] }
+      ]
+    },
+    {
+      "name": "W.2.7 訂閱管理",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 4, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "訂閱管理", "region": "content", "sub": "會員專區,訂閱管理" },
+        { "type": "empty", "label": "您沒有官網訂閱紀錄", "region": "content" },
+        { "type": "buttonRow", "region": "content", "align": "center", "buttons": ["前往購買方案"] }
+      ]
+    },
+    {
+      "name": "W.2.8 心禮卡管理",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 5, "items": ["會員資料", "修改密碼", "會員資訊", "訂單紀錄", "訂閱管理", "心禮卡管理", "登出"] },
+        { "type": "pageHeader", "label": "心禮卡管理", "region": "content", "sub": "會員專區,心禮卡管理", "showActions": true, "primaryText": "購買心禮卡" },
+        { "type": "statcards", "region": "content", "cards": ["可用心禮卡 3 張", "已贈送 1 張", "已兌換 2 張"] },
+        { "type": "table", "region": "content", "size": "small", "pager": true, "rows": 5, "columns": ["卡號", "面額", "狀態", "購買日", "操作"], "actions": ["贈送", "兌換"], "actionStyle": "link" }
+      ]
+    }
+  ]
+}

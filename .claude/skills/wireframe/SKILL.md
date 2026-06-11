@@ -26,6 +26,7 @@ description: 從文字需求產生 Wireplan 可直接匯入的 wireframe JSON。
     {
       "name": "歌曲管理",                  // 畫面名稱
       "device": "desktop",                // desktop | tablet | mobile（預設 desktop）
+      "theme": "music",                   // music = 深色金色音樂主題；省略 = 預設淺色
       "layout": "sidebar",                // sidebar | 省略(=單欄)
       "components": [ /* 元件樹 */ ]
     }
@@ -130,3 +131,4 @@ description: 從文字需求產生 Wireplan 可直接匯入的 wireframe JSON。
 - **善用容器**：要並排（搜尋＋按鈕同列、左右分欄）就包 `row`；要區塊卡片就包 `card`。
 - **清單給真實內容**：欄位、選單、按鈕文字都用貼近需求的中文，別留預設佔位字。
 - **一次可給多張**：相關頁面（列表→表單→詳情）放進同一個 `wireframes` 陣列一起匯入。
+- **主題**：音樂串流 / 影音娛樂類畫面可加 `"theme": "music"`（深底＋金色強調，仿 Spotify / KKBox）；一般後台 / 表單維持淺色（省略 theme）。
