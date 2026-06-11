@@ -6,6 +6,7 @@ import { COMPONENT_TYPES } from './wireframeTemplates.js'
 // 一張畫面 = {
 //   name:   string                       畫面名稱
 //   device: 'desktop'|'tablet'|'mobile'  預設 desktop
+//   theme:  'music'                      深色音樂主題（深底+金色），省略=預設淺色
 //   layout: 'sidebar'|'stack'            sidebar = 左側欄+內容兩欄
 //   components: Component[]              元件樹
 // }
@@ -52,6 +53,7 @@ export function normalizeWireframe(spec) {
     name: w.name || '匯入畫面',
     device: w.device || 'desktop',
     template: w.template || 'imported',
+    theme: w.theme === 'music' ? 'music' : undefined,
     layout: w.layout === 'sidebar' ? 'sidebar' : undefined,
     components: Array.isArray(w.components) ? w.components.map(normNode).filter(Boolean) : [],
   }
