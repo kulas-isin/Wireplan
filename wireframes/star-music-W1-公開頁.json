@@ -1,0 +1,97 @@
+{
+  "wireframes": [
+    {
+      "name": "W.1.0 首頁",
+      "device": "desktop",
+      "components": [
+        { "type": "nav", "active": 0, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
+        { "type": "header", "label": "聽見你的星球 · STAR MUSIC", "align": "center" },
+        { "type": "text", "label": "海量正版音樂、精選歌單、MV 與沉浸式播放體驗，一次擁有。", "align": "center" },
+        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] },
+        { "type": "carousel", "label": "主視覺 Banner 輪播", "showArrows": true },
+        { "type": "divider" },
+        { "type": "header", "label": "訂閱方案" },
+        { "type": "cardlist", "cards": ["免費體驗", "月方案 NT$149 / 月", "年方案 NT$1,490 / 年"] },
+        { "type": "header", "label": "心禮卡" },
+        { "type": "text", "label": "把音樂當禮物，購買心禮卡即可贈送訂閱給重要的人。" },
+        { "type": "buttonRow", "buttons": ["購買心禮卡"] },
+        { "type": "divider" },
+        { "type": "header", "label": "音樂串流首頁搶先看" },
+        { "type": "cardlist", "cards": ["分類歌單推薦", "熱門歌曲 / 新歌", "精選歌單"] },
+        { "type": "divider" },
+        { "type": "text", "label": "© 2026 STAR MUSIC ·  服務條款  ·  隱私權政策  ·  關於我們", "align": "center" }
+      ]
+    },
+    {
+      "name": "W.1.1 常見問題",
+      "device": "desktop",
+      "components": [
+        { "type": "nav", "active": 3, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
+        { "type": "pageHeader", "label": "常見問題", "sub": "首頁,常見問題" },
+        { "type": "collapse", "items": ["如何訂閱方案？", "可以在哪些裝置使用 STAR MUSIC？", "如何購買與兌換心禮卡？", "如何取消或變更訂閱方案？", "忘記密碼怎麼辦？", "音樂串流為什麼只能在桌機使用？"] }
+      ]
+    },
+    {
+      "name": "W.1.2 服務條款",
+      "device": "desktop",
+      "components": [
+        { "type": "nav", "active": 0, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
+        { "type": "pageHeader", "label": "服務條款", "sub": "首頁,服務條款" },
+        { "type": "text", "label": "歡迎使用 STAR MUSIC。當您使用本服務時，即表示您同意以下服務條款……（全文，App 內以 In-App Browser 載入）。" }
+      ]
+    },
+    {
+      "name": "W.1.3 隱私權政策",
+      "device": "desktop",
+      "components": [
+        { "type": "nav", "active": 0, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
+        { "type": "pageHeader", "label": "隱私權政策", "sub": "首頁,隱私權政策" },
+        { "type": "text", "label": "STAR MUSIC 非常重視您的個人資料保護。本政策說明我們如何蒐集、使用與保護您的資料……（全文，App 內以 In-App Browser 載入）。" }
+      ]
+    },
+    {
+      "name": "W.1.4 Deep Link 歌曲",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "align": "center" },
+        { "type": "image", "label": "歌曲封面", "align": "center" },
+        { "type": "header", "label": "歌曲名稱 — 創作者", "align": "center" },
+        { "type": "text", "label": "在 STAR MUSIC App 中開啟，聆聽完整歌曲。", "align": "center" },
+        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] }
+      ]
+    },
+    {
+      "name": "W.1.5 Deep Link 歌單",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "align": "center" },
+        { "type": "image", "label": "歌單封面", "align": "center" },
+        { "type": "header", "label": "歌單名稱", "align": "center" },
+        { "type": "text", "label": "在 STAR MUSIC App 中開啟，聆聽整張歌單。", "align": "center" },
+        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] }
+      ]
+    },
+    {
+      "name": "W.1.6 Deep Link MV",
+      "device": "desktop",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "align": "center" },
+        { "type": "image", "label": "MV 縮圖", "align": "center" },
+        { "type": "header", "label": "MV 名稱 — 創作者", "align": "center" },
+        { "type": "text", "label": "在 STAR MUSIC App 中開啟，觀看完整 MV。", "align": "center" },
+        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] }
+      ]
+    },
+    {
+      "name": "W.1.7 關於我們",
+      "device": "desktop",
+      "components": [
+        { "type": "nav", "active": 4, "items": ["首頁", "音樂串流", "訂閱方案", "常見問題", "關於我們", "登入"] },
+        { "type": "pageHeader", "label": "關於我們", "sub": "首頁,關於我們" },
+        { "type": "text", "label": "STAR MUSIC 致力於打造最貼近你的音樂串流體驗，連結創作者與聽眾。" },
+        { "type": "descriptions", "label": "聯絡資訊", "items": ["客服信箱:support@starmusic.com", "電話:02-8771-9095", "地址:台北市中山區民生東路二段170號8樓"] },
+        { "type": "buttonRow", "buttons": ["Facebook", "Instagram", "YouTube"] }
+      ]
+    }
+  ]
+}

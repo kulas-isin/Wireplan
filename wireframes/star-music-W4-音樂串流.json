@@ -1,0 +1,180 @@
+{
+  "wireframes": [
+    {
+      "name": "W.4.0 音樂首頁",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 0, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "音樂首頁", "region": "content", "showSearch": true, "showNotify": true, "showAvatar": true },
+        { "type": "carousel", "label": "首頁 Banner 輪播", "region": "content", "showArrows": true },
+        { "type": "header", "label": "分類歌單推薦", "region": "content" },
+        { "type": "cardlist", "region": "content", "cards": ["華語流行", "西洋", "電音", "爵士", "療癒", "運動"] },
+        { "type": "header", "label": "熱門歌曲 / 新歌推薦", "region": "content" },
+        { "type": "table", "region": "content", "size": "small", "rows": 6, "columns": ["#", "歌曲", "創作者", "專輯", "時長", "操作"], "actions": ["播放", "加入歌單", "收藏"], "actionStyle": "icon" },
+        { "type": "header", "label": "精選歌單", "region": "content" },
+        { "type": "cardlist", "region": "content", "cards": ["每日精選", "深夜放鬆", "通勤必聽", "運動電力"] },
+        { "type": "divider", "region": "content" },
+        { "type": "card", "label": "Mini Player（頁底固定）", "region": "content", "direction": "row", "gap": 16, "children": [
+          { "type": "image", "label": "封面", "width": "hug" },
+          { "type": "text", "label": "♪ 歌曲名稱 — 創作者", "width": "fill" },
+          { "type": "buttonRow", "width": "hug", "buttons": ["上一首", "播放 / 暫停", "下一首", "音量", "展開"] }
+        ] },
+        { "type": "progress", "region": "content", "percent": 35 }
+      ]
+    },
+    {
+      "name": "W.4.1 搜尋頁",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 1, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "搜尋", "region": "content", "showNotify": true, "showAvatar": true },
+        { "type": "searchbar", "label": "搜尋歌曲 / 歌單 / 創作者 / MV / 歌詞…", "region": "content", "enterButton": true },
+        { "type": "segmented", "region": "content", "options": ["全部", "歌曲", "歌單", "創作者", "專輯", "MV", "歌詞"] },
+        { "type": "header", "label": "熱門搜尋", "region": "content" },
+        { "type": "tags", "region": "content", "tags": ["每日熱歌榜", "每週熱歌榜", "新歌推薦", "華語", "電音", "深夜放鬆"] },
+        { "type": "header", "label": "搜尋結果", "region": "content" },
+        { "type": "table", "region": "content", "size": "small", "rows": 6, "columns": ["歌曲", "創作者", "類型", "時長", "操作"], "actions": ["播放", "收藏"], "actionStyle": "link" }
+      ]
+    },
+    {
+      "name": "W.4.2 歌單列表",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 2, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "歌單", "region": "content", "showSearch": true, "showAvatar": true },
+        { "type": "pageHeader", "label": "歌單", "region": "content", "sub": "音樂,歌單" },
+        { "type": "segmented", "region": "content", "options": ["全部", "華語", "西洋", "電音", "療癒", "運動"] },
+        { "type": "cardlist", "region": "content", "cards": ["每日精選", "深夜放鬆", "通勤必聽", "運動電力", "專注工作", "派對電音"] }
+      ]
+    },
+    {
+      "name": "W.4.3 歌單詳情",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 2, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "歌單詳情", "region": "content", "showAvatar": true },
+        { "type": "row", "region": "content", "direction": "row", "gap": 16, "alignCross": "center", "children": [
+          { "type": "image", "label": "歌單封面", "width": "fixed", "widthPx": 200 },
+          { "type": "card", "label": "深夜放鬆", "width": "fill", "direction": "column", "gap": 8, "children": [
+            { "type": "text", "label": "60 首歌曲 · 約 3 小時 · 由 STAR MUSIC 編輯" },
+            { "type": "text", "label": "在夜裡放下一切，讓音樂陪你慢慢沉澱。" },
+            { "type": "buttonRow", "buttons": ["播放全部", "隨機播放", "收藏歌單", "分享"] }
+          ] }
+        ] },
+        { "type": "table", "region": "content", "size": "small", "pager": true, "rows": 8, "columns": ["#", "歌曲", "創作者", "專輯", "時長", "操作"], "actions": ["播放", "加入歌單", "收藏"], "actionStyle": "icon" }
+      ]
+    },
+    {
+      "name": "W.4.4 創作者頁",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 0, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "創作者", "region": "content", "showAvatar": true },
+        { "type": "row", "region": "content", "direction": "row", "gap": 16, "alignCross": "center", "children": [
+          { "type": "avatar", "label": "創作者頭像", "width": "hug" },
+          { "type": "card", "label": "創作者名稱", "width": "fill", "direction": "column", "gap": 8, "children": [
+            { "type": "text", "label": "月聽眾 1.2M · 代表曲風：流行 / 電音" },
+            { "type": "buttonRow", "buttons": ["播放全部", "追蹤", "分享"] }
+          ] }
+        ] },
+        { "type": "header", "label": "代表作品", "region": "content" },
+        { "type": "cardlist", "region": "content", "cards": ["專輯一", "專輯二", "熱門單曲"] },
+        { "type": "header", "label": "全部歌曲", "region": "content" },
+        { "type": "table", "region": "content", "size": "small", "rows": 6, "columns": ["#", "歌曲", "專輯", "時長", "操作"], "actions": ["播放", "收藏"], "actionStyle": "icon" }
+      ]
+    },
+    {
+      "name": "W.4.5 MV 列表",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 3, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "MV 專區", "region": "content", "showSearch": true, "showAvatar": true },
+        { "type": "pageHeader", "label": "MV 專區", "region": "content", "sub": "音樂,MV" },
+        { "type": "segmented", "region": "content", "options": ["全部", "華語", "西洋", "現場", "官方 MV"] },
+        { "type": "cardlist", "region": "content", "cards": ["MV 一", "MV 二", "MV 三", "MV 四", "MV 五", "MV 六"] }
+      ]
+    },
+    {
+      "name": "W.4.6 MV 播放頁",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 3, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "MV 播放", "region": "content", "showAvatar": true },
+        { "type": "video", "label": "MV 播放（YouTube 嵌入）", "region": "content" },
+        { "type": "header", "label": "MV 標題 — 創作者", "region": "content" },
+        { "type": "text", "label": "發布日期 2026/06 · 觀看次數 1.2M", "region": "content" },
+        { "type": "buttonRow", "region": "content", "buttons": ["收藏", "分享"] },
+        { "type": "header", "label": "相關推薦", "region": "content" },
+        { "type": "cardlist", "region": "content", "cards": ["相關 MV 一", "相關 MV 二", "相關 MV 三", "相關 MV 四"] }
+      ]
+    },
+    {
+      "name": "W.4.7 我的最愛",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 4, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "我的最愛", "region": "content", "showAvatar": true },
+        { "type": "pageHeader", "label": "我的最愛", "region": "content", "sub": "我的,最愛", "showActions": true, "primaryText": "播放全部" },
+        { "type": "table", "region": "content", "size": "small", "pager": true, "rows": 8, "columns": ["#", "歌曲", "創作者", "專輯", "時長", "操作"], "actions": ["播放", "加入歌單", "移除"], "actionStyle": "icon" }
+      ]
+    },
+    {
+      "name": "W.4.8 我的歌單",
+      "device": "desktop",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 5, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "我的歌單"] },
+        { "type": "topbar", "label": "我的歌單", "region": "content", "showAvatar": true },
+        { "type": "pageHeader", "label": "我的歌單", "region": "content", "sub": "我的,歌單", "showActions": true, "primaryText": "＋ 建立歌單" },
+        { "type": "cardlist", "region": "content", "cards": ["我的最愛", "通勤歌單", "運動電力", "深夜歌單", "工作專注"] }
+      ]
+    },
+    {
+      "name": "W.4.M 手機引導頁",
+      "device": "mobile",
+      "components": [
+        { "type": "image", "label": "STAR MUSIC", "align": "center" },
+        { "type": "carousel", "label": "App 畫面截圖", "showArrows": true },
+        { "type": "header", "label": "在手機上享受完整音樂體驗", "align": "center" },
+        { "type": "list", "items": ["海量正版音樂與獨家歌單", "離線下載，隨時隨地聆聽", "沉浸式全螢幕播放器與歌詞"] },
+        { "type": "buttonRow", "align": "center", "buttons": ["App Store 下載", "Google Play 下載"] },
+        { "type": "alert", "label": "音樂串流功能僅支援桌機與 App，請下載 App 繼續使用。", "alertType": "info" }
+      ]
+    },
+    {
+      "name": "W.4.FP 全螢幕播放器",
+      "device": "desktop",
+      "components": [
+        { "type": "text", "label": "正在播放　·　收合 ▾", "align": "center" },
+        { "type": "row", "direction": "row", "gap": 24, "children": [
+          { "type": "image", "label": "專輯封面（大圖）", "width": "fixed", "widthPx": 360 },
+          { "type": "card", "label": "歌曲名稱", "width": "fill", "direction": "column", "gap": 12, "children": [
+            { "type": "text", "label": "創作者 — 專輯" },
+            { "type": "progress", "percent": 42 },
+            { "type": "buttonRow", "buttons": ["隨機", "上一首", "播放 / 暫停", "下一首", "循環", "音量"] },
+            { "type": "tabs", "tabs": ["歌詞", "播放清單"] },
+            { "type": "text", "label": "（同步歌詞顯示區，可調整字級）" }
+          ] }
+        ] },
+        { "type": "buttonRow", "align": "center", "buttons": ["加入歌單", "加入收藏", "分享"] }
+      ]
+    }
+  ]
+}

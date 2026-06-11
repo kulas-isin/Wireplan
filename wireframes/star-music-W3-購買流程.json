@@ -1,0 +1,26 @@
+{
+  "wireframes": [
+    {
+      "name": "W.3.0 購買方案選擇",
+      "device": "desktop",
+      "components": [
+        { "type": "steps", "active": 0, "steps": ["選擇方案", "填寫資料", "付款", "完成"] },
+        { "type": "header", "label": "選擇訂閱方案", "align": "center" },
+        { "type": "cardlist", "cards": ["月方案 NT$149 / 月", "年方案 NT$1,490 / 年（省 2 個月）", "心禮卡兌換"] },
+        { "type": "formgrid", "cols": 2, "fields": ["付款方式:select", "發票類型:select", "折扣 / 心禮卡序號", "Email 收據"] },
+        { "type": "descriptions", "label": "訂單摘要", "items": ["方案:年方案", "金額:NT$1,490", "首期扣款:今日", "下次續訂:2027-06-11"] },
+        { "type": "buttonRow", "align": "right", "buttons": ["返回", "前往付款"] }
+      ]
+    },
+    {
+      "name": "W.3.1 付款結果",
+      "device": "desktop",
+      "components": [
+        { "type": "steps", "active": 3, "steps": ["選擇方案", "填寫資料", "付款", "完成"] },
+        { "type": "result", "label": "付款成功", "status": "success", "sub": "您的訂閱已開通，感謝您的支持！" },
+        { "type": "descriptions", "label": "訂單明細", "items": ["訂單編號:BO20260611001", "方案:年方案", "金額:NT$1,490", "到期日:2027-06-11"] },
+        { "type": "buttonRow", "align": "center", "buttons": ["前往音樂首頁", "查看訂單"] }
+      ]
+    }
+  ]
+}
