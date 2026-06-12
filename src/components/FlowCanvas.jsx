@@ -264,6 +264,19 @@ export default function FlowCanvas() {
 
   const toggleConnect = () => { setConnectMode((m) => !m); setPending(null); markPending(null) }
 
+  // 編輯連線標籤（觸發按鈕 / 條件文字）
+  const editEdgeLabel = (edge) => {
+    if (!edge) return
+    const v = window.prompt('連線標籤（觸發按鈕 / 條件，例如「點登入」「是」）：', edge.label || '')
+    if (v === null) return
+    setRfEdges((eds) => {
+      const next = eds.map((e) => (e.id === edge.id ? { ...e, label: v.trim() || undefined } : e))
+      setRfNodes((nds) => { persistNow(nds, next); return nds })
+      return next
+    })
+  }
+  const onEdgeDoubleClick = useCallback((_e, edge) => editEdgeLabel(edge), [])
+
   // 加節點
   const addNode = (kind) => {
     let label = kind === 'decision' ? '判斷？' : '新頁面'
@@ -367,6 +380,7 @@ export default function FlowCanvas() {
           onNodesDelete={onNodesDelete}
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
+          onEdgeDoubleClick={onEdgeDoubleClick}
           onSelectionChange={onSelectionChange}
           nodesDraggable={!connectMode}
           connectionMode={ConnectionMode.Loose}
@@ -381,6 +395,9 @@ export default function FlowCanvas() {
           <Controls />
           <MiniMap pannable zoomable nodeStrokeWidth={2} />
         </ReactFlow>
+        {selected.nodes.length === 0 && selected.edges.length === 1 && (
+          <button className="fl-edit-fab" onClick={() => editEdgeLabel(selected.edges[0])}><Link2 size={15} /> 改標籤</button>
+        )}
         {(selected.nodes.length > 0 || selected.edges.length > 0) && (
           <button className="fl-del-fab" onClick={deleteSelected}><Trash2 size={16} /> 刪除選取（{selected.nodes.length + selected.edges.length}）</button>
         )}
