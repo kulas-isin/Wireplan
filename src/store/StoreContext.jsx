@@ -314,6 +314,7 @@ function reducer(state, action) {
     }
 
     case 'UPDATE_FLOW':
+    case 'UPDATE_FLOW_SILENT':
       return replaceCurrent(touch({ ...cur, flow: action.flow }))
 
     case 'REGENERATE_FLOW':
@@ -341,7 +342,7 @@ function reducer(state, action) {
 
 // ── Undo/Redo 歷史包裝 ──
 const HISTORY_LIMIT = 60
-const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE'])
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT'])
 
 function withHistory(baseReducer) {
   return (h, action) => {
