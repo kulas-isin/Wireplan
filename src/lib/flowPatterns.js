@@ -129,3 +129,18 @@ export function buildPatternFlow(pattern, wireframes) {
   const edges = pattern.edges.map(([s, t, label]) => ({ id: uid('e'), source: idOf.get(s), target: idOf.get(t), label }))
   return { nodes: autoLayout(nodes, edges), edges }
 }
+
+// 把 JSON 的 flows（多條業務流程，格式同 pattern：nodes/edges/role）組成一張圖，
+// 每條流程往右排開，綁定既有頁面、套角色色。給「匯入 JSON」用。
+export function buildFlowsGraph(flows, wireframes) {
+  const nodes = []
+  const edges = []
+  ;(flows || []).forEach((f, i) => {
+    if (!f || !Array.isArray(f.nodes)) return
+    const g = buildPatternFlow(f, wireframes)
+    const offX = i * 520
+    nodes.push(...g.nodes.map((n) => ({ ...n, x: (n.x || 0) + offX, y: n.y || 0 })))
+    edges.push(...g.edges)
+  })
+  return { nodes, edges }
+}

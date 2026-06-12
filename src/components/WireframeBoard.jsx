@@ -1061,6 +1061,8 @@ export default function WireframeBoard() {
     try { wfs = normalizeWireframes(json) } catch (e) { setImportErr('解析失敗：' + e.message); return }
     if (!wfs.length) { setImportErr('找不到任何畫面'); return }
     dispatch({ type: 'ADD_WIREFRAME', wireframes: wfs })
+    // JSON 帶 flows → 一併鋪成業務流程圖（在剛匯入的頁面上綁定）
+    if (Array.isArray(json.flows) && json.flows.length) dispatch({ type: 'IMPORT_FLOWS', flows: json.flows })
     setImportOpen(false); setImportText(''); setImportErr('')
   }
 
