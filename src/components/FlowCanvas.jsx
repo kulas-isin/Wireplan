@@ -10,6 +10,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { toGraph, autoLayout, graphToMermaid } from '../lib/flowGraph.js'
 import { FLOW_PATTERNS, buildPatternFlow } from '../lib/flowPatterns.js'
+import { extractTriggers } from '../lib/flowTriggers.js'
 import { downloadText } from '../lib/download.js'
 import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid, Link2, Trash2 } from 'lucide-react'
 
@@ -264,6 +265,21 @@ export default function FlowCanvas() {
 
   const toggleConnect = () => { setConnectMode((m) => !m); setPending(null); markPending(null) }
 
+  // 選到單一頁節點時，列出該頁可觸發元件 → 逐一指定去向
+  const selPage = (selected.nodes.length === 1 && selected.nodes[0].type === 'page') ? selected.nodes[0] : null
+  const selWf = selPage ? findWf(current.wireframes, selPage.data.page || selPage.data.label) : null
+  const triggers = useMemo(() => (selWf ? extractTriggers(selWf) : []), [selWf])
+
+  // 設定某觸發的去向（建立/更新/移除一條帶觸發標籤的連線）
+  const setTriggerTarget = (sourceId, triggerLabel, targetId) => {
+    setRfEdges((eds) => {
+      let next = eds.filter((e) => !(e.source === sourceId && e.label === triggerLabel))
+      if (targetId) next = [...next, { id: uid('e'), source: sourceId, target: targetId, label: triggerLabel, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }]
+      setRfNodes((nds) => { persistNow(nds, next); return nds })
+      return next
+    })
+  }
+
   // 編輯連線標籤（觸發按鈕 / 條件文字）
   const editEdgeLabel = (edge) => {
     if (!edge) return
@@ -395,6 +411,32 @@ export default function FlowCanvas() {
           <Controls />
           <MiniMap pannable zoomable nodeStrokeWidth={2} />
         </ReactFlow>
+        {selPage && (
+          <div className="fl-trig-panel">
+            <div className="fl-trig-head">
+              <span>「{selPage.data.label}」可觸發 <b>{triggers.length}</b></span>
+              <button onClick={() => rfInst.current?.fitView({ maxZoom: 1, duration: 150 })} title="關閉請點空白處">↺</button>
+            </div>
+            {!selWf && <div className="fl-trig-empty">此頁節點未綁到 wireframe（紅色待補）</div>}
+            {selWf && triggers.length === 0 && <div className="fl-trig-empty">此頁沒有可觸發元件</div>}
+            <div className="fl-trig-list">
+              {triggers.map((t) => {
+                const cur = rfEdges.find((e) => e.source === selPage.id && e.label === t.label)?.target || ''
+                return (
+                  <div className="fl-trig-row" key={t.label}>
+                    <span className="fl-trig-name" title={t.label}>{t.label}<i>{t.kind}</i></span>
+                    <select value={cur} onChange={(e) => setTriggerTarget(selPage.id, t.label, e.target.value || null)}>
+                      <option value="">（未設定入口）</option>
+                      {rfNodes.filter((n) => n.id !== selPage.id).map((n) => (
+                        <option key={n.id} value={n.id}>{(n.type === 'decision' ? '◇ ' : n.type === 'end' ? '⛳ ' : '▢ ') + (n.data.label || n.type)}</option>
+                      ))}
+                    </select>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
         {selected.nodes.length === 0 && selected.edges.length === 1 && (
           <button className="fl-edit-fab" onClick={() => editEdgeLabel(selected.edges[0])}><Link2 size={15} /> 改標籤</button>
         )}
