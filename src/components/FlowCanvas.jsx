@@ -33,7 +33,8 @@ function DecisionNode({ data, selected }) {
   return (
     <div className={'fl-decision' + (selected ? ' sel' : '')}>
       <Handle type="target" position={Position.Top} />
-      <div className="fl-diamond"><span>{data.label}</span></div>
+      <div className="fl-diamond" />
+      <span className="fl-dtext">{data.label}</span>
       <Handle type="source" position={Position.Right} id="yes" />
       <Handle type="source" position={Position.Bottom} id="no" />
     </div>

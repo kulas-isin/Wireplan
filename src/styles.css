@@ -810,11 +810,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-terminal { border-radius: 999px; }
 .fl-start { background: #ecfdf3; border-color: #16a34a; color: #15803d; }
 .fl-end { background: #fef2f2; border-color: #dc2626; color: #b91c1c; }
-.fl-decision { position: relative; width: 120px; height: 84px; display: flex; align-items: center; justify-content: center; }
+.fl-decision { position: relative; width: 108px; height: 108px; display: flex; align-items: center; justify-content: center; }
 .fl-decision.sel .fl-diamond { box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
-.fl-diamond { position: absolute; inset: 14px; transform: rotate(45deg); background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; }
-.fl-diamond > span { position: absolute; inset: 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 600; color: #92400e; text-align: center; padding: 4px; width: 118%; height: 118%; left: -9%; top: -9%; }
+.fl-diamond { position: absolute; inset: 16px; transform: rotate(45deg); background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; }
+.fl-dtext { position: relative; z-index: 1; max-width: 76px; font-size: 12px; font-weight: 600; color: #92400e; text-align: center; line-height: 1.2; }
 .react-flow__handle { width: 8px; height: 8px; background: var(--primary); border: 1.5px solid #fff; }
 .fl-decision .react-flow__handle { background: #f59e0b; }
 .react-flow__edge-text { font-size: 11px; font-weight: 600; }
