@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactFlow, {
   Background, Controls, MiniMap, Handle, Position, ConnectionMode,
   addEdge, applyNodeChanges, applyEdgeChanges, MarkerType,
+  BaseEdge, EdgeLabelRenderer, getSmoothStepPath, useNodes,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { toPng } from 'html-to-image'
@@ -52,6 +53,63 @@ function TerminalNode({ data, type }) {
 }
 const nodeTypes = { page: PageNode, decision: DecisionNode, start: TerminalNode, end: TerminalNode }
 
+// ── 回寫機制：page→page 的線顯示「已對應 / 加導航鈕」 ──
+const findWf = (wfs, name) => {
+  const k = coreName(name)
+  return (wfs || []).find((w) => { const c = coreName(w.name); return c && (c.includes(k) || k.includes(c)) })
+}
+const collectActions = (components, out = []) => {
+  for (const c of components || []) {
+    if (!c || typeof c !== 'object') continue
+    if (c.type === 'buttonRow') out.push(...(c.buttons || []))
+    else if (c.type === 'link') out.push(c.label)
+    else if (c.type === 'pageHeader') out.push(c.primaryText, c.secondaryText, ...(c.actions || []))
+    else if (c.type === 'breadcrumb' || c.type === 'dropdown') out.push(...(c.items || []))
+    if (Array.isArray(c.children)) collectActions(c.children, out)
+  }
+  return out.filter(Boolean)
+}
+const hasNavTo = (srcWf, targetName) => {
+  const k = coreName(targetName)
+  return collectActions(srcWf.components).some((t) => { const c = coreName(t); return c && (c.includes(k) || k.includes(c)) })
+}
+
+function BackSyncEdge({ id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, label, markerEnd, style }) {
+  const nodes = useNodes()
+  const { current, dispatch } = useStore()
+  const [path, labelX, labelY] = getSmoothStepPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
+  const s = nodes.find((n) => n.id === source)
+  const t = nodes.find((n) => n.id === target)
+  let chip = null
+  if (s?.type === 'page' && t?.type === 'page') {
+    const srcWf = findWf(current.wireframes, s.data.page || s.data.label)
+    const tgtWf = findWf(current.wireframes, t.data.page || t.data.label)
+    if (srcWf && tgtWf && srcWf.id !== tgtWf.id) {
+      chip = hasNavTo(srcWf, tgtWf.name)
+        ? <span className="fl-edge-ok">✓ 已對應</span>
+        : <button className="fl-edge-add" title={`在「${srcWf.name}」加一顆前往「${tgtWf.name}」的按鈕`}
+            onClick={(e) => {
+              e.stopPropagation()
+              dispatch({ type: 'ADD_COMPONENT', wireframeId: srcWf.id, component: { id: uid('cmp'), type: 'buttonRow', label: '', width: 'full', region: 'content', buttons: ['前往 ' + coreName(tgtWf.name)] } })
+            }}>⊕ 加導航鈕</button>
+    }
+  }
+  return (
+    <>
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} />
+      {(label || chip) && (
+        <EdgeLabelRenderer>
+          <div className="fl-edge-lbl" style={{ transform: `translate(-50%,-50%) translate(${labelX}px,${labelY}px)` }}>
+            {label && <span className="fl-edge-text">{label}</span>}
+            {chip}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  )
+}
+const edgeTypes = { backsync: BackSyncEdge }
+
 // graph → ReactFlow（標記缺頁、套分類色）
 function toRf(graph, wireframes) {
   const wfKeys = new Set((wireframes || []).map((w) => coreName(w.name)))
@@ -66,7 +124,7 @@ function toRf(graph, wireframes) {
   }))
   const edges = (graph.edges || []).map((e) => ({
     id: e.id || uid('e'), source: e.source, target: e.target, sourceHandle: e.sourceHandle,
-    label: e.label, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed },
+    label: e.label, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed },
   }))
   return { nodes, edges }
 }
@@ -136,7 +194,7 @@ export default function FlowCanvas() {
   const onConnect = useCallback((conn) => {
     const label = conn.sourceHandle === 'yes' ? '是' : conn.sourceHandle === 'no' ? '否' : undefined
     setRfEdges((eds) => {
-      const next = addEdge({ ...conn, id: uid('e'), label, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
+      const next = addEdge({ ...conn, id: uid('e'), label, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
       setRfNodes((nds) => { persistNow(nds, next); return nds })
       return next
     })
@@ -158,7 +216,7 @@ export default function FlowCanvas() {
       const src = rfNodes.find((n) => n.id === pending)
       let label
       if (src?.type === 'decision') { const out = eds.filter((x) => x.source === pending).length; label = out === 0 ? '是' : out === 1 ? '否' : undefined }
-      const next = addEdge({ id: uid('e'), source: pending, target: node.id, label, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
+      const next = addEdge({ id: uid('e'), source: pending, target: node.id, label, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
       setRfNodes((nds) => { const cleared = nds.map((n) => ({ ...n, className: undefined })); persistNow(cleared, next); return cleared })
       return next
     })
@@ -251,7 +309,7 @@ export default function FlowCanvas() {
     setReload((r) => r + 1)
   }
 
-  const defaultEdgeOptions = useMemo(() => ({ type: 'smoothstep' }), [])
+  const defaultEdgeOptions = useMemo(() => ({ type: 'backsync' }), [])
 
   return (
     <div className="flow-canvas-wrap">
@@ -276,6 +334,7 @@ export default function FlowCanvas() {
           nodes={rfNodes}
           edges={rfEdges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
