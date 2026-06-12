@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactFlow, {
-  Background, Controls, MiniMap, Handle, Position,
+  Background, Controls, MiniMap, Handle, Position, ConnectionMode,
   addEdge, applyNodeChanges, applyEdgeChanges, MarkerType,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -43,9 +43,9 @@ function DecisionNode({ data, selected }) {
 function TerminalNode({ data, type }) {
   return (
     <div className={'fl-node fl-terminal ' + (type === 'start' ? 'fl-start' : 'fl-end')}>
-      {type !== 'start' && <Handle type="target" position={Position.Top} />}
+      <Handle type="target" position={Position.Top} />
       <span className="fl-label">{data.label}</span>
-      {type !== 'end' && <Handle type="source" position={Position.Bottom} />}
+      <Handle type="source" position={Position.Bottom} />
     </div>
   )
 }
@@ -264,6 +264,7 @@ export default function FlowCanvas() {
           onPaneClick={onPaneClick}
           onSelectionChange={onSelectionChange}
           nodesDraggable={!connectMode}
+          connectionMode={ConnectionMode.Loose}
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
           fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
