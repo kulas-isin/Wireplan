@@ -12,7 +12,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Music } from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -25,7 +25,7 @@ const COMP_ICON = {
 
 // 跨畫面共用的元件剪貼簿（複製/貼上）
 let cmpClipboard = null
-import { ConfigProvider, Modal, Input, Dropdown, message } from 'antd'
+import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 
 // wireframe 配色主題（和諧自然的成套色票）
@@ -38,11 +38,28 @@ export const WF_PALETTES = [
   { key: 'terracotta', name: '暖陶', primary: '#9a3412', sage: '#d6b1a0' },
   { key: 'plum', name: '葡萄紫', primary: '#6b2160', sage: '#c6a9c4' },
   { key: 'mono', name: '墨黑', primary: '#1f2937', sage: '#b4b9c0' },
+  { key: 'musicdark', name: '深色音樂', primary: '#D4A537', sage: '#3a3a3a', dark: true },
 ]
 const paletteOf = (key) => WF_PALETTES.find((p) => p.key === key) || WF_PALETTES[0]
 
 // 依主色產生 wireframe 的 antd 主題
-const makeWfTheme = (primary, hifi) => hifi ? ({
+const makeWfTheme = (primary, hifi, dark) => dark ? ({
+  // 深色音樂主題：用 antd 原生深色演算法，元件自帶深底（再由 .theme-music CSS 微調成參考色）
+  algorithm: theme.darkAlgorithm,
+  token: {
+    colorPrimary: primary,
+    colorBgBase: '#181818',
+    colorTextBase: '#e9e9e9',
+    borderRadius: 8,
+    fontSize: 13,
+    fontFamily: 'inherit',
+  },
+  components: {
+    Segmented: { itemSelectedBg: primary, itemSelectedColor: '#1a1a1a' },
+    Menu: { itemSelectedColor: primary, itemHeight: 34, itemBorderRadius: 8 },
+    Button: { borderRadius: 999, controlHeight: 32, fontWeight: 600 },
+  },
+}) : hifi ? ({
   // 擬真模式：真實後台質感（實線細邊、白卡輕陰影、方角小圓角、彩色狀態）
   token: {
     colorPrimary: primary,
@@ -732,7 +749,7 @@ function Node({ cmp, ed }) {
   )
 }
 
-function WireframeFrame({ wireframe, requirement }) {
+function WireframeFrame({ wireframe, requirement, dark }) {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [selectedCmp, setSelectedCmp] = useState(null)
   const [paletteOpen, setPaletteOpen] = useState(null) // null | 'content' | 'sidebar'
@@ -848,7 +865,6 @@ function WireframeFrame({ wireframe, requirement }) {
   }
 
   const setDevice = (device) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { device } })
-  const toggleTheme = () => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { theme: wireframe.theme === 'music' ? undefined : 'music' } })
 
   const layout = wireframe.layout || 'stack'
   const toggleLayout = () => {
@@ -935,7 +951,7 @@ function WireframeFrame({ wireframe, requirement }) {
       </button>
       {layersOpen && <LayerTree components={wireframe.components} ed={ed} />}
     </aside>
-    <div className={`wf-frame dev-${wireframe.device || 'desktop'}` + (wireframe.theme === 'music' ? ' theme-music' : '') + (activeNew ? ' wf-dragnew' : '')} id={`wf-${wireframe.id}`}
+    <div className={`wf-frame dev-${wireframe.device || 'desktop'}` + (dark || wireframe.theme === 'music' ? ' theme-music' : '') + (activeNew ? ' wf-dragnew' : '')} id={`wf-${wireframe.id}`}
       style={DEV_W[wireframe.device] ? { maxWidth: DEV_W[wireframe.device], margin: '0 auto' } : undefined}
       onClick={() => { setSelectedCmp(null); setPaletteOpen(null) }}>
       <div className="wf-titlebar">
@@ -957,7 +973,6 @@ function WireframeFrame({ wireframe, requirement }) {
         >
           <button className="ghost sm" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
         </Dropdown>
-        <button className={'ghost sm' + (wireframe.theme === 'music' ? ' active' : '')} title={wireframe.theme === 'music' ? '切回淺色主題' : '套用深色音樂主題'} onClick={(e) => { e.stopPropagation(); toggleTheme() }}><Music size={15} /></button>
         <button className="ghost sm" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
           {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
         </button>
@@ -1091,7 +1106,7 @@ export default function WireframeBoard() {
   const hifi = current.fidelity === 'hifi'
 
   return (
-    <ConfigProvider theme={makeWfTheme(pal.primary, hifi)} componentSize="small">
+    <ConfigProvider theme={makeWfTheme(pal.primary, hifi, pal.dark)} componentSize="small">
       <div className={'wf-studio' + (hifi ? ' hifi' : '')} style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
         {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
@@ -1122,7 +1137,7 @@ export default function WireframeBoard() {
                   key={pt.key}
                   className={'wf-swatch' + ((current.wfTheme || 'forest') === pt.key ? ' active' : '')}
                   title={pt.name}
-                  style={{ background: pt.primary }}
+                  style={{ background: pt.dark ? `linear-gradient(135deg, ${pt.primary} 50%, #1a1a1a 50%)` : pt.primary }}
                   onClick={() => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'wfTheme', value: pt.key })}
                 />
               ))}
@@ -1147,7 +1162,7 @@ export default function WireframeBoard() {
         </aside>
         )}
         <main className="wf-stage">
-          <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} />
+          <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} dark={pal.dark} />
         </main>
         {importModal}
       </div>

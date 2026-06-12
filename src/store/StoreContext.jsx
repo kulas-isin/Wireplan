@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer 
 import { loadState, saveState, emptyProject, rebuildArtifacts } from './store.js'
 import { uid } from '../lib/id.js'
 import { generateWireframe, regenerateComponents } from '../lib/wireframeTemplates.js'
-import { generateFlow } from '../lib/flowGenerator.js'
+import { generateFlow, generateFlowFromWireframes } from '../lib/flowGenerator.js'
 import { detectCategory } from '../lib/categories.js'
 
 const StoreContext = createContext(null)
@@ -314,10 +314,14 @@ function reducer(state, action) {
     }
 
     case 'UPDATE_FLOW':
+    case 'UPDATE_FLOW_SILENT':
       return replaceCurrent(touch({ ...cur, flow: action.flow }))
 
     case 'REGENERATE_FLOW':
       return replaceCurrent(touch({ ...cur, flow: generateFlow(cur) }))
+
+    case 'REGENERATE_FLOW_FROM_WIREFRAMES':
+      return replaceCurrent(touch({ ...cur, flow: generateFlowFromWireframes(cur) }))
 
     case 'SET_SPEC_OVERRIDE':
       return replaceCurrent(touch({ ...cur, specOverride: action.value }))
@@ -338,7 +342,7 @@ function reducer(state, action) {
 
 // ── Undo/Redo 歷史包裝 ──
 const HISTORY_LIMIT = 60
-const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE'])
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT'])
 
 function withHistory(baseReducer) {
   return (h, action) => {

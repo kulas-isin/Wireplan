@@ -46,6 +46,81 @@ export function generateFlow(project) {
   return { nodes: [start, ...screens, end] }
 }
 
+// 去掉頁名前綴編號與括號補充，取出「核心頁名」用於比對
+function coreName(label) {
+  return String(label || '')
+    .replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '') // 去 W.4.8a / 1.2 之類前綴
+    .replace(/[（(【\[].*?[）)】\]]/g, '')          // 去括號補充
+    .replace(/\s+/g, '')
+    .trim()
+}
+
+// 從畫面元件樹收集「會導向其他頁」的動作文字（不含全域選單 nav/sidenav，避免全連在一起）
+function collectActionTexts(components, out = []) {
+  for (const c of components || []) {
+    if (!c || typeof c !== 'object') continue
+    if (c.type === 'buttonRow') out.push(...(c.buttons || []))
+    else if (c.type === 'link') out.push(c.label)
+    else if (c.type === 'breadcrumb') out.push(...(c.items || []))
+    else if (c.type === 'tabs') out.push(...(c.tabs || []))
+    else if (c.type === 'dropdown') out.push(...(c.items || []))
+    else if (c.type === 'pageHeader') out.push(c.primaryText, c.secondaryText, ...(c.actions || []))
+    if (Array.isArray(c.children)) collectActionTexts(c.children, out)
+  }
+  return out.filter(Boolean)
+}
+
+// 在候選頁中找出與動作文字最匹配的目標（雙向包含、取最長命中）
+function matchTarget(text, targets, selfId) {
+  const t = coreName(text)
+  if (t.length < 2) return null
+  let best = null
+  for (const tg of targets) {
+    if (tg.node.id === selfId || tg.key.length < 2) continue
+    if (t.includes(tg.key) || tg.key.includes(t)) {
+      if (!best || tg.key.length > best.key.length) best = tg
+    }
+  }
+  return best ? best.node : null
+}
+
+// 依「畫面清單」產生流程：每張 wireframe 一個節點，依序串接，
+// 再從畫面內的按鈕/連結/頁籤文字推斷額外跳轉（extraEdges，虛線）。
+export function generateFlowFromWireframes(project) {
+  const wfs = project.wireframes || []
+  if (!wfs.length) return generateFlow(project)
+
+  const start = { id: uid('node'), type: 'start', label: '開始', next: null }
+  const screens = wfs.map((w) => ({
+    id: uid('node'), type: 'screen', label: w.name || '畫面', wireframeId: w.id, next: null,
+  }))
+  const end = { id: uid('node'), type: 'end', label: '結束' }
+
+  // 入口：優先比對 登入 / 入口 / 首頁 / home，否則第一張
+  const entryIdx = Math.max(0, screens.findIndex((s) => /登入|入口|首頁|home/i.test(s.label)))
+  const ordered = [screens[entryIdx], ...screens.filter((_, i) => i !== entryIdx)]
+  const chain = [start, ...ordered]
+  for (let i = 0; i < chain.length; i++) chain[i].next = i + 1 < chain.length ? chain[i + 1].id : end.id
+
+  // 推斷跳轉
+  const targets = screens.map((s) => ({ node: s, key: coreName(s.label) }))
+  const extraEdges = []
+  const seen = new Set()
+  wfs.forEach((w, i) => {
+    const from = screens[i]
+    for (const text of collectActionTexts(w.components)) {
+      const tgt = matchTarget(text, targets, from.id)
+      if (!tgt) continue
+      const k = from.id + '>' + tgt.id
+      if (seen.has(k)) continue
+      seen.add(k)
+      extraEdges.push({ from: from.id, to: tgt.id, label: coreName(text).slice(0, 8) })
+    }
+  })
+
+  return { nodes: [start, ...screens, end], extraEdges }
+}
+
 // 確保流程為新版格式（有 nodes）；舊資料或空的就重新產生
 export function ensureFlow(project) {
   const f = project.flow
@@ -80,6 +155,11 @@ export function flowToMermaid(flow) {
     } else if (n.next && byId.has(n.next)) {
       lines.push(`  ${n.id} --> ${n.next}`)
     }
+  }
+
+  // 推斷出的跳轉（虛線，附動作標籤）
+  for (const e of flow.extraEdges || []) {
+    if (byId.has(e.from) && byId.has(e.to)) lines.push(`  ${e.from} -.->|"${esc(e.label)}"| ${e.to}`)
   }
 
   // 依分類上色

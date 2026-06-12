@@ -90,6 +90,7 @@ export default function FlowView() {
         <button onClick={() => addNode('screen')}><Plus size={15} /> 畫面節點</button>
         <button onClick={() => addNode('decision')}><GitBranch size={15} /> 判斷節點</button>
         <button onClick={() => { if (confirm('依目前需求重新產生流程？將覆蓋手動調整。')) dispatch({ type: 'REGENERATE_FLOW' }) }}><RotateCw size={14} /> 由需求重新產生</button>
+        <button className="primary" onClick={() => { if (confirm('依目前「畫面」自動產生流程？每張 wireframe 一個節點，並從按鈕/連結文字推斷跳轉。將覆蓋手動調整。')) dispatch({ type: 'REGENERATE_FLOW_FROM_WIREFRAMES' }) }}><RotateCw size={14} /> 由畫面自動產生</button>
         <button onClick={() => downloadText(`${current.name}-流程設計.md`, flowToMarkdown(current, flow), 'text/markdown')}><Download size={15} /> Markdown</button>
         <button onClick={() => downloadText(`${current.name}-流程圖.mmd`, mermaid, 'text/plain')}><Download size={15} /> Mermaid</button>
       </div>

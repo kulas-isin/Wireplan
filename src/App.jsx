@@ -4,9 +4,10 @@ import Sidebar from './components/Sidebar.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
 import SpecView from './components/SpecView.jsx'
-import FlowView from './components/FlowView.jsx'
 // Wireframe 用到 Ant Design，延遲載入避免進主包
 const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
+// 流程畫布用到 reactflow，延遲載入
+const FlowCanvas = lazy(() => import('./components/FlowCanvas.jsx'))
 import { downloadText, readFileAsText } from './lib/download.js'
 import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2 } from 'lucide-react'
 
@@ -62,7 +63,7 @@ export default function App() {
   const counts = {
     requirements: current.requirements.length,
     wireframe: current.wireframes.length,
-    flow: (current.flow?.nodes || []).filter((n) => n.type === 'screen' || n.type === 'decision').length,
+    flow: ((current.flow?.graph?.nodes || current.flow?.nodes || []).filter((n) => n.type === 'page' || n.type === 'screen' || n.type === 'decision')).length,
   }
 
   return (
@@ -110,7 +111,11 @@ export default function App() {
             </Suspense>
           )}
           {tab === 'spec' && <SpecView />}
-          {tab === 'flow' && <FlowView />}
+          {tab === 'flow' && (
+            <Suspense fallback={<div className="empty"><div className="muted">載入流程畫布中…</div></div>}>
+              <FlowCanvas />
+            </Suspense>
+          )}
         </div>
       </div>
 
