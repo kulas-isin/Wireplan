@@ -812,7 +812,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-hint { font-size: 12px; }
 /* 觸控裝置：連接點放大、好按 */
 @media (pointer: coarse) {
-  .react-flow__handle { width: 16px; height: 16px; }
+  .react-flow__handle { width: 22px; height: 22px; border-width: 3px; }
+  .react-flow__handle::after { inset: -16px; } /* 觸控可按範圍 ~54px */
   .fl-del-fab { padding: 12px 18px; font-size: 14px; }
   .fl-node { min-width: 158px; padding: 16px 22px; font-size: 16px; }
   .fl-decision { width: 132px; height: 132px; }
@@ -835,7 +836,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-decision.sel .fl-diamond { box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
 .fl-diamond { position: absolute; inset: 16px; transform: rotate(45deg); background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; }
 .fl-dtext { position: relative; z-index: 1; max-width: 76px; font-size: 12px; font-weight: 600; color: #92400e; text-align: center; line-height: 1.2; }
-.react-flow__handle { width: 8px; height: 8px; background: var(--primary); border: 1.5px solid #fff; }
+.react-flow__handle { width: 11px; height: 11px; background: var(--primary); border: 2px solid #fff; }
 .fl-decision .react-flow__handle { background: #f59e0b; }
+/* 擴大連接點的隱形觸控/點擊範圍（視覺不變、好抓很多） */
+.react-flow__handle::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
 .react-flow__edge-text { font-size: 11px; font-weight: 600; }
 .react-flow__attribution { display: none; }
