@@ -122,7 +122,7 @@ export function buildPatternFlow(pattern, wireframes) {
       page = wf ? wf.name : n.page
     }
     return {
-      id, type: n.type, label, page, role: pattern.role,
+      id, type: n.type, label, page, role: pattern.role, flow: pattern.name,
       color: n.type === 'page' ? ROLE_COLORS[pattern.role] : undefined,
     }
   })
