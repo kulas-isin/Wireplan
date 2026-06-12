@@ -8,6 +8,7 @@ import { toPng } from 'html-to-image'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { toGraph, autoLayout, graphToMermaid } from '../lib/flowGraph.js'
+import { FLOW_PATTERNS, buildPatternFlow } from '../lib/flowPatterns.js'
 import { downloadText } from '../lib/download.js'
 import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid, Link2, Trash2 } from 'lucide-react'
 
@@ -234,6 +235,22 @@ export default function FlowCanvas() {
     setReload((r) => r + 1)
   }
 
+  // 插入業務流程模式（綁既有頁面、含判斷/失敗回圈、角色色），放在現有流程右側
+  const insertPattern = (id) => {
+    const p = FLOW_PATTERNS.find((x) => x.id === id)
+    if (!p) return
+    const g = buildPatternFlow(p, current.wireframes)
+    const cur = fromRf(rfNodes, rfEdges)
+    const maxX = cur.nodes.reduce((m, n) => Math.max(m, n.x || 0), -Infinity)
+    const offX = cur.nodes.length ? maxX + 360 : 0
+    const merged = {
+      nodes: [...cur.nodes, ...g.nodes.map((n) => ({ ...n, x: (n.x || 0) + offX, y: n.y || 0 }))],
+      edges: [...cur.edges, ...g.edges],
+    }
+    persist(merged)
+    setReload((r) => r + 1)
+  }
+
   const defaultEdgeOptions = useMemo(() => ({ type: 'smoothstep' }), [])
 
   return (
@@ -245,6 +262,10 @@ export default function FlowCanvas() {
         <button className={connectMode ? 'primary' : ''} onClick={toggleConnect}><Link2 size={15} /> 連線模式</button>
         <button onClick={() => addNode('page')}><Plus size={15} /> 頁節點</button>
         <button onClick={() => addNode('decision')}><GitBranch size={15} /> 判斷節點</button>
+        <select className="fl-pattern-select" value="" onChange={(e) => { if (e.target.value) insertPattern(e.target.value); e.target.value = '' }} title="插入業務流程模式">
+          <option value="">＋ 業務流程…</option>
+          {FLOW_PATTERNS.map((p) => <option key={p.id} value={p.id}>{p.name}（{p.role}）</option>)}
+        </select>
         <button onClick={autoArrange}><LayoutGrid size={15} /> 自動排列</button>
         <button className="primary" onClick={regen}><RotateCw size={14} /> 由畫面重新鋪</button>
         <button onClick={exportPng}><ImageIcon size={15} /> PNG</button>
