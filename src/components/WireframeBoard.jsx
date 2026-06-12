@@ -28,6 +28,41 @@ let cmpClipboard = null
 import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 
+// 頁名比對（去編號/括號/空白）
+const flowCore = (l) => String(l || '')
+  .replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').replace(/\s+/g, '').trim()
+
+// Demo：算出某頁依流程連線可前往的轉場（判斷會展開成各分支）
+function computeTransitions(flow, wireframes, currentWf) {
+  const graph = flow?.graph
+  if (!graph?.nodes?.length || !currentWf) return []
+  const node = graph.nodes.find((n) => n.type === 'page' && flowCore(n.page || n.label) === flowCore(currentWf.name))
+  if (!node) return []
+  const byId = new Map(graph.nodes.map((n) => [n.id, n]))
+  const wfByCore = new Map((wireframes || []).map((w) => [flowCore(w.name), w]))
+  const wfOf = (n) => (n ? wfByCore.get(flowCore(n.page || n.label)) : null)
+  const out = []
+  for (const e of graph.edges || []) {
+    if (e.source !== node.id) continue
+    const tgt = byId.get(e.target)
+    if (!tgt) continue
+    if (tgt.type === 'page') {
+      const w = wfOf(tgt)
+      out.push({ trigger: e.label, label: e.label || ('前往 ' + (w ? w.name : tgt.label)), toId: w?.id, missing: !w })
+    } else if (tgt.type === 'decision') {
+      for (const e2 of graph.edges) {
+        if (e2.source !== tgt.id) continue
+        const t2 = byId.get(e2.target)
+        const w = t2?.type === 'page' ? wfOf(t2) : null
+        out.push({ trigger: e.label, label: `${e.label ? e.label + '：' : ''}${tgt.label} → ${e2.label || ''}`, toId: w?.id, missing: t2?.type === 'page' && !w, end: t2?.type === 'end' })
+      }
+    } else if (tgt.type === 'end') {
+      out.push({ trigger: e.label, label: e.label || '結束', end: true })
+    }
+  }
+  return out
+}
+
 // wireframe 配色主題（和諧自然的成套色票）
 export const WF_PALETTES = [
   { key: 'adminblue', name: '後台藍', primary: '#2563eb', sage: '#9db8ee' },
@@ -1048,6 +1083,7 @@ export default function WireframeBoard() {
   const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
   const [selectedId, setSelectedId] = useState(null)
+  const [demo, setDemo] = useState(false)
   const [navOpen, setNavOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 820 : true))
   const [importOpen, setImportOpen] = useState(false)
   const [importText, setImportText] = useState('')
@@ -1107,9 +1143,21 @@ export default function WireframeBoard() {
   const pal = paletteOf(current.wfTheme)
   const hifi = current.fidelity === 'hifi'
 
+  // Demo 模式：點觸發元件 → 依流程連線跳頁
+  const transitions = demo ? computeTransitions(current.flow, wireframes, selected) : []
+  const demoDirect = transitions.filter((t) => t.toId && t.trigger && !t.end)
+  const onDemoClick = (e) => {
+    let el = e.target, txt = ''
+    for (let i = 0; i < 4 && el; i++) { const s = (el.textContent || '').trim(); if (s && s.length <= 24) { txt = s; break } el = el.parentElement }
+    if (!txt) return
+    const k = flowCore(txt)
+    const hit = demoDirect.find((d) => { const tk = flowCore(d.trigger || ''); return tk && (tk.includes(k) || k.includes(tk)) })
+    if (hit) { e.preventDefault(); e.stopPropagation(); setSelectedId(hit.toId) }
+  }
+
   return (
     <ConfigProvider theme={makeWfTheme(pal.primary, hifi, pal.dark)} componentSize="small">
-      <div className={'wf-studio' + (hifi ? ' hifi' : '')} style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
+      <div className={'wf-studio' + (hifi ? ' hifi' : '') + (demo ? ' demo' : '')} style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
         {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
@@ -1123,6 +1171,7 @@ export default function WireframeBoard() {
             <span className="ws-actions">
               <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
               <button className="sm" title="匯入畫面 JSON" onClick={() => setImportOpen(true)}><FileJson size={14} /></button>
+              <button className="sm" title="Demo 互動預覽（點觸發元件依流程跳頁）" onClick={() => setDemo(true)}><Play size={14} /></button>
               <button className="ghost sm" title="收合清單" onClick={() => setNavOpen(false)}><PanelLeftClose size={15} /></button>
             </span>
           </div>
@@ -1163,9 +1212,23 @@ export default function WireframeBoard() {
           </div>
         </aside>
         )}
-        <main className="wf-stage">
+        <main className="wf-stage" onClickCapture={demo ? onDemoClick : undefined}>
           <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} dark={pal.dark} />
         </main>
+        {demo && (
+          <div className="demo-bar">
+            <span className="demo-title"><Play size={14} /> Demo：{selected.name}</span>
+            <div className="demo-trans">
+              {transitions.length === 0 && <span className="demo-muted">此頁尚無流程連線（在「流程設計」連好觸發入口後，這裡就能點擊前往）</span>}
+              {transitions.map((t, i) => (
+                t.end
+                  ? <span key={i} className="demo-end">⛳ {t.label}</span>
+                  : <button key={i} className="demo-go" disabled={!t.toId} onClick={() => t.toId && setSelectedId(t.toId)}>{t.label}{t.missing ? '（待補）' : ' →'}</button>
+              ))}
+            </div>
+            <button className="demo-exit" onClick={() => setDemo(false)}>結束 Demo</button>
+          </div>
+        )}
         {importModal}
       </div>
     </ConfigProvider>
