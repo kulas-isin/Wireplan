@@ -800,7 +800,21 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 
 /* ── 流程互動畫布（React Flow） ── */
 .flow-canvas-wrap { display: flex; flex-direction: column; }
-.flow-canvas { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fbfcfb; }
+.flow-canvas { position: relative; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fbfcfb; }
+.flow-canvas.fl-connect { cursor: crosshair; }
+.flow-canvas.fl-connect .react-flow__pane { cursor: crosshair; }
+/* 連線模式：起點高亮 */
+.react-flow__node.fl-pending .fl-node, .react-flow__node.fl-pending .fl-diamond { box-shadow: 0 0 0 3px var(--accent), 0 0 12px rgba(244,105,79,0.5); }
+/* 刪除選取浮動鈕（手機無 Delete 鍵） */
+.fl-del-fab { position: absolute; right: 14px; bottom: 14px; z-index: 20; display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border: none; border-radius: 999px; background: var(--danger, #d4380d); color: #fff; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 14px rgba(212,56,13,0.4); cursor: pointer; }
+.fl-hint { font-size: 12px; }
+/* 觸控裝置：連接點放大、好按 */
+@media (pointer: coarse) {
+  .react-flow__handle { width: 14px; height: 14px; }
+  .fl-del-fab { padding: 12px 18px; font-size: 14px; }
+}
 .fl-node { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 10px;
   background: #fff; border: 1.5px solid var(--primary); font-size: 13px; font-weight: 600; color: #14271c;
   box-shadow: 0 1px 3px rgba(16,24,40,0.10); min-width: 96px; justify-content: center; }

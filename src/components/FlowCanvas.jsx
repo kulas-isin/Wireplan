@@ -9,7 +9,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import { toGraph, autoLayout, graphToMermaid } from '../lib/flowGraph.js'
 import { downloadText } from '../lib/download.js'
-import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid } from 'lucide-react'
+import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid, Link2, Trash2 } from 'lucide-react'
 
 // 頁名比對（去編號/括號/空白）— 與 flowGenerator 同邏輯
 const coreName = (l) => String(l || '')
@@ -89,6 +89,9 @@ export default function FlowCanvas() {
   const [rfNodes, setRfNodes] = useState([])
   const [rfEdges, setRfEdges] = useState([])
   const [reload, setReload] = useState(0)
+  const [connectMode, setConnectMode] = useState(false)
+  const [pending, setPending] = useState(null)
+  const [selected, setSelected] = useState({ nodes: [], edges: [] })
   const wrapRef = useRef(null)
   const saveTimer = useRef(null)
 
@@ -141,6 +144,48 @@ export default function FlowCanvas() {
   const onNodesDelete = useCallback(() => {
     setTimeout(() => setRfNodes((nds) => { setRfEdges((eds) => { persistNow(nds, eds); return eds }); return nds }), 0)
   }, [])
+
+  // 標記/清除「連線模式」起點高亮
+  const markPending = (id) => setRfNodes((nds) => nds.map((n) => ({ ...n, className: n.id === id ? 'fl-pending' : undefined })))
+
+  // 連線模式：點起點 → 點目標 = 連線（手機不用拖小圓點）
+  const onNodeClick = useCallback((_e, node) => {
+    if (!connectMode) return
+    if (!pending) { setPending(node.id); markPending(node.id); return }
+    if (pending === node.id) { setPending(null); markPending(null); return }
+    setRfEdges((eds) => {
+      const src = rfNodes.find((n) => n.id === pending)
+      let label
+      if (src?.type === 'decision') { const out = eds.filter((x) => x.source === pending).length; label = out === 0 ? '是' : out === 1 ? '否' : undefined }
+      const next = addEdge({ id: uid('e'), source: pending, target: node.id, label, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
+      setRfNodes((nds) => { const cleared = nds.map((n) => ({ ...n, className: undefined })); persistNow(cleared, next); return cleared })
+      return next
+    })
+    setPending(null)
+  }, [connectMode, pending, rfNodes])
+
+  const onPaneClick = useCallback(() => { if (pending) { setPending(null); markPending(null) } }, [pending])
+
+  const onSelectionChange = useCallback(({ nodes, edges }) => setSelected({ nodes: nodes || [], edges: edges || [] }), [])
+
+  // 刪除目前選取（手機無 Delete 鍵）
+  const deleteSelected = () => {
+    const nIds = new Set(selected.nodes.map((n) => n.id))
+    const eIds = new Set(selected.edges.map((e) => e.id))
+    if (!nIds.size && !eIds.size) return
+    setRfNodes((nds) => {
+      const nextN = nds.filter((n) => !nIds.has(n.id))
+      setRfEdges((eds) => {
+        const nextE = eds.filter((e) => !eIds.has(e.id) && !nIds.has(e.source) && !nIds.has(e.target))
+        persistNow(nextN, nextE)
+        return nextE
+      })
+      return nextN
+    })
+    setSelected({ nodes: [], edges: [] })
+  }
+
+  const toggleConnect = () => { setConnectMode((m) => !m); setPending(null); markPending(null) }
 
   // 加節點
   const addNode = (kind) => {
@@ -195,8 +240,9 @@ export default function FlowCanvas() {
     <div className="flow-canvas-wrap">
       <div className="toolbar">
         <strong>流程設計</strong>
-        <span className="muted" style={{ fontSize: 12 }}>拖節點移動 · 從節點邊緣拉線連接 · 點線/選節點按 Delete 刪除</span>
+        <span className="muted fl-hint">{connectMode ? (pending ? '再點「目標」節點即連線' : '點一個節點當「起點」') : '拖節點移動 · 拉線或用連線模式連接'}</span>
         <div className="spacer" />
+        <button className={connectMode ? 'primary' : ''} onClick={toggleConnect}><Link2 size={15} /> 連線模式</button>
         <button onClick={() => addNode('page')}><Plus size={15} /> 頁節點</button>
         <button onClick={() => addNode('decision')}><GitBranch size={15} /> 判斷節點</button>
         <button onClick={autoArrange}><LayoutGrid size={15} /> 自動排列</button>
@@ -204,7 +250,7 @@ export default function FlowCanvas() {
         <button onClick={exportPng}><ImageIcon size={15} /> PNG</button>
         <button onClick={exportMermaid}><Download size={15} /> Mermaid</button>
       </div>
-      <div className="flow-canvas" ref={wrapRef} style={{ height: 'calc(100vh - 210px)' }}>
+      <div className={'flow-canvas' + (connectMode ? ' fl-connect' : '')} ref={wrapRef} style={{ height: 'calc(100vh - 210px)' }}>
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
@@ -214,6 +260,10 @@ export default function FlowCanvas() {
           onConnect={onConnect}
           onNodeDragStop={onNodeDragStop}
           onNodesDelete={onNodesDelete}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onSelectionChange={onSelectionChange}
+          nodesDraggable={!connectMode}
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
           deleteKeyCode={['Delete', 'Backspace']}
@@ -222,6 +272,9 @@ export default function FlowCanvas() {
           <Controls />
           <MiniMap pannable zoomable nodeStrokeWidth={2} />
         </ReactFlow>
+        {(selected.nodes.length > 0 || selected.edges.length > 0) && (
+          <button className="fl-del-fab" onClick={deleteSelected}><Trash2 size={16} /> 刪除選取（{selected.nodes.length + selected.edges.length}）</button>
+        )}
       </div>
     </div>
   )
