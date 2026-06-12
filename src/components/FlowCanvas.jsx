@@ -118,7 +118,7 @@ function toRf(graph, wireframes) {
     type: n.type === 'page' || n.type === 'decision' || n.type === 'start' || n.type === 'end' ? n.type : 'page',
     position: { x: n.x ?? 0, y: n.y ?? 0 },
     data: {
-      label: n.label || '', page: n.page, wireframeId: n.wireframeId, role: n.role, color: n.color,
+      label: n.label || '', page: n.page, wireframeId: n.wireframeId, role: n.role, color: n.color, flow: n.flow,
       missing: n.type === 'page' && !!(n.page || n.label) && !wfKeys.has(coreName(n.page || n.label)),
     },
   }))
@@ -133,7 +133,7 @@ function fromRf(nodes, edges) {
   return {
     nodes: nodes.map((n) => ({
       id: n.id, type: n.type, label: n.data.label, page: n.data.page,
-      wireframeId: n.data.wireframeId, role: n.data.role, color: n.data.color,
+      wireframeId: n.data.wireframeId, role: n.data.role, color: n.data.color, flow: n.data.flow,
       x: Math.round(n.position.x), y: Math.round(n.position.y),
     })),
     edges: edges.map((e) => ({
@@ -151,8 +151,26 @@ export default function FlowCanvas() {
   const [connectMode, setConnectMode] = useState(false)
   const [pending, setPending] = useState(null)
   const [selected, setSelected] = useState({ nodes: [], edges: [] })
+  const [viewFlow, setViewFlow] = useState('')
   const wrapRef = useRef(null)
   const saveTimer = useRef(null)
+  const rfInst = useRef(null)
+
+  // 目前畫布上有哪些業務流程（給「顯示流程」下拉）
+  const flowNames = useMemo(() => [...new Set(rfNodes.map((n) => n.data.flow).filter(Boolean))], [rfNodes])
+  // 只顯示選定流程的節點/線（編輯仍作用在完整資料上）
+  const viewNodes = useMemo(() => (viewFlow ? rfNodes.filter((n) => n.data.flow === viewFlow) : rfNodes), [rfNodes, viewFlow])
+  const viewEdges = useMemo(() => {
+    if (!viewFlow) return rfEdges
+    const ids = new Set(viewNodes.map((n) => n.id))
+    return rfEdges.filter((e) => ids.has(e.source) && ids.has(e.target))
+  }, [rfEdges, viewNodes, viewFlow])
+
+  // 切換顯示流程後重新置中
+  useEffect(() => {
+    const t = setTimeout(() => rfInst.current?.fitView({ maxZoom: 1, padding: 0.2, duration: 200 }), 60)
+    return () => clearTimeout(t)
+  }, [viewFlow])
 
   // 載入：切專案 / 外部重新產生時，從 store 重建畫布
   useEffect(() => {
@@ -320,6 +338,12 @@ export default function FlowCanvas() {
         <button className={connectMode ? 'primary' : ''} onClick={toggleConnect}><Link2 size={15} /> 連線模式</button>
         <button onClick={() => addNode('page')}><Plus size={15} /> 頁節點</button>
         <button onClick={() => addNode('decision')}><GitBranch size={15} /> 判斷節點</button>
+        {flowNames.length > 0 && (
+          <select className="fl-pattern-select" value={viewFlow} onChange={(e) => setViewFlow(e.target.value)} title="只顯示某條業務流程">
+            <option value="">顯示：全部</option>
+            {flowNames.map((nm) => <option key={nm} value={nm}>只看：{nm}</option>)}
+          </select>
+        )}
         <select className="fl-pattern-select" value="" onChange={(e) => { if (e.target.value) insertPattern(e.target.value); e.target.value = '' }} title="插入業務流程模式">
           <option value="">＋ 業務流程…</option>
           {FLOW_PATTERNS.map((p) => <option key={p.id} value={p.id}>{p.name}（{p.role}）</option>)}
@@ -331,8 +355,9 @@ export default function FlowCanvas() {
       </div>
       <div className={'flow-canvas' + (connectMode ? ' fl-connect' : '')} ref={wrapRef} style={{ height: 'calc(100vh - 210px)' }}>
         <ReactFlow
-          nodes={rfNodes}
-          edges={rfEdges}
+          nodes={viewNodes}
+          edges={viewEdges}
+          onInit={(inst) => { rfInst.current = inst }}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
