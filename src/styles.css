@@ -809,6 +809,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-del-fab { position: absolute; right: 14px; bottom: 14px; z-index: 20; display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 16px; border: none; border-radius: 999px; background: var(--danger, #d4380d); color: #fff; font-size: 13px; font-weight: 600;
   box-shadow: 0 4px 14px rgba(212,56,13,0.4); cursor: pointer; }
+.fl-edit-fab { position: absolute; right: 14px; bottom: 60px; z-index: 20; display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border: none; border-radius: 999px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 14px rgba(16,61,46,0.35); cursor: pointer; }
 .fl-hint { font-size: 12px; }
 .fl-pattern-select { height: 32px; border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 0 8px; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; }
 /* 觸控裝置：連接點放大、好按 */

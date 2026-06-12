@@ -18,7 +18,7 @@ export const FLOW_PATTERNS = [
       { key: 'home', type: 'page', page: '首頁' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'login'], ['login', 'chk'], ['chk', 'home', '是'], ['chk', 'login', '否'], ['home', 'e']],
+    edges: [['s', 'login'], ['login', 'chk', '點登入'], ['chk', 'home', '是'], ['chk', 'login', '否'], ['home', 'e']],
   },
   {
     id: 'register', name: '註冊', role: '訪客',
@@ -29,7 +29,7 @@ export const FLOW_PATTERNS = [
       { key: 'home', type: 'page', page: '首頁' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'reg'], ['reg', 'chk'], ['chk', 'home', '是'], ['chk', 'reg', '否'], ['home', 'e']],
+    edges: [['s', 'reg'], ['reg', 'chk', '送出註冊'], ['chk', 'home', '是'], ['chk', 'reg', '否'], ['home', 'e']],
   },
   {
     id: 'forgot', name: '忘記密碼', role: '訪客',
@@ -41,7 +41,7 @@ export const FLOW_PATTERNS = [
       { key: 'login', type: 'page', page: '登入' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'fp'], ['fp', 'chk'], ['chk', 'reset', '是'], ['chk', 'fp', '否'], ['reset', 'login'], ['login', 'e']],
+    edges: [['s', 'fp'], ['fp', 'chk', '送出'], ['chk', 'reset', '是'], ['chk', 'fp', '否'], ['reset', 'login'], ['login', 'e']],
   },
   {
     id: 'purchase', name: '購買 / 訂閱', role: '會員',
@@ -52,7 +52,7 @@ export const FLOW_PATTERNS = [
       { key: 'ok', type: 'page', page: '付款結果' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'plan'], ['plan', 'pay'], ['pay', 'ok', '是'], ['pay', 'plan', '否'], ['ok', 'e']],
+    edges: [['s', 'plan'], ['plan', 'pay', '前往付款'], ['pay', 'ok', '是'], ['pay', 'plan', '否'], ['ok', 'e']],
   },
   {
     id: 'crud', name: '資料增刪改查', role: '管理員',
@@ -63,7 +63,7 @@ export const FLOW_PATTERNS = [
       { key: 'chk', type: 'decision', label: '欄位驗證通過？' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'list'], ['list', 'form'], ['form', 'chk'], ['chk', 'list', '是'], ['chk', 'form', '否'], ['list', 'e']],
+    edges: [['s', 'list'], ['list', 'form', '新增/編輯'], ['form', 'chk', '儲存'], ['chk', 'list', '是'], ['chk', 'form', '否'], ['list', 'e']],
   },
   {
     id: 'approval', name: '審核 / 簽核', role: '管理員',
@@ -75,7 +75,7 @@ export const FLOW_PATTERNS = [
       { key: 'done', type: 'page', page: '完成' },
       { key: 'e', type: 'end', label: '結束' },
     ],
-    edges: [['s', 'fill'], ['fill', 'l1'], ['l1', 'l2', '是'], ['l1', 'fill', '退回'], ['l2', 'done', '是'], ['l2', 'fill', '退回'], ['done', 'e']],
+    edges: [['s', 'fill'], ['fill', 'l1', '送出申請'], ['l1', 'l2', '是'], ['l1', 'fill', '退回'], ['l2', 'done', '是'], ['l2', 'fill', '退回'], ['done', 'e']],
   },
   {
     id: 'search', name: '搜尋瀏覽', role: '會員',
@@ -86,7 +86,7 @@ export const FLOW_PATTERNS = [
       { key: 'detail', type: 'page', page: '詳情' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'search'], ['search', 'chk'], ['chk', 'detail', '是'], ['chk', 'search', '否'], ['detail', 'e']],
+    edges: [['s', 'search'], ['search', 'chk', '搜尋'], ['chk', 'detail', '是'], ['chk', 'search', '否'], ['detail', 'e']],
   },
   {
     id: 'play', name: '播放 / 收藏', role: '會員',
@@ -98,7 +98,7 @@ export const FLOW_PATTERNS = [
       { key: 'trial', type: 'page', page: '試聽' },
       { key: 'e', type: 'end', label: '完成' },
     ],
-    edges: [['s', 'pick'], ['pick', 'chk'], ['chk', 'player', '是'], ['chk', 'trial', '否'], ['player', 'e'], ['trial', 'e']],
+    edges: [['s', 'pick'], ['pick', 'chk', '點播放'], ['chk', 'player', '是'], ['chk', 'trial', '否'], ['player', 'e'], ['trial', 'e']],
   },
 ]
 
