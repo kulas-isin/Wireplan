@@ -810,6 +810,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   padding: 10px 16px; border: none; border-radius: 999px; background: var(--danger, #d4380d); color: #fff; font-size: 13px; font-weight: 600;
   box-shadow: 0 4px 14px rgba(212,56,13,0.4); cursor: pointer; }
 .fl-hint { font-size: 12px; }
+.fl-pattern-select { height: 32px; border: 1px solid var(--border); border-radius: 8px; background: #fff; padding: 0 8px; font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; }
 /* 觸控裝置：連接點放大、好按 */
 @media (pointer: coarse) {
   .react-flow__handle { width: 22px; height: 22px; border-width: 3px; }
