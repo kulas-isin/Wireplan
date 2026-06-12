@@ -863,3 +863,20 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-edge-ok { background: #ecfdf3; border: 1px solid #abe6c2; border-radius: 6px; padding: 1px 6px; color: #15803d; font-weight: 600; }
 .fl-edge-add { background: var(--accent, #f4694f); border: none; border-radius: 6px; padding: 2px 8px; color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(244,105,79,0.4); }
 .react-flow__attribution { display: none; }
+
+/* ── Demo 互動預覽模式 ── */
+.wf-studio.demo .wf-screens, .wf-studio.demo .wf-screens-toggle, .wf-studio.demo .wf-nav-backdrop { display: none !important; }
+.wf-studio.demo .wf-titlebar > button, .wf-studio.demo .wf-titlebar .device-toggle, .wf-studio.demo .wf-titlebar .ant-dropdown-trigger { display: none !important; }
+.wf-studio.demo .wb-tools, .wf-studio.demo .wf-rowhandle, .wf-studio.demo .add-cmp-bar, .wf-studio.demo .wf-resize, .wf-studio.demo .wf-badge, .wf-studio.demo .drag-handle { display: none !important; }
+.wf-studio.demo .wf-item.selected { outline: none !important; }
+.wf-studio.demo .wf-item { cursor: pointer; }
+.wf-studio.demo .wf-stage { padding-bottom: 84px; }
+.demo-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; background: #14271c; color: #fff; box-shadow: 0 -4px 20px rgba(0,0,0,0.25); }
+.demo-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; white-space: nowrap; }
+.demo-trans { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.demo-muted { font-size: 12px; color: #9fb6ab; }
+.demo-go { background: var(--accent, #f4694f); color: #fff; border: none; border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.demo-go:disabled { background: #5a6b62; cursor: not-allowed; }
+.demo-end { font-size: 12px; color: #cfe6d8; }
+.demo-exit { background: #fff; color: #14271c; border: none; border-radius: 999px; padding: 6px 16px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
