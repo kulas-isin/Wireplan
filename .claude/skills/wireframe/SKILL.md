@@ -115,6 +115,36 @@ description: 從文字需求產生 Wireplan 可直接匯入的 wireframe JSON。
 }
 ```
 
+## 業務流程 `flows`（選填，會自動畫成流程圖）
+
+JSON 頂層除了 `wireframes`，可再帶 `flows`：描述「某角色完成某任務」的步驟與判斷。匯入後 app 會在「流程設計」分頁**自動鋪成含判斷分支的流程圖**，並把 `page` 綁到對應 wireframe（找不到→紅色待補節點）。
+
+```jsonc
+"flows": [
+  {
+    "name": "購買訂閱",
+    "role": "會員",                       // 訪客 | 會員 | 管理員（決定節點顏色）
+    "nodes": [
+      { "key": "s",    "type": "start",    "label": "開始" },
+      { "key": "plan", "type": "page",     "page": "購買方案選擇" },   // page=要綁的頁名
+      { "key": "pay",  "type": "decision", "label": "付款成功？" },
+      { "key": "ok",   "type": "page",     "page": "付款結果" },
+      { "key": "e",    "type": "end",      "label": "完成" }
+    ],
+    "edges": [
+      ["s","plan"], ["plan","pay"],
+      ["pay","ok","是"], ["pay","plan","否"],   // [from, to, 標籤?]；判斷用是/否、退回
+      ["ok","e"]
+    ]
+  }
+]
+```
+
+- 一條 flow 一個物件；`nodes` 的 `key` 僅供 `edges` 連線參照。
+- `type`：`start`／`end`／`page`（綁頁，方框）／`decision`（判斷，菱形）。
+- **務必含判斷點與失敗回圈**（如付款失敗→回方案、審核退回→回填寫），這正是 RD 要、頁面上看不出來的部分。
+- 常見業務流程：登入、註冊、忘記密碼、購買/訂閱、資料增刪改查、審核/簽核、搜尋瀏覽、播放/收藏。產頁時若需求涵蓋這些，**順手把對應 flows 一起輸出**。
+
 ## 怎麼匯入
 
 把產生的 JSON 給使用者後，請告訴他：

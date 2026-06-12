@@ -3,6 +3,7 @@ import { loadState, saveState, emptyProject, rebuildArtifacts } from './store.js
 import { uid } from '../lib/id.js'
 import { generateWireframe, regenerateComponents } from '../lib/wireframeTemplates.js'
 import { generateFlow, generateFlowFromWireframes } from '../lib/flowGenerator.js'
+import { buildFlowsGraph } from '../lib/flowPatterns.js'
 import { detectCategory } from '../lib/categories.js'
 
 const StoreContext = createContext(null)
@@ -322,6 +323,23 @@ function reducer(state, action) {
 
     case 'REGENERATE_FLOW_FROM_WIREFRAMES':
       return replaceCurrent(touch({ ...cur, flow: generateFlowFromWireframes(cur) }))
+
+    case 'IMPORT_FLOWS': {
+      // 匯入 JSON 帶的 flows：組成圖、綁定既有頁面，併入現有流程（往右排開）
+      const g = buildFlowsGraph(action.flows, cur.wireframes)
+      if (!g.nodes.length) return state
+      const existing = cur.flow?.graph
+      let merged = g
+      if (existing?.nodes?.length) {
+        const maxX = existing.nodes.reduce((m, n) => Math.max(m, n.x || 0), -Infinity)
+        const off = isFinite(maxX) ? maxX + 520 : 0
+        merged = {
+          nodes: [...existing.nodes, ...g.nodes.map((n) => ({ ...n, x: (n.x || 0) + off }))],
+          edges: [...(existing.edges || []), ...g.edges],
+        }
+      }
+      return replaceCurrent(touch({ ...cur, flow: { graph: merged } }))
+    }
 
     case 'SET_SPEC_OVERRIDE':
       return replaceCurrent(touch({ ...cur, specOverride: action.value }))
