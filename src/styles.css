@@ -812,12 +812,15 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-hint { font-size: 12px; }
 /* 觸控裝置：連接點放大、好按 */
 @media (pointer: coarse) {
-  .react-flow__handle { width: 14px; height: 14px; }
+  .react-flow__handle { width: 16px; height: 16px; }
   .fl-del-fab { padding: 12px 18px; font-size: 14px; }
+  .fl-node { min-width: 158px; padding: 16px 22px; font-size: 16px; }
+  .fl-decision { width: 132px; height: 132px; }
+  .fl-dtext { max-width: 92px; font-size: 14px; }
 }
-.fl-node { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 10px;
-  background: #fff; border: 1.5px solid var(--primary); font-size: 13px; font-weight: 600; color: #14271c;
-  box-shadow: 0 1px 3px rgba(16,24,40,0.10); min-width: 96px; justify-content: center; }
+.fl-node { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; border-radius: 11px;
+  background: #fff; border: 2px solid var(--primary); font-size: 14px; font-weight: 600; color: #14271c;
+  box-shadow: 0 1px 3px rgba(16,24,40,0.10); min-width: 120px; justify-content: center; }
 .fl-node.sel { box-shadow: 0 0 0 3px var(--primary-soft); }
 .fl-page.fl-missing { border-style: dashed; border-color: var(--danger, #d4380d); color: var(--danger, #d4380d); background: #fff7f5; }
 .fl-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }

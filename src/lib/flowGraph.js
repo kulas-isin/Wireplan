@@ -36,8 +36,8 @@ export function autoLayout(nodes, edges) {
   for (const [d, list] of byDepth) {
     list.forEach((n, i) => {
       const node = idx.get(n.id)
-      node.x = i * 240 - (list.length - 1) * 120
-      node.y = d * 140
+      node.x = i * 280 - (list.length - 1) * 140
+      node.y = d * 170
     })
   }
   return out

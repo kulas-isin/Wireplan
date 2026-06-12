@@ -266,6 +266,9 @@ export default function FlowCanvas() {
           nodesDraggable={!connectMode}
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
+          fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
+          minZoom={0.3}
+          maxZoom={2.5}
           deleteKeyCode={['Delete', 'Backspace']}
         >
           <Background gap={16} color="#e3e8e5" />
