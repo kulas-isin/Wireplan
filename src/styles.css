@@ -842,4 +842,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 擴大連接點的隱形觸控/點擊範圍（視覺不變、好抓很多） */
 .react-flow__handle::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
 .react-flow__edge-text { font-size: 11px; font-weight: 600; }
+/* 連線上的標籤與回寫晶片 */
+.fl-edge-lbl { position: absolute; display: flex; align-items: center; gap: 4px; pointer-events: all; font-size: 11px; }
+.fl-edge-text { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; font-weight: 700; color: #475467; }
+.fl-edge-ok { background: #ecfdf3; border: 1px solid #abe6c2; border-radius: 6px; padding: 1px 6px; color: #15803d; font-weight: 600; }
+.fl-edge-add { background: var(--accent, #f4694f); border: none; border-radius: 6px; padding: 2px 8px; color: #fff; font-weight: 600; cursor: pointer; box-shadow: 0 1px 3px rgba(244,105,79,0.4); }
 .react-flow__attribution { display: none; }
