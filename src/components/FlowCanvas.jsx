@@ -135,7 +135,7 @@ function BackSyncEdge({ id, source, target, sourceX, sourceY, targetX, targetY, 
   }
   return (
     <>
-      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} />
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} style={{ stroke: '#64748b', strokeWidth: 2, ...(style || {}) }} />
       {(label || chip) && (
         <EdgeLabelRenderer>
           <div className="fl-edge-lbl" style={{ transform: `translate(-50%,-50%) translate(${labelX}px,${labelY}px)` }}>
@@ -499,7 +499,7 @@ export default function FlowCanvas() {
           onlyRenderVisibleElements
           deleteKeyCode={['Delete', 'Backspace']}
         >
-          <Background gap={16} color="#e3e8e5" />
+          <Background gap={18} size={1.5} color="#dfe4ea" />
           <Controls />
           <MiniMap pannable zoomable nodeStrokeWidth={2} />
         </ReactFlow>
