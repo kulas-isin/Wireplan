@@ -1,0 +1,154 @@
+{
+  "wireframes": [
+    {
+      "name": "W.4.LOGIN 串流登入頁",
+      "device": "desktop",
+      "theme": "music",
+      "components": [
+        { "type": "image", "label": "STAR MUSIC", "align": "center" },
+        { "type": "header", "label": "登入即可聆聽", "align": "center" },
+        { "type": "field", "label": "手機號碼 / Email" },
+        { "type": "field", "label": "密碼", "control": "password" },
+        { "type": "buttonRow", "align": "center", "buttons": ["登入"] },
+        { "type": "buttonRow", "align": "center", "buttons": ["Google", "Apple"] },
+        { "type": "text", "label": "註冊 / 免費體驗", "align": "center" }
+      ]
+    },
+    {
+      "name": "W.4.0 音樂首頁",
+      "device": "desktop",
+      "theme": "music",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 0, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "訂閱方案"] },
+        { "type": "topbar", "label": "音樂首頁", "region": "content", "showSearch": true, "showNotify": true, "showAvatar": true },
+        { "type": "carousel", "label": "首頁 Banner 輪播", "region": "content", "showArrows": true },
+        { "type": "header", "label": "熱門歌曲 / 新歌推薦", "region": "content" },
+        { "type": "table", "region": "content", "size": "small", "rows": 6, "columns": ["#", "歌曲", "創作者", "時長", "操作"], "actions": ["播放", "加入歌單", "收藏"], "actionStyle": "icon" },
+        { "type": "header", "label": "精選歌單", "region": "content" },
+        { "type": "cardlist", "region": "content", "cards": ["每日精選", "深夜放鬆", "通勤必聽", "運動電力"] }
+      ]
+    },
+    {
+      "name": "W.4.1 搜尋頁",
+      "device": "desktop",
+      "theme": "music",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 1, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "訂閱方案"] },
+        { "type": "topbar", "label": "搜尋", "region": "content", "showAvatar": true },
+        { "type": "searchbar", "label": "搜尋歌曲 / 歌單 / 創作者…", "region": "content", "enterButton": true },
+        { "type": "segmented", "region": "content", "options": ["全部", "歌曲", "歌單", "創作者", "MV"] },
+        { "type": "table", "region": "content", "size": "small", "rows": 6, "columns": ["歌曲", "創作者", "類型", "時長", "操作"], "actions": ["播放", "收藏"], "actionStyle": "link" }
+      ]
+    },
+    {
+      "name": "W.4.3 歌單詳情",
+      "device": "desktop",
+      "theme": "music",
+      "layout": "sidebar",
+      "components": [
+        { "type": "header", "label": "STAR MUSIC", "region": "sidebar" },
+        { "type": "sidenav", "region": "sidebar", "active": 2, "items": ["音樂首頁", "搜尋", "歌單", "MV 專區", "我的最愛", "訂閱方案"] },
+        { "type": "topbar", "label": "歌單詳情", "region": "content", "showAvatar": true },
+        { "type": "row", "region": "content", "direction": "row", "gap": 16, "alignCross": "center", "children": [
+          { "type": "image", "label": "歌單封面", "width": "fixed", "widthPx": 180 },
+          { "type": "card", "label": "深夜放鬆", "width": "fill", "direction": "column", "gap": 8, "children": [
+            { "type": "text", "label": "60 首歌曲 · 約 3 小時" },
+            { "type": "buttonRow", "buttons": ["播放全部", "隨機播放", "收藏歌單"] }
+          ] }
+        ] },
+        { "type": "table", "region": "content", "size": "small", "pager": true, "rows": 8, "columns": ["#", "歌曲", "創作者", "時長", "操作"], "actions": ["播放", "收藏"], "actionStyle": "icon" }
+      ]
+    },
+    {
+      "name": "W.4.FP 全螢幕播放器",
+      "device": "desktop",
+      "theme": "music",
+      "components": [
+        { "type": "text", "label": "正在播放　·　收合 ▾", "align": "center" },
+        { "type": "row", "direction": "row", "gap": 24, "children": [
+          { "type": "image", "label": "專輯封面（大圖）", "width": "fixed", "widthPx": 320 },
+          { "type": "card", "label": "歌曲名稱", "width": "fill", "direction": "column", "gap": 12, "children": [
+            { "type": "text", "label": "演出者" },
+            { "type": "progress", "percent": 42 },
+            { "type": "buttonRow", "buttons": ["隨機", "上一首", "播放 / 暫停", "下一首", "循環"] },
+            { "type": "buttonRow", "buttons": ["歌詞", "加入歌單", "收藏", "分享"] }
+          ] }
+        ] }
+      ]
+    },
+    {
+      "name": "W.3.0 購買方案選擇",
+      "device": "desktop",
+      "theme": "music",
+      "components": [
+        { "type": "steps", "active": 0, "steps": ["選擇方案", "填寫資料", "付款", "完成"] },
+        { "type": "header", "label": "選擇訂閱方案", "align": "center" },
+        { "type": "cardlist", "cards": ["月方案 NT$149 / 月", "年方案 NT$1,490 / 年", "心禮卡兌換"] },
+        { "type": "formgrid", "cols": 2, "fields": ["付款方式:select", "發票類型:select"] },
+        { "type": "buttonRow", "align": "right", "buttons": ["返回", "前往付款"] }
+      ]
+    },
+    {
+      "name": "W.3.1 付款結果",
+      "device": "desktop",
+      "theme": "music",
+      "components": [
+        { "type": "steps", "active": 3, "steps": ["選擇方案", "填寫資料", "付款", "完成"] },
+        { "type": "result", "label": "付款成功", "status": "success", "sub": "您的訂閱已開通，感謝您的支持！" },
+        { "type": "buttonRow", "align": "center", "buttons": ["前往音樂首頁", "查看訂單"] }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "name": "登入", "role": "訪客",
+      "nodes": [
+        { "key": "s", "type": "start", "label": "開始" },
+        { "key": "login", "type": "page", "page": "串流登入頁" },
+        { "key": "chk", "type": "decision", "label": "帳號密碼正確？" },
+        { "key": "home", "type": "page", "page": "音樂首頁" },
+        { "key": "e", "type": "end", "label": "完成" }
+      ],
+      "edges": [["s", "login"], ["login", "chk", "登入"], ["chk", "home", "是"], ["chk", "login", "否"], ["home", "e"]]
+    },
+    {
+      "name": "購買訂閱", "role": "會員",
+      "nodes": [
+        { "key": "s", "type": "start", "label": "開始" },
+        { "key": "home", "type": "page", "page": "音樂首頁" },
+        { "key": "plan", "type": "page", "page": "購買方案選擇" },
+        { "key": "pay", "type": "decision", "label": "付款成功？" },
+        { "key": "ok", "type": "page", "page": "付款結果" },
+        { "key": "e", "type": "end", "label": "完成" }
+      ],
+      "edges": [["s", "home"], ["home", "plan", "訂閱方案"], ["plan", "pay", "前往付款"], ["pay", "ok", "是"], ["pay", "plan", "否"], ["ok", "e"]]
+    },
+    {
+      "name": "播放", "role": "會員",
+      "nodes": [
+        { "key": "s", "type": "start", "label": "開始" },
+        { "key": "pl", "type": "page", "page": "歌單詳情" },
+        { "key": "mem", "type": "decision", "label": "是會員？" },
+        { "key": "fp", "type": "page", "page": "全螢幕播放器" },
+        { "key": "plan", "type": "page", "page": "購買方案選擇" },
+        { "key": "e", "type": "end", "label": "完成" }
+      ],
+      "edges": [["s", "pl"], ["pl", "mem", "播放全部"], ["mem", "fp", "是"], ["mem", "plan", "否"], ["fp", "e"], ["plan", "e"]]
+    },
+    {
+      "name": "搜尋", "role": "會員",
+      "nodes": [
+        { "key": "s", "type": "start", "label": "開始" },
+        { "key": "sr", "type": "page", "page": "搜尋" },
+        { "key": "chk", "type": "decision", "label": "有結果？" },
+        { "key": "d", "type": "page", "page": "歌單詳情" },
+        { "key": "e", "type": "end", "label": "完成" }
+      ],
+      "edges": [["s", "sr"], ["sr", "chk", "搜尋"], ["chk", "d", "是"], ["chk", "sr", "否"], ["d", "e"]]
+    }
+  ]
+}
