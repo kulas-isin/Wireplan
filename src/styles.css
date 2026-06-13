@@ -847,6 +847,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fl-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .fl-terminal { border-radius: 999px; }
 .fl-process { background: #f7f9fb; border-color: #94a3b8; border-style: solid; color: #334155; }
+.fl-process.fl-jump { background: #f3eefb; border-color: #8E44AD; border-style: dashed; color: #6b2160; cursor: pointer; font-weight: 600; }
 /* 畫面縮圖節點（Overflow 風：真實畫面即時縮小渲染） */
 .fl-screen-node { width: 224px; background: #fff; border: 2px solid var(--primary); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(16,24,40,0.14); }
 .fl-screen-node.sel { box-shadow: 0 0 0 3px var(--primary-soft); }
