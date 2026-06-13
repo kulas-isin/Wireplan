@@ -91,7 +91,7 @@ export function renderActions(labels, style = 'link', hover = false) {
   )
 }
 
-function Visual({ cmp }) {
+export function Visual({ cmp }) {
   const align = cmp.align || 'left'
   const justify = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
   const T = Typography
