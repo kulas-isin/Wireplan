@@ -11,6 +11,7 @@ import { uid } from '../lib/id.js'
 import { toGraph, autoLayout, graphToMermaid } from '../lib/flowGraph.js'
 import { FLOW_PATTERNS, buildPatternFlow } from '../lib/flowPatterns.js'
 import { extractTriggers } from '../lib/flowTriggers.js'
+import { parseMermaidDoc } from '../lib/mermaidImport.js'
 import { downloadText } from '../lib/download.js'
 import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid, Link2, Trash2 } from 'lucide-react'
 
@@ -52,7 +53,18 @@ function TerminalNode({ data, type }) {
     </div>
   )
 }
-const nodeTypes = { page: PageNode, decision: DecisionNode, start: TerminalNode, end: TerminalNode }
+function ProcessNode({ data, selected }) {
+  return (
+    <div className={'fl-node fl-process' + (selected ? ' sel' : '')} style={data.color ? { borderColor: data.color } : undefined}>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} id="l" />
+      <span className="fl-label">{data.label}</span>
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} id="r" />
+    </div>
+  )
+}
+const nodeTypes = { page: PageNode, decision: DecisionNode, start: TerminalNode, end: TerminalNode, process: ProcessNode }
 
 // ── 回寫機制：page→page 的線顯示「已對應 / 加導航鈕」 ──
 const findWf = (wfs, name) => {
@@ -116,7 +128,7 @@ function toRf(graph, wireframes) {
   const wfKeys = new Set((wireframes || []).map((w) => coreName(w.name)))
   const nodes = (graph.nodes || []).map((n) => ({
     id: n.id,
-    type: n.type === 'page' || n.type === 'decision' || n.type === 'start' || n.type === 'end' ? n.type : 'page',
+    type: ['page', 'decision', 'start', 'end', 'process'].includes(n.type) ? n.type : 'page',
     position: { x: n.x ?? 0, y: n.y ?? 0 },
     data: {
       label: n.label || '', page: n.page, wireframeId: n.wireframeId, role: n.role, color: n.color, flow: n.flow,
@@ -153,6 +165,8 @@ export default function FlowCanvas() {
   const [pending, setPending] = useState(null)
   const [selected, setSelected] = useState({ nodes: [], edges: [] })
   const [viewFlow, setViewFlow] = useState('')
+  const [mmOpen, setMmOpen] = useState(false)
+  const [mmText, setMmText] = useState('')
   const wrapRef = useRef(null)
   const saveTimer = useRef(null)
   const rfInst = useRef(null)
@@ -340,6 +354,29 @@ export default function FlowCanvas() {
     setReload((r) => r + 1)
   }
 
+  // 匯入 Mermaid：每個 ```mermaid``` 區塊 → 一條流程，往右排開併入現有圖
+  const importMermaid = (text) => {
+    const flows = parseMermaidDoc(text)
+    if (!flows.length) { window.alert('沒有解析到 flowchart（請貼 mermaid flowchart 內容）'); return }
+    const cur = fromRf(rfNodes, rfEdges)
+    let offX = cur.nodes.length ? Math.max(...cur.nodes.map((n) => n.x || 0)) + 400 : 0
+    const addN = [], addE = []
+    for (const f of flows) {
+      const idMap = new Map()
+      const gn = f.nodes.map((n) => { const id = uid('node'); idMap.set(n.id, id); return { id, type: n.type, label: n.label, color: n.color, flow: f.name } })
+      const ge = f.edges.filter((e) => idMap.has(e.from) && idMap.has(e.to)).map((e) => ({ id: uid('e'), source: idMap.get(e.from), target: idMap.get(e.to), label: e.label }))
+      const laid = autoLayout(gn, ge)
+      const xs = laid.map((n) => n.x || 0)
+      const w = (Math.max(...xs, 0) - Math.min(...xs, 0)) || 0
+      addN.push(...laid.map((n) => ({ ...n, x: (n.x || 0) + offX })))
+      addE.push(...ge)
+      offX += w + 420
+    }
+    persist({ nodes: [...cur.nodes, ...addN], edges: [...cur.edges, ...addE] })
+    setReload((r) => r + 1)
+    window.alert(`已匯入 ${flows.length} 條流程：${flows.map((f) => f.name).join('、')}`)
+  }
+
   // 插入業務流程模式（綁既有頁面、含判斷/失敗回圈、角色色），放在現有流程右側
   const insertPattern = (id) => {
     const p = FLOW_PATTERNS.find((x) => x.id === id)
@@ -379,9 +416,23 @@ export default function FlowCanvas() {
         </select>
         <button onClick={autoArrange}><LayoutGrid size={15} /> 自動排列</button>
         <button className="primary" onClick={regen}><RotateCw size={14} /> 由畫面重新鋪</button>
+        <button onClick={() => { setMmText(''); setMmOpen(true) }}><Download size={15} style={{ transform: 'rotate(180deg)' }} /> 匯入 Mermaid</button>
         <button onClick={exportPng}><ImageIcon size={15} /> PNG</button>
         <button onClick={exportMermaid}><Download size={15} /> Mermaid</button>
       </div>
+      {mmOpen && (
+        <div className="mm-modal-backdrop" onClick={() => setMmOpen(false)}>
+          <div className="mm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="mm-modal-head">匯入 Mermaid 流程圖</div>
+            <p className="mm-modal-tip">貼上 mermaid flowchart（可整份含多個 ```mermaid``` 區塊，每塊變一條流程）。支援判斷多分支、起訖、處理節點、classDef 顏色。</p>
+            <textarea className="mm-modal-ta" value={mmText} onChange={(e) => setMmText(e.target.value)} placeholder={'flowchart LR\n  A([開始]) --> B{判斷?}\n  B -->|是| C[頁面]\n  B -->|否| A'} />
+            <div className="mm-modal-btns">
+              <button onClick={() => setMmOpen(false)}>取消</button>
+              <button className="primary" onClick={() => { importMermaid(mmText); setMmOpen(false) }}>匯入</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className={'flow-canvas' + (connectMode ? ' fl-connect' : '')} ref={wrapRef} style={{ height: 'calc(100vh - 210px)' }}>
         <ReactFlow
           nodes={viewNodes}
