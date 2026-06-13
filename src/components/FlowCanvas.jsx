@@ -21,7 +21,7 @@ const coreName = (l) => String(l || '')
   .replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').replace(/\s+/g, '').trim()
 
 // ── 自訂節點 ──────────────────────────────
-function PageNode({ data, selected }) {
+function PageNode({ id, data, selected }) {
   const { current } = useStore()
   const wf = data.missing ? null : findWf(current.wireframes, data.page || data.label)
   if (!wf) {
@@ -37,14 +37,25 @@ function PageNode({ data, selected }) {
       </div>
     )
   }
+  const triggers = extractTriggers(wf)
+  const wired = new Set((current.flow?.graph?.edges || []).filter((e) => e.source === id && e.label).map((e) => e.label))
   return (
     <div className={'fl-screen-node' + (selected ? ' sel' : '')} style={data.color ? { borderColor: data.color } : undefined}>
       <Handle type="target" position={Position.Top} />
       <Handle type="target" position={Position.Left} id="l" />
       <div className="fl-thumb"><div className="fl-thumb-scale"><WireframePreview wireframe={wf} /></div></div>
       <div className="fl-cap">{data.label}</div>
+      {triggers.length > 0 && (
+        <div className="fl-ports">
+          {triggers.map((t) => (
+            <span key={t.label} className={'fl-port' + (wired.has(t.label) ? ' on' : '')} title={`從「${t.label}」拉線到目標畫面`}>
+              {t.label}
+              <Handle type="source" position={Position.Right} id={'t:' + t.label} className="fl-port-h" />
+            </span>
+          ))}
+        </div>
+      )}
       <Handle type="source" position={Position.Bottom} />
-      <Handle type="source" position={Position.Right} id="r" />
     </div>
   )
 }
@@ -240,7 +251,8 @@ export default function FlowCanvas() {
 
   // 拉線連接
   const onConnect = useCallback((conn) => {
-    const label = conn.sourceHandle === 'yes' ? '是' : conn.sourceHandle === 'no' ? '否' : undefined
+    const sh = conn.sourceHandle
+    const label = sh === 'yes' ? '是' : sh === 'no' ? '否' : (sh && sh.startsWith('t:')) ? sh.slice(2) : undefined
     setRfEdges((eds) => {
       const next = addEdge({ ...conn, id: uid('e'), label, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }, eds)
       setRfNodes((nds) => { persistNow(nds, next); return nds })
@@ -303,7 +315,7 @@ export default function FlowCanvas() {
   const setTriggerTarget = (sourceId, triggerLabel, targetId) => {
     setRfEdges((eds) => {
       let next = eds.filter((e) => !(e.source === sourceId && e.label === triggerLabel))
-      if (targetId) next = [...next, { id: uid('e'), source: sourceId, target: targetId, label: triggerLabel, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }]
+      if (targetId) next = [...next, { id: uid('e'), source: sourceId, target: targetId, sourceHandle: 't:' + triggerLabel, label: triggerLabel, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed } }]
       setRfNodes((nds) => { persistNow(nds, next); return nds })
       return next
     })
