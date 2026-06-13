@@ -81,10 +81,10 @@ function TerminalNode({ data, type }) {
 }
 function ProcessNode({ data, selected }) {
   return (
-    <div className={'fl-node fl-process' + (selected ? ' sel' : '')} style={data.color ? { borderColor: data.color } : undefined}>
+    <div className={'fl-node fl-process' + (selected ? ' sel' : '') + (data.jumpFlow ? ' fl-jump' : '')} style={data.color ? { borderColor: data.color } : undefined} title={data.jumpFlow ? `雙擊跳到流程「${data.jumpFlow}」` : undefined}>
       <Handle type="target" position={Position.Top} />
       <Handle type="target" position={Position.Left} id="l" />
-      <span className="fl-label">{data.label}</span>
+      <span className="fl-label">{data.jumpFlow ? '↪ ' : ''}{data.label}</span>
       <Handle type="source" position={Position.Bottom} />
       <Handle type="source" position={Position.Right} id="r" />
     </div>
@@ -149,18 +149,27 @@ function BackSyncEdge({ id, source, target, sourceX, sourceY, targetX, targetY, 
 }
 const edgeTypes = { backsync: BackSyncEdge }
 
-// graph → ReactFlow（標記缺頁、套分類色）
+// graph → ReactFlow（標記缺頁、套分類色、跨流程引用）
+const fCode = (s) => { const m = String(s || '').match(/F\d+/i); return m ? m[0].toUpperCase() : null }
 function toRf(graph, wireframes) {
   const wfKeys = new Set((wireframes || []).map((w) => coreName(w.name)))
-  const nodes = (graph.nodes || []).map((n) => ({
-    id: n.id,
-    type: ['page', 'decision', 'start', 'end', 'process'].includes(n.type) ? n.type : 'page',
-    position: { x: n.x ?? 0, y: n.y ?? 0 },
-    data: {
-      label: n.label || '', page: n.page, wireframeId: n.wireframeId, role: n.role, color: n.color, flow: n.flow,
-      missing: n.type === 'page' && !!(n.page || n.label) && !wfKeys.has(coreName(n.page || n.label)),
-    },
-  }))
+  // 建立「F 編號 → 流程名」對照，用來偵測引用別張流程的節點
+  const flowNames = [...new Set((graph.nodes || []).map((n) => n.flow).filter(Boolean))]
+  const flowByCode = {}
+  flowNames.forEach((fn) => { const c = fCode(fn); if (c) flowByCode[c] = fn })
+  const nodes = (graph.nodes || []).map((n) => {
+    const lc = fCode(n.label)
+    const jumpFlow = lc && flowByCode[lc] && flowByCode[lc] !== n.flow ? flowByCode[lc] : undefined
+    return {
+      id: n.id,
+      type: ['page', 'decision', 'start', 'end', 'process'].includes(n.type) ? n.type : 'page',
+      position: { x: n.x ?? 0, y: n.y ?? 0 },
+      data: {
+        label: n.label || '', page: n.page, wireframeId: n.wireframeId, role: n.role, color: n.color, flow: n.flow, jumpFlow,
+        missing: n.type === 'page' && !!(n.page || n.label) && !wfKeys.has(coreName(n.page || n.label)),
+      },
+    }
+  })
   const edges = (graph.edges || []).map((e) => ({
     id: e.id || uid('e'), source: e.source, target: e.target, sourceHandle: e.sourceHandle,
     label: e.label, type: 'backsync', markerEnd: { type: MarkerType.ArrowClosed },
@@ -334,6 +343,9 @@ export default function FlowCanvas() {
   }
   const onEdgeDoubleClick = useCallback((_e, edge) => editEdgeLabel(edge), [])
 
+  // 雙擊「引用別張流程」的節點 → 跳到那條流程
+  const onNodeDoubleClick = useCallback((_e, node) => { if (node?.data?.jumpFlow) setViewFlow(node.data.jumpFlow) }, [])
+
   // 加節點
   const addNode = (kind) => {
     let label = kind === 'decision' ? '判斷？' : '新頁面'
@@ -475,6 +487,7 @@ export default function FlowCanvas() {
           onNodeClick={onNodeClick}
           onPaneClick={onPaneClick}
           onEdgeDoubleClick={onEdgeDoubleClick}
+          onNodeDoubleClick={onNodeDoubleClick}
           onSelectionChange={onSelectionChange}
           nodesDraggable={!connectMode}
           connectionMode={ConnectionMode.Loose}
