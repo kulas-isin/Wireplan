@@ -12,6 +12,7 @@ import { toGraph, autoLayout, graphToMermaid } from '../lib/flowGraph.js'
 import { FLOW_PATTERNS, buildPatternFlow } from '../lib/flowPatterns.js'
 import { extractTriggers } from '../lib/flowTriggers.js'
 import { parseMermaidDoc } from '../lib/mermaidImport.js'
+import WireframePreview from './WireframePreview.jsx'
 import { downloadText } from '../lib/download.js'
 import { Plus, GitBranch, RotateCw, Download, Image as ImageIcon, LayoutGrid, Link2, Trash2 } from 'lucide-react'
 
@@ -21,13 +22,27 @@ const coreName = (l) => String(l || '')
 
 // ── 自訂節點 ──────────────────────────────
 function PageNode({ data, selected }) {
+  const { current } = useStore()
+  const wf = data.missing ? null : findWf(current.wireframes, data.page || data.label)
+  if (!wf) {
+    return (
+      <div className={'fl-node fl-page' + (data.missing ? ' fl-missing' : '') + (selected ? ' sel' : '')}
+        style={data.color ? { borderColor: data.color } : undefined}>
+        <Handle type="target" position={Position.Top} />
+        <Handle type="target" position={Position.Left} id="l" />
+        {data.color && <span className="fl-dot" style={{ background: data.color }} />}
+        <span className="fl-label">{data.label}{data.missing ? '（待補）' : ''}</span>
+        <Handle type="source" position={Position.Bottom} />
+        <Handle type="source" position={Position.Right} id="r" />
+      </div>
+    )
+  }
   return (
-    <div className={'fl-node fl-page' + (data.missing ? ' fl-missing' : '') + (selected ? ' sel' : '')}
-      style={data.color ? { borderColor: data.color } : undefined}>
+    <div className={'fl-screen-node' + (selected ? ' sel' : '')} style={data.color ? { borderColor: data.color } : undefined}>
       <Handle type="target" position={Position.Top} />
       <Handle type="target" position={Position.Left} id="l" />
-      {data.color && <span className="fl-dot" style={{ background: data.color }} />}
-      <span className="fl-label">{data.label}{data.missing ? '（待補）' : ''}</span>
+      <div className="fl-thumb"><div className="fl-thumb-scale"><WireframePreview wireframe={wf} /></div></div>
+      <div className="fl-cap">{data.label}</div>
       <Handle type="source" position={Position.Bottom} />
       <Handle type="source" position={Position.Right} id="r" />
     </div>
@@ -454,8 +469,9 @@ export default function FlowCanvas() {
           defaultEdgeOptions={defaultEdgeOptions}
           fitView
           fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
-          minZoom={0.3}
+          minZoom={0.2}
           maxZoom={2.5}
+          onlyRenderVisibleElements
           deleteKeyCode={['Delete', 'Backspace']}
         >
           <Background gap={16} color="#e3e8e5" />
