@@ -90,13 +90,31 @@ function guessValidations(label, type) {
   if (type === 'number') return ['數值範圍：待補']
   return []
 }
-// 智慧預設：把常見的驗證/必填/使用情境先猜好，使用者少填
+// 自動猜英文欄名（PM 只要再選模組短碼即可湊成 ID）
+const NAME_MAP = [
+  [/帳號|email|信箱/i, 'account'], [/密碼|password|pin/i, 'password'], [/手機|電話|phone|mobile/i, 'phone'],
+  [/驗證碼|otp/i, 'otp'], [/暱稱|nickname/i, 'nickname'], [/名稱|name/i, 'name'], [/標題|title/i, 'title'],
+  [/狀態|status/i, 'status'], [/類型|type/i, 'type'], [/分類|類別|category/i, 'category'],
+  [/說明|描述|desc/i, 'description'], [/封面|cover/i, 'cover'], [/圖片|image/i, 'image'], [/附件|檔案|file/i, 'file'],
+  [/建立時間|建立日/i, 'createdAt'], [/更新時間|更新日/i, 'updatedAt'], [/日期|date/i, 'date'], [/時間|time/i, 'time'],
+  [/搜尋|關鍵字|keyword/i, 'keyword'], [/金額|價格|price/i, 'price'], [/數量|count/i, 'count'],
+  [/生日|出生/i, 'birthday'], [/備註|note/i, 'note'], [/排序|order/i, 'sortOrder'], [/發票/i, 'invoice'], [/付款/i, 'payment'],
+]
+function guessName(label) {
+  const L = String(label || '').trim()
+  if (/^[a-zA-Z0-9 _-]+$/.test(L)) return L.replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase()).replace(/[^a-zA-Z0-9]/g, '').replace(/^(.)/, (c) => c.toLowerCase())
+  for (const [re, name] of NAME_MAP) if (re.test(L)) return name
+  return ''
+}
+
+// 智慧預設：把常見的驗證/必填/使用情境/英文欄名先猜好，使用者少填
 function enrichField(r, wfName) {
   const required = r.required === '否' && likelyRequired(r.label) ? '是' : r.required
   let validations = r.validations && r.validations.length ? r.validations : guessValidations(r.label, r.type)
   if (required === '是' && !validations.includes('必填')) validations = ['必填', ...validations]
   const usage = r.usage || (wfName ? `${pageShort(wfName)}` : '')
-  return { ...r, required, validations, usage }
+  const id = r.id || guessName(r.label) // 只有英文名，PM 再選模組短碼組成 module.name
+  return { ...r, required, validations, usage, id }
 }
 
 // 匯入用：把 AI/外部產的 fields 正規化（補預設、_k、mapping、validations 陣列）
@@ -151,9 +169,12 @@ function findComp(cs, id) {
 export function validateField(f, allFields) {
   const out = []
   if (!f.label) out.push('缺 Label（顯示字）')
-  if (!f.id) out.push('缺欄位 ID')
-  else if (!/^[a-z][a-z0-9]*\.[A-Za-z0-9_]+$/.test(f.id)) out.push('欄位 ID 格式應為「模組.欄位」')
-  else if ((allFields || []).filter((x) => x.id === f.id).length > 1) out.push('欄位 ID 重複')
+  // 欄位 ID：草稿階段不催；狀態=已確認才要求敲定
+  if (f.status === '已確認') {
+    if (!f.id) out.push('已確認欄位需敲定 ID（選模組短碼）')
+    else if (!/^[a-z][a-z0-9]*\.[A-Za-z0-9_]+$/.test(f.id)) out.push('欄位 ID 格式應為「模組.欄位」')
+    else if ((allFields || []).filter((x) => x.id === f.id).length > 1) out.push('欄位 ID 重複')
+  }
   if (f.type === 'enum' && !f.dictRef && !(f.validations || []).some((v) => /\[\[.+\]\]/.test(v))) out.push('enum 建議引用字典 [[..]]，不要就地列選項')
   if ((f.validations || []).some((v) => /\d\s*px|字級|font-|顏色|color|#[0-9a-fA-F]{3,6}/.test(v))) out.push('別寫視覺規格（px/顏色），那屬 wireframe')
   if (f.status === '待拍板') out.push('待拍板：記得註明決策 ID')
