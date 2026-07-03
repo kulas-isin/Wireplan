@@ -146,6 +146,31 @@ JSON 頂層除了 `wireframes`，可再帶 `flows`：描述「某角色完成某
 - **連線標籤可放「觸發按鈕」**：頁→判斷的線標上觸發它的按鈕（如 `["plan","pay","前往付款"]`、`["login","chk","點登入"]`），流程圖就能讀出「點哪顆鈕 → 跑什麼判斷」。
 - 常見業務流程：登入、註冊、忘記密碼、購買/訂閱、資料增刪改查、審核/簽核、搜尋瀏覽、播放/收藏。產頁時若需求涵蓋這些，**順手把對應 flows 一起輸出**。
 
+## 欄位規格 `fields`（選填，會自動帶入「欄位規格」分頁）
+
+需要幫 RD 補欄位級規格時，頂層可帶 `fields`：每個 input / 表單欄 / 表格欄 / 篩選器一列。匯入後進「欄位規格」分頁的表格，使用者只需審改。**視覺規格（px/字級/顏色）不要寫**，那是 wireframe 的範圍。
+
+```jsonc
+"fields": [
+  {
+    "id": "auth.account",              // 模組短碼.欄位camelCase（auth/member/playlist/song/order/sub…）
+    "label": "帳號 / Email",           // 顯示字
+    "i18n": "authAccount",             // i18n key（純後台可省）
+    "type": "text",                     // text|number|enum|date|datetime|bool|file|ref|array
+    "required": "是",                   // 是|否|條件式
+    "source": "使用者輸入",             // 使用者輸入|API 回傳|系統計算|常數|前頁帶入|後台設定
+    "validations": ["必填", "Email 格式"],   // 逐條；列舉改寫 "見字典 [[member.plan]]"
+    "visibility": "恆顯示",
+    "usage": "登入(R)",                 // 頁面 + CRUD 段
+    "mapping": { "wf": "串流登入頁 #account", "api": "POST /login .account", "db": "" },
+    "status": "草稿"                    // 草稿|已確認|待拍板(決策ID)
+  }
+]
+```
+
+- **只填看得出來/推得出來的**：型別、必填、來源、常見驗證（Email/長度/唯一）、使用情境；不確定的 API/DB 留空給 RD。
+- 列舉型（enum）的驗證寫 `見字典 [[模組.欄位]]`，不就地展開選項。
+
 ## 怎麼匯入
 
 把產生的 JSON 給使用者後，請告訴他：

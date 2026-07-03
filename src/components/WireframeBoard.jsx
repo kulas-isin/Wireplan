@@ -27,6 +27,7 @@ const COMP_ICON = {
 let cmpClipboard = null
 import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
+import { normalizeField } from '../lib/fieldSpec.js'
 
 // 頁名比對（去編號/括號/空白）
 const flowCore = (l) => String(l || '')
@@ -1099,6 +1100,10 @@ export default function WireframeBoard() {
     dispatch({ type: 'ADD_WIREFRAME', wireframes: wfs })
     // JSON 帶 flows → 一併鋪成業務流程圖（在剛匯入的頁面上綁定）
     if (Array.isArray(json.flows) && json.flows.length) dispatch({ type: 'IMPORT_FLOWS', flows: json.flows })
+    // JSON 帶 fields → 一併帶入欄位規格草稿
+    if (Array.isArray(json.fields) && json.fields.length) {
+      dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: [...(current.fields || []), ...json.fields.map(normalizeField)] })
+    }
     setImportOpen(false); setImportText(''); setImportErr('')
   }
 
