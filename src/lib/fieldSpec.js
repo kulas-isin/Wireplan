@@ -71,10 +71,72 @@ export function extractFields(wireframe) {
   walk(wireframe?.components)
   // 去重（同畫面同 label）
   const seen = new Set()
-  return out.filter((r) => { const k = r.label; if (seen.has(k)) return false; seen.add(k); return true })
+  const dedup = out.filter((r) => { if (seen.has(r.label)) return false; seen.add(r.label); return true })
+  return dedup.map((r) => enrichField(r, wf))
+}
+
+const pageShort = (n) => String(n || '').replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').trim()
+const likelyRequired = (l) => /帳號|密碼|email|信箱|手機|電話|名稱|標題|title|name/i.test(l)
+function guessValidations(label, type) {
+  const L = String(label || '')
+  if (/email|信箱/i.test(L)) return ['Email 格式']
+  if (/手機|電話|phone|mobile/i.test(L)) return ['手機號碼格式']
+  if (/密碼|password/i.test(L)) return ['≥8 字元']
+  if (/名稱|標題|name|title/i.test(L)) return ['≤30 字元', '不可全空白']
+  if (type === 'enum') return ['見字典 [[待補]]']
+  if (type === 'number') return ['數值範圍：待補']
+  return []
+}
+// 智慧預設：把常見的驗證/必填/使用情境先猜好，使用者少填
+function enrichField(r, wfName) {
+  const required = r.required === '否' && likelyRequired(r.label) ? '是' : r.required
+  let validations = r.validations && r.validations.length ? r.validations : guessValidations(r.label, r.type)
+  if (required === '是' && !validations.includes('必填')) validations = ['必填', ...validations]
+  const usage = r.usage || (wfName ? `${pageShort(wfName)}` : '')
+  return { ...r, required, validations, usage }
+}
+
+// 匯入用：把 AI/外部產的 fields 正規化（補預設、_k、mapping、validations 陣列）
+export function normalizeField(f) {
+  return {
+    _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
+    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, ...f,
+    mapping: { wf: '', api: '', db: '', ...(f.mapping || {}) },
+    validations: Array.isArray(f.validations) ? f.validations : (f.validations ? String(f.validations).split(/[；;]/).map((s) => s.trim()).filter(Boolean) : []),
+  }
 }
 
 export const emptyField = () => row({})
+
+// 模組範本：一鍵帶入該類常見欄位（含常見驗證），不用每格自己想
+export const FIELD_TEMPLATES = {
+  form: { name: '表單（新增/編輯）', rows: [
+    { label: '名稱', type: 'text', required: '是', validations: ['必填', '≤30 字元'], usage: '建立(C)、編輯(U)' },
+    { label: '分類', type: 'enum', validations: ['見字典 [[待補]]'], usage: '建立(C)、編輯(U)' },
+    { label: '狀態', type: 'enum', source: '系統計算', default: '草稿', validations: ['見字典 [[待補]]'] },
+    { label: '說明', type: 'text', required: '否', validations: ['≤500 字元'] },
+    { label: '建立時間', type: 'datetime', source: 'API 回傳', usage: '詳情(R)' },
+  ] },
+  list: { name: '清單 / 表格', rows: [
+    { label: '名稱', type: 'text', source: 'API 回傳' },
+    { label: '狀態', type: 'enum', source: 'API 回傳', validations: ['見字典 [[待補]]'] },
+    { label: '建立時間', type: 'datetime', source: 'API 回傳' },
+    { label: '操作', type: 'text', source: '系統計算', usage: '列表(R)' },
+  ] },
+  detail: { name: '詳情頁', rows: [
+    { label: 'ID', type: 'ref', source: 'API 回傳', required: '是' },
+    { label: '名稱', type: 'text', source: 'API 回傳' },
+    { label: '狀態', type: 'enum', source: 'API 回傳', validations: ['見字典 [[待補]]'] },
+    { label: '建立時間', type: 'datetime', source: 'API 回傳' },
+    { label: '更新時間', type: 'datetime', source: 'API 回傳' },
+  ] },
+  auth: { name: '登入 / 註冊', rows: [
+    { label: '帳號 / Email', type: 'text', required: '是', validations: ['必填', 'Email 格式'] },
+    { label: '密碼', type: 'text', required: '是', validations: ['必填', '≥8 字元'] },
+    { label: '手機號碼', type: 'text', required: '否', validations: ['手機號碼格式'] },
+    { label: '驗證碼', type: 'text', required: '條件式', validations: ['6 碼數字'] },
+  ] },
+}
 
 // 匯出成 SOP 的 11 欄 markdown 表格
 export function fieldsToMarkdown(project) {

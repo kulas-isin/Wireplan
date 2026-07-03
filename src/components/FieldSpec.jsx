@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
-import { extractFields, emptyField, fieldsToMarkdown, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
+import { extractFields, emptyField, fieldsToMarkdown, normalizeField, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
 import WireframePreview from './WireframePreview.jsx'
-import { Plus, Download, X, Sparkles, PanelRight } from 'lucide-react'
+import { Plus, Download, X, Sparkles, PanelRight, Columns3 } from 'lucide-react'
 
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
@@ -12,6 +12,7 @@ export default function FieldSpec() {
   const [wfId, setWfId] = useState(wireframes[0]?.id || '')
   const [showPreview, setShowPreview] = useState(true)
   const [focusComp, setFocusComp] = useState(null)
+  const [full, setFull] = useState(false)
   const selectedWf = wireframes.find((w) => w.id === wfId)
 
   const setFields = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: next })
@@ -44,7 +45,12 @@ export default function FieldSpec() {
           {wireframes.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
         </select>
         <button className="primary" onClick={doExtract}><Sparkles size={15} /> 從此畫面抽欄位</button>
+        <select className="fs-wf" value="" onChange={(e) => { const t = FIELD_TEMPLATES[e.target.value]; if (t) setFields([...fields, ...t.rows.map(normalizeField)]); e.target.value = '' }} title="一鍵帶入常見欄位">
+          <option value="">＋ 範本…</option>
+          {Object.entries(FIELD_TEMPLATES).map(([k, t]) => <option key={k} value={k}>{t.name}</option>)}
+        </select>
         <button onClick={() => setFields([...fields, emptyField()])}><Plus size={15} /> 空白列</button>
+        <button className={full ? 'active' : ''} onClick={() => setFull((v) => !v)}><Columns3 size={15} /> {full ? '完整欄位' : '簡易'}</button>
         <button className={showPreview ? 'active' : ''} onClick={() => setShowPreview((v) => !v)}><PanelRight size={15} /> {showPreview ? '隱藏畫面' : '顯示畫面'}</button>
         <button onClick={() => downloadText(`${current.name}-欄位規格.md`, fieldsToMarkdown(current), 'text/markdown')}><Download size={15} /> 匯出 Markdown</button>
       </div>
@@ -57,8 +63,9 @@ export default function FieldSpec() {
           <table className="fs-table">
             <thead>
               <tr>
-                <th>欄位 ID</th><th>Label / i18n</th><th>型別</th><th>必填</th><th>來源</th><th>預設</th>
-                <th>驗證規則</th><th>顯示/啟用條件</th><th>使用情境</th><th>對應 WF / API / DB</th><th>狀態</th><th></th>
+                <th>欄位 ID</th><th>Label / i18n</th><th>型別</th><th>必填</th><th>來源</th>
+                {full && <><th>預設</th><th>驗證規則</th><th>顯示/啟用條件</th><th>使用情境</th><th>對應 WF / API / DB</th></>}
+                <th>狀態</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -82,15 +89,17 @@ export default function FieldSpec() {
                   <td><Sel v={f.type} opts={F_TYPES} onChange={(v) => patch(f._k, { type: v })} /></td>
                   <td><Sel v={f.required} opts={F_REQUIRED} onChange={(v) => patch(f._k, { required: v })} /></td>
                   <td><Sel v={f.source} opts={F_SOURCE} onChange={(v) => patch(f._k, { source: v })} /></td>
-                  <td><input value={f.default} onChange={(e) => patch(f._k, { default: e.target.value })} /></td>
-                  <td><input value={(f.validations || []).join('；')} placeholder="必填；≤30字元…" onChange={(e) => patch(f._k, { validations: e.target.value.split(/[；;]/).map((s) => s.trim()).filter(Boolean) })} /></td>
-                  <td><input value={f.visibility} onChange={(e) => patch(f._k, { visibility: e.target.value })} /></td>
-                  <td><input value={f.usage} placeholder="7.1 建立(C)…" onChange={(e) => patch(f._k, { usage: e.target.value })} /></td>
-                  <td>
-                    <input value={f.mapping?.wf || ''} placeholder="WF" className="fs-sub" onChange={(e) => patchMap(f._k, { wf: e.target.value })} />
-                    <input value={f.mapping?.api || ''} placeholder="API" className="fs-sub" onChange={(e) => patchMap(f._k, { api: e.target.value })} />
-                    <input value={f.mapping?.db || ''} placeholder="DB" className="fs-sub" onChange={(e) => patchMap(f._k, { db: e.target.value })} />
-                  </td>
+                  {full && <>
+                    <td><input value={f.default} onChange={(e) => patch(f._k, { default: e.target.value })} /></td>
+                    <td><input value={(f.validations || []).join('；')} placeholder="必填；≤30字元…" onChange={(e) => patch(f._k, { validations: e.target.value.split(/[；;]/).map((s) => s.trim()).filter(Boolean) })} /></td>
+                    <td><input value={f.visibility} onChange={(e) => patch(f._k, { visibility: e.target.value })} /></td>
+                    <td><input value={f.usage} placeholder="7.1 建立(C)…" onChange={(e) => patch(f._k, { usage: e.target.value })} /></td>
+                    <td>
+                      <input value={f.mapping?.wf || ''} placeholder="WF" className="fs-sub" onChange={(e) => patchMap(f._k, { wf: e.target.value })} />
+                      <input value={f.mapping?.api || ''} placeholder="API" className="fs-sub" onChange={(e) => patchMap(f._k, { api: e.target.value })} />
+                      <input value={f.mapping?.db || ''} placeholder="DB" className="fs-sub" onChange={(e) => patchMap(f._k, { db: e.target.value })} />
+                    </td>
+                  </>}
                   <td><Sel v={f.status} opts={F_STATUS} onChange={(v) => patch(f._k, { status: v })} /></td>
                   <td><button className="ghost sm danger" onClick={() => del(f._k)}><X size={14} /></button></td>
                 </tr>
