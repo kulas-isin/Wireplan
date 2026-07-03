@@ -141,6 +141,47 @@ export const FIELD_TEMPLATES = {
   ] },
 }
 
+// ── 里程碑 3：即時提醒 + wireframe 綁定偵測 ──
+function findComp(cs, id) {
+  for (const c of cs || []) { if (c.id === id) return c; if (c.children) { const r = findComp(c.children, id); if (r) return r } }
+  return null
+}
+
+// 單一欄位的提醒（白話、給 PM 看）
+export function validateField(f, allFields) {
+  const out = []
+  if (!f.label) out.push('缺 Label（顯示字）')
+  if (!f.id) out.push('缺欄位 ID')
+  else if (!/^[a-z][a-z0-9]*\.[A-Za-z0-9_]+$/.test(f.id)) out.push('欄位 ID 格式應為「模組.欄位」')
+  else if ((allFields || []).filter((x) => x.id === f.id).length > 1) out.push('欄位 ID 重複')
+  if (f.type === 'enum' && !f.dictRef && !(f.validations || []).some((v) => /\[\[.+\]\]/.test(v))) out.push('enum 建議引用字典 [[..]]，不要就地列選項')
+  if ((f.validations || []).some((v) => /\d\s*px|字級|font-|顏色|color|#[0-9a-fA-F]{3,6}/.test(v))) out.push('別寫視覺規格（px/顏色），那屬 wireframe')
+  if (f.status === '待拍板') out.push('待拍板：記得註明決策 ID')
+  return out
+}
+
+// 偵測：wireframe 有新欄位沒登錄 / 欄位來源畫面·元件已刪除
+export function wireframeSync(project) {
+  const wfs = project.wireframes || []
+  const fields = project.fields || []
+  const existById = new Set(fields.map((f) => (f.ref?.wfId || '') + '|' + f.label))
+  const existByName = new Set(fields.map((f) => (f.mapping?.wf || '') + '|' + f.label))
+  const byWf = []
+  for (const wf of wfs) {
+    const fresh = extractFields(wf).filter((g) => !existById.has(wf.id + '|' + g.label) && !existByName.has(wf.name + '|' + g.label))
+    if (fresh.length) byWf.push({ wfId: wf.id, name: wf.name, labels: fresh.map((x) => x.label) })
+  }
+  const wfById = new Map(wfs.map((w) => [w.id, w]))
+  const orphans = []
+  for (const f of fields) {
+    if (!f.ref?.wfId) continue
+    const wf = wfById.get(f.ref.wfId)
+    if (!wf) { orphans.push({ _k: f._k, reason: '來源畫面已刪除' }); continue }
+    if (f.ref.compId && !findComp(wf.components, f.ref.compId)) orphans.push({ _k: f._k, reason: '來源元件已刪除/變更' })
+  }
+  return { byWf, orphans, newCount: byWf.reduce((n, x) => n + x.labels.length, 0) }
+}
+
 // 匯出成 SOP 的 11 欄 markdown 表格
 export function fieldsToMarkdown(project) {
   const fs = project.fields || []

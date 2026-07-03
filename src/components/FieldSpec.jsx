@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
-import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
+import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, validateField, wireframeSync, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
 import WireframePreview from './WireframePreview.jsx'
-import { Plus, Download, X, Sparkles, PanelRight, Columns3, BookOpen } from 'lucide-react'
+import { Plus, Download, X, Sparkles, PanelRight, Columns3, BookOpen, TriangleAlert } from 'lucide-react'
 
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
@@ -39,6 +39,17 @@ export default function FieldSpec() {
     } else {
       patch(fk, { dictRef: null })
     }
+  }
+
+  const sync = wireframeSync(current)
+  const orphanK = new Map(sync.orphans.map((o) => [o._k, o.reason]))
+
+  // 一鍵登錄「所有畫面上還沒登錄」的欄位
+  const registerAllNew = () => {
+    const have = new Set(fields.map((f) => (f.ref?.wfId || '') + '|' + f.label))
+    const add = []
+    for (const wf of wireframes) extractFields(wf).forEach((g) => { const k = wf.id + '|' + g.label; if (!have.has(k)) { have.add(k); add.push(g) } })
+    if (add.length) setFields([...fields, ...add])
   }
 
   const doExtract = () => {
@@ -77,6 +88,12 @@ export default function FieldSpec() {
         <button onClick={() => downloadText(`${current.name}-欄位規格.md`, fieldsToMarkdown(current), 'text/markdown')}><Download size={15} /> 匯出 Markdown</button>
       </div>
 
+      {(sync.newCount > 0 || sync.orphans.length > 0) && (
+        <div className="fs-alert">
+          {sync.newCount > 0 && <span className="fs-alert-new"><TriangleAlert size={14} /> 有 {sync.newCount} 個畫面欄位尚未登錄<button className="sm" onClick={registerAllNew}>一鍵登錄</button></span>}
+          {sync.orphans.length > 0 && <span className="fs-alert-orphan"><TriangleAlert size={14} /> {sync.orphans.length} 個欄位的來源已刪除/變更（下方紅列）</span>}
+        </div>
+      )}
       {showDict && (
         <div className="fs-dict">
           <div className="fs-dict-head">
@@ -117,8 +134,11 @@ export default function FieldSpec() {
               </tr>
             </thead>
             <tbody>
-              {fields.map((f) => (
-                <tr key={f._k} className={focusComp && f.ref?.compId === focusComp ? 'fs-row-on' : ''}
+              {fields.map((f) => {
+                const issues = validateField(f, fields)
+                const orphan = orphanK.get(f._k)
+                return (
+                <tr key={f._k} className={(focusComp && f.ref?.compId === focusComp ? 'fs-row-on ' : '') + (orphan ? 'fs-row-orphan' : issues.length ? 'fs-row-warn' : '')}
                   onFocusCapture={() => { if (f.ref?.wfId) setWfId(f.ref.wfId); setFocusComp(f.ref?.compId || null) }}
                   onClick={() => { if (f.ref?.wfId) setWfId(f.ref.wfId); setFocusComp(f.ref?.compId || null) }}>
                   <td>
@@ -158,9 +178,13 @@ export default function FieldSpec() {
                     </td>
                   </>}
                   <td><Sel v={f.status} opts={F_STATUS} onChange={(v) => patch(f._k, { status: v })} /></td>
-                  <td><button className="ghost sm danger" onClick={() => del(f._k)}><X size={14} /></button></td>
+                  <td className="fs-actcell">
+                    {(issues.length > 0 || orphan) && <span className="fs-warn" title={[orphan, ...issues].filter(Boolean).join(' · ')}><TriangleAlert size={13} /></span>}
+                    <button className="ghost sm danger" onClick={() => del(f._k)}><X size={14} /></button>
+                  </td>
                 </tr>
-              ))}
+                )
+              })}
             </tbody>
           </table>
         </div>
