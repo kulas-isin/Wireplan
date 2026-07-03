@@ -948,3 +948,15 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fs-dict-table input:hover, .fs-dict-table select:hover { border-color: var(--border); }
 .fs-dict-table input:focus, .fs-dict-table select:focus { border-color: var(--primary); background: #fff; outline: none; }
 .fs-dictpick { width: 100%; margin-top: 3px; font-size: 11px; color: var(--primary-dark, #0b2c20); border: 1px dashed var(--border); border-radius: 6px; padding: 2px 4px; background: var(--primary-soft); cursor: pointer; }
+
+/* ── 欄位規格：即時提醒 ── */
+.fs-alert { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 8px 12px; margin-bottom: 10px; border-radius: 8px; background: #fff7ed; border: 1px solid #fdba74; font-size: 12px; color: #9a3412; }
+.fs-alert span { display: inline-flex; align-items: center; gap: 6px; }
+.fs-alert-orphan { color: #b91c1c; }
+.fs-alert button.sm { margin-left: 6px; }
+.fs-table tr.fs-row-warn td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
+.fs-table tr.fs-row-orphan td { background: #fef2f2; }
+.fs-table tr.fs-row-orphan td:first-child { box-shadow: inset 3px 0 0 #dc2626; }
+.fs-actcell { display: flex; align-items: center; gap: 4px; }
+.fs-warn { color: #d97706; cursor: help; display: inline-flex; }
+.fs-table tr.fs-row-orphan .fs-warn { color: #dc2626; }
