@@ -18,8 +18,11 @@ const guessColType = (col) => {
 
 const row = (o) => ({
   _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
-  default: '', validations: [], visibility: '恆顯示', usage: '', mapping: { wf: '', api: '', db: '' }, status: '草稿', ref: null, ...o,
+  default: '', validations: [], visibility: '恆顯示', usage: '', mapping: { wf: '', api: '', db: '' }, status: '草稿', ref: null, dictRef: null, ...o,
 })
+
+// 字典項（單一真相源：enum / 共用實體只定義一次）
+export const emptyDictEntry = () => ({ _k: uid('dic'), id: '', values: [], note: '', status: '草稿' })
 
 // 解析 formgrid 欄名：後綴 * = 必填、:select/:date/:number/:textarea = 型別
 function parseFormField(name) {
@@ -100,7 +103,7 @@ function enrichField(r, wfName) {
 export function normalizeField(f) {
   return {
     _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
-    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, ...f,
+    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, dictRef: null, ...f,
     mapping: { wf: '', api: '', db: '', ...(f.mapping || {}) },
     validations: Array.isArray(f.validations) ? f.validations : (f.validations ? String(f.validations).split(/[；;]/).map((s) => s.trim()).filter(Boolean) : []),
   }
@@ -150,6 +153,11 @@ export function fieldsToMarkdown(project) {
     const valid = (f.validations || []).join('；')
     const map = [f.mapping?.wf && `WF: ${f.mapping.wf}`, f.mapping?.api && `API: ${f.mapping.api}`, f.mapping?.db && `DB: ${f.mapping.db}`].filter(Boolean).join('；')
     lines.push(`| \`${esc(f.id)}\` | ${esc(label)} | ${esc(f.type)} | ${esc(f.required)} | ${esc(f.source)} | ${esc(f.default)} | ${esc(valid)} | ${esc(f.visibility)} | ${esc(f.usage)} | ${esc(map)} | ${esc(f.status)} |`)
+  }
+  const dict = project.dictionary || []
+  if (dict.length) {
+    lines.push('', '## 欄位字典（單一真相源）', '', '| ID | 值 | 說明 | 狀態 |', '|---|---|---|:-:|')
+    for (const d of dict) lines.push(`| \`${esc(d.id)}\` | ${esc((d.values || []).join(' / '))} | ${esc(d.note)} | ${esc(d.status)} |`)
   }
   return lines.join('\n')
 }
