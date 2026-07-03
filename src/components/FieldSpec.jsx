@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
-import { extractFields, emptyField, fieldsToMarkdown, normalizeField, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
+import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
 import WireframePreview from './WireframePreview.jsx'
-import { Plus, Download, X, Sparkles, PanelRight, Columns3 } from 'lucide-react'
+import { Plus, Download, X, Sparkles, PanelRight, Columns3, BookOpen } from 'lucide-react'
 
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
@@ -13,12 +13,33 @@ export default function FieldSpec() {
   const [showPreview, setShowPreview] = useState(true)
   const [focusComp, setFocusComp] = useState(null)
   const [full, setFull] = useState(false)
+  const [showDict, setShowDict] = useState(false)
   const selectedWf = wireframes.find((w) => w.id === wfId)
+  const dictionary = current.dictionary || []
+  const dictIds = dictionary.map((d) => d.id).filter(Boolean)
 
   const setFields = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: next })
   const patch = (k, p) => setFields(fields.map((f) => (f._k === k ? { ...f, ...p } : f)))
   const patchMap = (k, p) => setFields(fields.map((f) => (f._k === k ? { ...f, mapping: { ...f.mapping, ...p } } : f)))
   const del = (k) => setFields(fields.filter((f) => f._k !== k))
+
+  const setDict = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'dictionary', value: next })
+  const patchDict = (k, p) => setDict(dictionary.map((d) => (d._k === k ? { ...d, ...p } : d)))
+  const delDict = (k) => setDict(dictionary.filter((d) => d._k !== k))
+  // enum 欄位選字典引用（沒有就新建）
+  const pickDict = (fk, val) => {
+    if (val === '__new') {
+      const id = window.prompt('新字典 ID（例 member.plan）：', '')
+      if (!id) return
+      if (!dictIds.includes(id)) setDict([...dictionary, { ...emptyDictEntry(), id }])
+      patch(fk, { dictRef: id, validations: [`見字典 [[${id}]]`] })
+      setShowDict(true)
+    } else if (val) {
+      patch(fk, { dictRef: val, validations: [`見字典 [[${val}]]`] })
+    } else {
+      patch(fk, { dictRef: null })
+    }
+  }
 
   const doExtract = () => {
     const wf = wireframes.find((w) => w.id === wfId)
@@ -51,10 +72,37 @@ export default function FieldSpec() {
         </select>
         <button onClick={() => setFields([...fields, emptyField()])}><Plus size={15} /> 空白列</button>
         <button className={full ? 'active' : ''} onClick={() => setFull((v) => !v)}><Columns3 size={15} /> {full ? '完整欄位' : '簡易'}</button>
+        <button className={showDict ? 'active' : ''} onClick={() => setShowDict((v) => !v)}><BookOpen size={15} /> 字典（{dictionary.length}）</button>
         <button className={showPreview ? 'active' : ''} onClick={() => setShowPreview((v) => !v)}><PanelRight size={15} /> {showPreview ? '隱藏畫面' : '顯示畫面'}</button>
         <button onClick={() => downloadText(`${current.name}-欄位規格.md`, fieldsToMarkdown(current), 'text/markdown')}><Download size={15} /> 匯出 Markdown</button>
       </div>
 
+      {showDict && (
+        <div className="fs-dict">
+          <div className="fs-dict-head">
+            <strong>欄位字典（單一真相源）</strong>
+            <span className="muted" style={{ fontSize: 12 }}>enum / 共用實體只定義一次，欄位用 [[ID]] 引用；改一次全專案一致</span>
+            <div className="spacer" />
+            <button className="sm" onClick={() => setDict([...dictionary, emptyDictEntry()])}><Plus size={14} /> 字典項</button>
+          </div>
+          {dictionary.length === 0 ? <div className="muted" style={{ fontSize: 12, padding: 8 }}>還沒有字典項。enum 欄位選「＋新增字典」會自動建立。</div> : (
+            <table className="fs-dict-table">
+              <thead><tr><th>ID</th><th>值（用 / 或換行分隔）</th><th>說明</th><th>狀態</th><th></th></tr></thead>
+              <tbody>
+                {dictionary.map((d) => (
+                  <tr key={d._k}>
+                    <td><input value={d.id} placeholder="member.plan" onChange={(e) => patchDict(d._k, { id: e.target.value })} /></td>
+                    <td><input value={(d.values || []).join(' / ')} placeholder="試聽會員 / 白金會員 / 尊爵會員" onChange={(e) => patchDict(d._k, { values: e.target.value.split(/[/\n]/).map((s) => s.trim()).filter(Boolean) })} /></td>
+                    <td><input value={d.note} onChange={(e) => patchDict(d._k, { note: e.target.value })} /></td>
+                    <td><select value={d.status} onChange={(e) => patchDict(d._k, { status: e.target.value })}>{F_STATUS.map((o) => <option key={o}>{o}</option>)}</select></td>
+                    <td><button className="ghost sm danger" onClick={() => delDict(d._k)}><X size={14} /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
       <div className="fs-body">
       {fields.length === 0 ? (
         <div className="empty" style={{ flex: 1 }}><div className="muted">選一張畫面 → 按「從此畫面抽欄位」，欄位 ID/Label/型別會自動帶入，再用下拉補完來源、必填、驗證等。點某一列會在右側畫面高亮對應元件。</div></div>
@@ -86,7 +134,16 @@ export default function FieldSpec() {
                     <input value={f.label} placeholder="顯示字" onChange={(e) => patch(f._k, { label: e.target.value })} />
                     <input value={f.i18n} placeholder="i18n key" className="fs-sub" onChange={(e) => patch(f._k, { i18n: e.target.value })} />
                   </td>
-                  <td><Sel v={f.type} opts={F_TYPES} onChange={(v) => patch(f._k, { type: v })} /></td>
+                  <td>
+                    <Sel v={f.type} opts={F_TYPES} onChange={(v) => patch(f._k, { type: v })} />
+                    {f.type === 'enum' && (
+                      <select className="fs-dictpick" value={f.dictRef || ''} onChange={(e) => pickDict(f._k, e.target.value)}>
+                        <option value="">引用字典…</option>
+                        {dictIds.map((id) => <option key={id} value={id}>[[{id}]]</option>)}
+                        <option value="__new">＋ 新增字典</option>
+                      </select>
+                    )}
+                  </td>
                   <td><Sel v={f.required} opts={F_REQUIRED} onChange={(v) => patch(f._k, { required: v })} /></td>
                   <td><Sel v={f.source} opts={F_SOURCE} onChange={(v) => patch(f._k, { source: v })} /></td>
                   {full && <>
