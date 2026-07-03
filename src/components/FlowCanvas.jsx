@@ -472,7 +472,7 @@ export default function FlowCanvas() {
           </div>
         </div>
       )}
-      <div className={'flow-canvas' + (connectMode ? ' fl-connect' : '')} ref={wrapRef} style={{ height: 'calc(100vh - 210px)' }}>
+      <div className={'flow-canvas' + (connectMode ? ' fl-connect' : '')} ref={wrapRef} style={{ height: 'calc(100vh - 165px)' }}>
         <ReactFlow
           nodes={viewNodes}
           edges={viewEdges}
