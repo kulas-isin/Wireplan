@@ -4,41 +4,42 @@ import { Visual } from './WireframeBlock.jsx'
 
 const WCLASS = { full: 'w-full', half: 'w-half', third: 'w-third', quarter: 'w-quarter', fill: 'w-fill', hug: 'w-hug', fixed: 'w-fixed' }
 
-function PreviewItem({ cmp }) {
+function PreviewItem({ cmp, hl }) {
   const wcls = WCLASS[cmp.width] || 'w-full'
+  const on = hl && cmp.id === hl ? ' prev-hl' : ''
   if (cmp.type === 'row') {
     return (
-      <div className={'wf-item wf-rowwrap ' + wcls}>
+      <div className={'wf-item wf-rowwrap ' + wcls + on}>
         <div className={'wf-row' + (cmp.direction === 'column' ? ' wf-row-col' : '')}>
-          {(cmp.children || []).map((c) => <PreviewItem key={c.id} cmp={c} />)}
+          {(cmp.children || []).map((c) => <PreviewItem key={c.id} cmp={c} hl={hl} />)}
         </div>
       </div>
     )
   }
   if (cmp.type === 'card') {
     return (
-      <div className={'wf-item wf-cardwrap ' + wcls}>
+      <div className={'wf-item wf-cardwrap ' + wcls + on}>
         <div className="wb-cardbox">
           {cmp.label && <div className="wb-cardbox-head">{cmp.label}</div>}
-          <div className="wb-cardbox-body">{(cmp.children || []).map((c) => <PreviewItem key={c.id} cmp={c} />)}</div>
+          <div className="wb-cardbox-body">{(cmp.children || []).map((c) => <PreviewItem key={c.id} cmp={c} hl={hl} />)}</div>
         </div>
       </div>
     )
   }
-  return <div className={'wf-item ' + wcls}><Visual cmp={cmp} /></div>
+  return <div className={'wf-item ' + wcls + on}><Visual cmp={cmp} /></div>
 }
 
-export default function WireframePreview({ wireframe }) {
+export default function WireframePreview({ wireframe, highlightId }) {
   const cmps = wireframe.components || []
   if (wireframe.layout === 'sidebar') {
     const side = cmps.filter((c) => c.region === 'sidebar')
     const content = cmps.filter((c) => c.region !== 'sidebar')
     return (
       <div className="wf-preview prev-sidebar">
-        <div className="wf-canvas prev-side">{side.map((c) => <PreviewItem key={c.id} cmp={c} />)}</div>
-        <div className="wf-canvas prev-content">{content.map((c) => <PreviewItem key={c.id} cmp={c} />)}</div>
+        <div className="wf-canvas prev-side">{side.map((c) => <PreviewItem key={c.id} cmp={c} hl={highlightId} />)}</div>
+        <div className="wf-canvas prev-content">{content.map((c) => <PreviewItem key={c.id} cmp={c} hl={highlightId} />)}</div>
       </div>
     )
   }
-  return <div className="wf-preview"><div className="wf-canvas">{cmps.map((c) => <PreviewItem key={c.id} cmp={c} />)}</div></div>
+  return <div className="wf-preview"><div className="wf-canvas">{cmps.map((c) => <PreviewItem key={c.id} cmp={c} hl={highlightId} />)}</div></div>
 }

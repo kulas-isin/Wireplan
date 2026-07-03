@@ -18,7 +18,7 @@ const guessColType = (col) => {
 
 const row = (o) => ({
   _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
-  default: '', validations: [], visibility: '恆顯示', usage: '', mapping: { wf: '', api: '', db: '' }, status: '草稿', ...o,
+  default: '', validations: [], visibility: '恆顯示', usage: '', mapping: { wf: '', api: '', db: '' }, status: '草稿', ref: null, ...o,
 })
 
 // 解析 formgrid 欄名：後綴 * = 必填、:select/:date/:number/:textarea = 型別
@@ -35,10 +35,13 @@ function parseFormField(name) {
 export function extractFields(wireframe) {
   const out = []
   const wf = wireframe?.name || ''
-  const push = (o) => { if (o.label) out.push(row({ ...o, mapping: { wf, api: '', db: '', ...(o.mapping || {}) } })) }
+  const wfId = wireframe?.id || ''
+  let curRef = null
+  const push = (o) => { if (o.label) out.push(row({ ...o, ref: o.ref || curRef, mapping: { wf, api: '', db: '', ...(o.mapping || {}) } })) }
   const walk = (cs) => {
     for (const c of cs || []) {
       if (!c || typeof c !== 'object') continue
+      curRef = { wfId, compId: c.id }
       switch (c.type) {
         case 'field':
           push({ label: c.label, type: mapControl(c.control), required: c.required ? '是' : '否', source: '使用者輸入' }); break

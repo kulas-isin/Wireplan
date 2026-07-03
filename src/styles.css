@@ -922,3 +922,18 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .fs-id { display: flex; flex-direction: column; gap: 2px; }
 .fs-id .fs-mod { max-width: 90px; }
 .fs-table select { cursor: pointer; }
+
+/* ── 欄位規格：表格 + 畫面預覽並排 ── */
+.fs-body { display: flex; gap: 12px; align-items: flex-start; }
+.fs-body .fs-tablewrap { flex: 1; min-width: 0; max-height: calc(100vh - 250px); overflow: auto; }
+.fs-preview { width: 380px; flex-shrink: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #fff; position: sticky; top: 0; }
+.fs-preview-head { padding: 8px 12px; font-size: 13px; font-weight: 700; background: var(--panel); border-bottom: 1px solid var(--border); }
+.fs-preview-scroll { height: calc(100vh - 290px); overflow: auto; }
+.fs-preview-scale { width: 700px; transform: scale(0.535); transform-origin: top left; }
+.fs-table tr.fs-row-on td { background: var(--primary-soft); }
+.wf-item.prev-hl { outline: 3px solid var(--accent, #f4694f); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 900px) {
+  .fs-body { flex-direction: column-reverse; }
+  .fs-preview { width: 100%; position: static; }
+  .fs-preview-scroll { height: 300px; }
+}
