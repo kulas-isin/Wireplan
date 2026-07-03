@@ -2,13 +2,17 @@ import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
 import { extractFields, emptyField, fieldsToMarkdown, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
-import { Plus, Download, X, Sparkles } from 'lucide-react'
+import WireframePreview from './WireframePreview.jsx'
+import { Plus, Download, X, Sparkles, PanelRight } from 'lucide-react'
 
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
   const fields = current.fields || []
   const wireframes = current.wireframes || []
   const [wfId, setWfId] = useState(wireframes[0]?.id || '')
+  const [showPreview, setShowPreview] = useState(true)
+  const [focusComp, setFocusComp] = useState(null)
+  const selectedWf = wireframes.find((w) => w.id === wfId)
 
   const setFields = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: next })
   const patch = (k, p) => setFields(fields.map((f) => (f._k === k ? { ...f, ...p } : f)))
@@ -41,11 +45,13 @@ export default function FieldSpec() {
         </select>
         <button className="primary" onClick={doExtract}><Sparkles size={15} /> 從此畫面抽欄位</button>
         <button onClick={() => setFields([...fields, emptyField()])}><Plus size={15} /> 空白列</button>
+        <button className={showPreview ? 'active' : ''} onClick={() => setShowPreview((v) => !v)}><PanelRight size={15} /> {showPreview ? '隱藏畫面' : '顯示畫面'}</button>
         <button onClick={() => downloadText(`${current.name}-欄位規格.md`, fieldsToMarkdown(current), 'text/markdown')}><Download size={15} /> 匯出 Markdown</button>
       </div>
 
+      <div className="fs-body">
       {fields.length === 0 ? (
-        <div className="empty"><div className="muted">選一張畫面 → 按「從此畫面抽欄位」，欄位 ID/Label/型別會自動帶入，再用下拉補完來源、必填、驗證等。</div></div>
+        <div className="empty" style={{ flex: 1 }}><div className="muted">選一張畫面 → 按「從此畫面抽欄位」，欄位 ID/Label/型別會自動帶入，再用下拉補完來源、必填、驗證等。點某一列會在右側畫面高亮對應元件。</div></div>
       ) : (
         <div className="fs-tablewrap">
           <table className="fs-table">
@@ -57,7 +63,9 @@ export default function FieldSpec() {
             </thead>
             <tbody>
               {fields.map((f) => (
-                <tr key={f._k}>
+                <tr key={f._k} className={focusComp && f.ref?.compId === focusComp ? 'fs-row-on' : ''}
+                  onFocusCapture={() => { if (f.ref?.wfId) setWfId(f.ref.wfId); setFocusComp(f.ref?.compId || null) }}
+                  onClick={() => { if (f.ref?.wfId) setWfId(f.ref.wfId); setFocusComp(f.ref?.compId || null) }}>
                   <td>
                     <div className="fs-id">
                       <select value={idMod(f.id)} onChange={(e) => patch(f._k, { id: e.target.value + '.' + idName(f.id) })} className="fs-mod">
@@ -91,6 +99,13 @@ export default function FieldSpec() {
           </table>
         </div>
       )}
+      {showPreview && selectedWf && (
+        <div className="fs-preview">
+          <div className="fs-preview-head">{selectedWf.name}</div>
+          <div className="fs-preview-scroll"><div className="fs-preview-scale"><WireframePreview wireframe={selectedWf} highlightId={focusComp} /></div></div>
+        </div>
+      )}
+      </div>
     </div>
   )
 }
