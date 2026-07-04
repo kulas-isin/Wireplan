@@ -174,7 +174,7 @@ function enrichField(r, wfName) {
 export function normalizeField(f) {
   return {
     _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
-    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, dictRef: null, formula: '', ...f,
+    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, dictRef: null, formula: '', errorNote: '', ...f,
     mapping: { wf: '', api: '', db: '', ...(f.mapping || {}) },
     validations: Array.isArray(f.validations) ? f.validations : (f.validations ? String(f.validations).split(/[；;]/).map((s) => s.trim()).filter(Boolean) : []),
   }
@@ -265,7 +265,7 @@ export function fieldsToMarkdown(project) {
   lines.push('|---|---|---|:-:|---|---|---|---|---|---|:-:|')
   for (const f of fs) {
     const label = f.i18n ? `${f.label} / \`${f.i18n}\`` : f.label
-    const valid = (f.validations || []).join('；')
+    const valid = (f.validations || []).join('；') + (f.errorNote ? `；【錯誤碼】${f.errorNote}` : '')
     const source = f.formula ? `${f.source}：${f.formula}` : f.source // SOP 複合來源寫法
     const map = [f.mapping?.wf && `WF: ${f.mapping.wf}`, f.mapping?.api && `API: ${f.mapping.api}`, f.mapping?.db && `DB: ${f.mapping.db}`].filter(Boolean).join('；')
     lines.push(`| \`${esc(f.id)}\` | ${esc(label)} | ${esc(f.type)} | ${esc(f.required)} | ${esc(source)} | ${esc(f.default)} | ${esc(valid)} | ${esc(f.visibility)} | ${esc(f.usage)} | ${esc(map)} | ${esc(f.status)} |`)
@@ -277,8 +277,8 @@ export function fieldsToMarkdown(project) {
   }
   const dict = project.dictionary || []
   if (dict.length) {
-    lines.push('', '## 欄位字典（單一真相源）', '', '| ID | 值 | 說明 | 狀態 |', '|---|---|---|:-:|')
-    for (const d of dict) lines.push(`| \`${esc(d.id)}\` | ${esc((d.values || []).join(' / '))} | ${esc(d.note)} | ${esc(d.status)} |`)
+    lines.push('', '## 欄位字典（單一真相源）', '', '| ID | 值 | 連動於 | 說明 | 狀態 |', '|---|---|---|---|:-:|')
+    for (const d of dict) lines.push(`| \`${esc(d.id)}\` | ${esc((d.values || []).join(' / '))} | ${esc(d.cascade ? '[[' + d.cascade + ']]' : '—')} | ${esc(d.note)} | ${esc(d.status)} |`)
   }
   return lines.join('\n')
 }
