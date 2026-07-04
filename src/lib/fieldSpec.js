@@ -24,6 +24,34 @@ const row = (o) => ({
 // 字典項（單一真相源：enum / 共用實體只定義一次）
 export const emptyDictEntry = () => ({ _k: uid('dic'), id: '', values: [], note: '', status: '草稿' })
 
+// ── 規則片語庫：點選不打字（params 為可調參數、units 顯示在各參數後）──
+export const RULE_CHIPS = [
+  { id: 'maxLen', label: '字數 ≤', params: [30], units: ['字'], make: (n = 30) => `≤${n} 字元`, re: /^≤(\d+) 字元$/ },
+  { id: 'minLen', label: '字數 ≥', params: [8], units: ['字'], make: (n = 8) => `≥${n} 字元`, re: /^≥(\d+) 字元$/ },
+  { id: 'email', label: 'Email 格式', make: () => 'Email 格式' },
+  { id: 'phone', label: '手機格式', make: () => '手機號碼格式' },
+  { id: 'numRange', label: '範圍', params: [0, 999], units: ['~', ''], make: (a = 0, b = 999) => `數字範圍 ${a}~${b}`, re: /^數字範圍 (-?\d+)~(-?\d+)$/ },
+  { id: 'unique', label: '全表唯一', make: () => '全表唯一' },
+  { id: 'noBlank', label: '不可全空白', make: () => '不可全空白' },
+  { id: 'notPast', label: '不可早於今日', make: () => '不可早於今日' },
+  { id: 'fileMax', label: '檔案 ≤', params: [5], units: ['MB'], make: (n = 5) => `檔案 ≤${n}MB`, re: /^檔案 ≤(\d+)MB$/ },
+]
+
+// 型別/語意 → 建議規則（chip id），在抽屜顯示為虛線建議、一點即加入
+export function suggestChips(label, type) {
+  const L = String(label || '')
+  const out = []
+  if (/email|信箱/i.test(L)) out.push('email')
+  if (/手機|電話|phone|mobile/i.test(L)) out.push('phone')
+  if (/密碼|password|pin/i.test(L)) out.push('minLen')
+  if (type === 'text' && !out.length) out.push('maxLen', 'noBlank')
+  if (type === 'number') out.push('numRange')
+  if (type === 'date' || type === 'datetime') out.push('notPast')
+  if (type === 'file') out.push('fileMax')
+  if (/名稱|標題|帳號|name|title/i.test(L)) out.push('unique')
+  return [...new Set(out)]
+}
+
 // 解析 formgrid 欄名：後綴 * = 必填、:select/:date/:number/:textarea = 型別
 function parseFormField(name) {
   let n = String(name || '').trim(), required = '否', kind = null

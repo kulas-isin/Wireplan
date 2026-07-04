@@ -1,12 +1,73 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
-import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, validateField, wireframeSync, FIELD_TEMPLATES, F_TYPES, F_REQUIRED, F_SOURCE, F_STATUS, MODULE_CODES } from '../lib/fieldSpec.js'
+import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, validateField, wireframeSync, FIELD_TEMPLATES, F_TYPES, F_SOURCE, F_STATUS, MODULE_CODES, RULE_CHIPS, suggestChips } from '../lib/fieldSpec.js'
 import WireframePreview from './WireframePreview.jsx'
 import { Plus, Download, X, Sparkles, PanelRight, BookOpen, TriangleAlert, Pencil, Check } from 'lucide-react'
 
 const idMod = (id) => { const p = String(id || '').split('.'); return p.length > 1 && MODULE_CODES.includes(p[0]) ? p[0] : '' }
 const idName = (id) => { const p = String(id || '').split('.'); return p.length > 1 ? p.slice(1).join('.') : (p[0] && !MODULE_CODES.includes(p[0]) ? p[0] : '') }
+
+// 膠囊選擇（取代下拉，點一下就選好）
+function Pills({ value, options, onChange, match }) {
+  const isOn = (o) => (match ? match(value, o) : value === o)
+  return (
+    <div className="fe-pills">
+      {options.map((o) => <button key={o} type="button" className={'fe-pill' + (isOn(o) ? ' on' : '')} onClick={() => onChange(o)}>{o}</button>)}
+    </div>
+  )
+}
+
+// 規則片語庫：點選 chips 組規則，不打字（參數用小輸入框、建議用虛線）
+function RuleChips({ validations = [], suggestions = [], onChange }) {
+  const [custom, setCustom] = useState('')
+  const vals = validations.filter((v) => v !== '必填')
+  const keepReq = validations.includes('必填') ? ['必填'] : []
+  const commit = (next) => onChange([...keepReq, ...next])
+  const findMatch = (chip) => {
+    for (const v of vals) {
+      if (chip.re) { const m = v.match(chip.re); if (m) return { v, params: m.slice(1) } }
+      else if (v === chip.make()) return { v, params: [] }
+    }
+    return null
+  }
+  const matchedVals = new Set()
+  const states = RULE_CHIPS.map((chip) => { const m = findMatch(chip); if (m) matchedVals.add(m.v); return { chip, m } })
+  const customs = vals.filter((v) => !matchedVals.has(v))
+  return (
+    <div className="rc-wrap">
+      <div className="rc-chips">
+        {states.map(({ chip, m }) => {
+          const sug = !m && suggestions.includes(chip.id)
+          return (
+            <span key={chip.id} className={'rc-chip' + (m ? ' on' : sug ? ' sug' : '')}
+              onClick={() => (m ? commit(vals.filter((v) => v !== m.v)) : commit([...vals, chip.make(...(chip.params || []))]))}>
+              {sug && '✨'}{chip.label}
+              {m && chip.params && chip.params.map((_, i) => (
+                <span key={i} className="rc-param" onClick={(e) => e.stopPropagation()}>
+                  <input type="number" value={m.params[i]} onChange={(e) => {
+                    const p = [...m.params]; p[i] = e.target.value || 0
+                    commit(vals.map((v) => (v === m.v ? chip.make(...p) : v)))
+                  }} />{chip.units?.[i]}
+                </span>
+              ))}
+              {m && <b className="rc-x">×</b>}
+            </span>
+          )
+        })}
+      </div>
+      {(customs.length > 0 || true) && (
+        <div className="rc-custom">
+          {customs.map((v) => (
+            <span key={v} className="rc-chip on" onClick={() => commit(vals.filter((x) => x !== v))}>{v}<b className="rc-x">×</b></span>
+          ))}
+          <input value={custom} placeholder="＋ 自訂規則，Enter 加入" onChange={(e) => setCustom(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && custom.trim()) { commit([...vals, custom.trim()]); setCustom('') } }} />
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
@@ -169,7 +230,8 @@ export default function FieldSpec() {
               <div className="fe-issues">{[orp, ...iss].filter(Boolean).map((m, i) => <div key={i}><TriangleAlert size={12} /> {m}</div>)}</div>
             ) : null })()}
             <div className="fe-body">
-              <label className="fe-row"><span>欄位 ID</span>
+              <label className="fe-row"><span>Label 顯示字</span><input value={editF.label} onChange={(e) => patch(editF._k, { label: e.target.value })} /></label>
+              <label className="fe-row"><span>欄位 ID<br /><small>草稿可先不填</small></span>
                 <div className="fe-id">
                   <select value={idMod(editF.id)} onChange={(e) => patch(editF._k, { id: (e.target.value || '') + '.' + idName(editF.id) })}>
                     <option value="">模組</option>{MODULE_CODES.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -177,8 +239,6 @@ export default function FieldSpec() {
                   <input value={idName(editF.id)} placeholder="欄位camelCase" onChange={(e) => patch(editF._k, { id: idMod(editF.id) + '.' + e.target.value })} />
                 </div>
               </label>
-              <label className="fe-row"><span>Label 顯示字</span><input value={editF.label} onChange={(e) => patch(editF._k, { label: e.target.value })} /></label>
-              <label className="fe-row"><span>i18n key</span><input value={editF.i18n} placeholder="純後台可留空" onChange={(e) => patch(editF._k, { i18n: e.target.value })} /></label>
               <label className="fe-row"><span>型別</span>
                 <div className="fe-type">
                   <Sel v={editF.type} opts={F_TYPES} onChange={(v) => patch(editF._k, { type: v })} />
@@ -191,19 +251,39 @@ export default function FieldSpec() {
                   )}
                 </div>
               </label>
-              <label className="fe-row"><span>必填</span><Sel v={editF.required} opts={F_REQUIRED} onChange={(v) => patch(editF._k, { required: v })} /></label>
-              <label className="fe-row"><span>來源</span><Sel v={editF.source} opts={F_SOURCE} onChange={(v) => patch(editF._k, { source: v })} /></label>
-              <label className="fe-row"><span>預設值</span><input value={editF.default} onChange={(e) => patch(editF._k, { default: e.target.value })} /></label>
-              <label className="fe-row"><span>驗證規則<br /><small>一行一條</small></span>
-                <textarea rows={3} value={(editF.validations || []).join('\n')} placeholder={'必填\n≤30 字元'} onChange={(e) => patch(editF._k, { validations: e.target.value.split('\n').map((s) => s.trim()).filter(Boolean) })} />
-              </label>
-              <label className="fe-row"><span>顯示/啟用條件</span><input value={editF.visibility} onChange={(e) => patch(editF._k, { visibility: e.target.value })} /></label>
-              <label className="fe-row"><span>使用情境</span><input value={editF.usage} placeholder="7.1 建立(C)…" onChange={(e) => patch(editF._k, { usage: e.target.value })} /></label>
-              <div className="fe-group">對應（WF 為必填，API/DB 待 RD）</div>
+
+              <div className="fe-q">❶ 這個值從哪來？</div>
+              <Pills value={editF.source} options={F_SOURCE} onChange={(v) => patch(editF._k, { source: v })} />
+              <label className="fe-row"><span>預設值</span><input value={editF.default} placeholder="空" onChange={(e) => patch(editF._k, { default: e.target.value })} /></label>
+
+              <div className="fe-q">❷ 什麼情況一定要填？怎樣才算合法？</div>
+              <Pills value={editF.required} options={['是', '否', '條件式']} match={(v, o) => (o === '條件式' ? String(v || '').startsWith('條件式') : v === o)}
+                onChange={(v) => {
+                  const req = v === '條件式' ? (String(editF.required || '').startsWith('條件式') ? editF.required : '條件式：') : v
+                  const rest = (editF.validations || []).filter((x) => x !== '必填')
+                  patch(editF._k, { required: req, validations: v === '是' ? ['必填', ...rest] : rest })
+                }} />
+              {String(editF.required || '').startsWith('條件式') && (
+                <input className="fe-cond" value={String(editF.required).replace(/^條件式[：:]?/, '')} placeholder="例：型別=白金時必填"
+                  onChange={(e) => patch(editF._k, { required: '條件式：' + e.target.value })} />
+              )}
+              <RuleChips validations={editF.validations || []} suggestions={suggestChips(editF.label, editF.type)}
+                onChange={(v) => patch(editF._k, { validations: v })} />
+
+              <div className="fe-q">❸ 誰、什麼狀態下看得到 / 改得動？</div>
+              <Pills value={editF.visibility} options={['恆顯示', '僅登入可見', '僅管理員可見', '唯讀']} onChange={(v) => patch(editF._k, { visibility: v })} />
+              <input className="fe-cond" value={editF.visibility} placeholder="或自行描述：白金以上可編輯…" onChange={(e) => patch(editF._k, { visibility: e.target.value })} />
+
+              <div className="fe-q">❹ 出現在哪些頁？</div>
+              <input className="fe-cond" value={editF.usage} placeholder="7.1 建立(C)、7.4 編輯(U)…" onChange={(e) => patch(editF._k, { usage: e.target.value })} />
+
+              <div className="fe-group">對應（WF 先填，API/DB 可留給 RD）</div>
               <label className="fe-row"><span>WF</span><input value={editF.mapping?.wf || ''} onChange={(e) => patchMap(editF._k, { wf: e.target.value })} /></label>
               <label className="fe-row"><span>API</span><input value={editF.mapping?.api || ''} onChange={(e) => patchMap(editF._k, { api: e.target.value })} /></label>
               <label className="fe-row"><span>DB</span><input value={editF.mapping?.db || ''} onChange={(e) => patchMap(editF._k, { db: e.target.value })} /></label>
-              <label className="fe-row"><span>狀態</span><Sel v={editF.status} opts={F_STATUS} onChange={(v) => patch(editF._k, { status: v })} /></label>
+
+              <div className="fe-group">狀態（AI/自動帶入的是草稿，你確認後轉正）</div>
+              <Pills value={editF.status} options={F_STATUS} onChange={(v) => patch(editF._k, { status: v })} />
             </div>
             <div className="fe-foot">
               <button className="ghost sm danger" onClick={() => del(editF._k)}><X size={14} /> 刪除欄位</button>
