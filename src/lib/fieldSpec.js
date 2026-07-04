@@ -35,7 +35,28 @@ export const RULE_CHIPS = [
   { id: 'noBlank', label: '不可全空白', make: () => '不可全空白' },
   { id: 'notPast', label: '不可早於今日', make: () => '不可早於今日' },
   { id: 'fileMax', label: '檔案 ≤', params: [5], units: ['MB'], make: (n = 5) => `檔案 ≤${n}MB`, re: /^檔案 ≤(\d+)MB$/ },
+  { id: 'url', label: 'URL 格式', make: () => 'URL 格式' },
+  { id: 'twId', label: '身分證格式', make: () => '身分證字號格式' },
+  { id: 'taxId', label: '統編格式', make: () => '統一編號格式' },
+  { id: 'decimals', label: '小數 ≤', params: [2], units: ['位'], make: (n = 2) => `小數 ≤${n} 位`, re: /^小數 ≤(\d+) 位$/ },
+  { id: 'minItems', label: '至少', params: [1], units: ['筆'], make: (n = 1) => `至少 ${n} 筆`, re: /^至少 (\d+) 筆$/ },
+  { id: 'maxItems', label: '至多', params: [10], units: ['筆'], make: (n = 10) => `至多 ${n} 筆`, re: /^至多 (\d+) 筆$/ },
 ]
+
+// ── 表單層（跨欄位）規則：結束日≥開始日、兩欄一致、二擇一必填… ──
+export const FORM_RULE_KINDS = [
+  { id: 'notBefore', name: 'A 不可早於 B', text: (a, b) => `「${a}」不可早於「${b}」` },
+  { id: 'equal', name: '兩欄須一致', text: (a, b) => `「${a}」須與「${b}」一致` },
+  { id: 'oneOf', name: '二擇一必填', text: (a, b) => `「${a}」與「${b}」二擇一必填` },
+  { id: 'sumTo', name: '總和限制', text: (a, b) => `「${a}」加總須等於「${b}」` },
+  { id: 'custom', name: '自訂', text: () => '' },
+]
+export const emptyFormRule = () => ({ _k: uid('fr'), kind: 'notBefore', a: '', b: '', text: '' })
+export function formRuleText(r) {
+  if (r.kind === 'custom') return r.text || ''
+  const k = FORM_RULE_KINDS.find((x) => x.id === r.kind)
+  return k && r.a && r.b ? k.text(r.a, r.b) : ''
+}
 
 // 型別/語意 → 建議規則（chip id），在抽屜顯示為虛線建議、一點即加入
 export function suggestChips(label, type) {
@@ -48,6 +69,10 @@ export function suggestChips(label, type) {
   if (type === 'number') out.push('numRange')
   if (type === 'date' || type === 'datetime') out.push('notPast')
   if (type === 'file') out.push('fileMax')
+  if (type === 'array') out.push('minItems')
+  if (/網址|連結|url|link/i.test(L)) out.push('url')
+  if (/身分證/i.test(L)) out.push('twId')
+  if (/統編|統一編號/i.test(L)) out.push('taxId')
   if (/名稱|標題|帳號|name|title/i.test(L)) out.push('unique')
   return [...new Set(out)]
 }
@@ -149,7 +174,7 @@ function enrichField(r, wfName) {
 export function normalizeField(f) {
   return {
     _k: uid('fld'), id: '', label: '', i18n: '', type: 'text', required: '否', source: '使用者輸入',
-    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, dictRef: null, ...f,
+    default: '', visibility: '恆顯示', usage: '', status: '草稿', ref: null, dictRef: null, formula: '', ...f,
     mapping: { wf: '', api: '', db: '', ...(f.mapping || {}) },
     validations: Array.isArray(f.validations) ? f.validations : (f.validations ? String(f.validations).split(/[；;]/).map((s) => s.trim()).filter(Boolean) : []),
   }
@@ -241,8 +266,14 @@ export function fieldsToMarkdown(project) {
   for (const f of fs) {
     const label = f.i18n ? `${f.label} / \`${f.i18n}\`` : f.label
     const valid = (f.validations || []).join('；')
+    const source = f.formula ? `${f.source}：${f.formula}` : f.source // SOP 複合來源寫法
     const map = [f.mapping?.wf && `WF: ${f.mapping.wf}`, f.mapping?.api && `API: ${f.mapping.api}`, f.mapping?.db && `DB: ${f.mapping.db}`].filter(Boolean).join('；')
-    lines.push(`| \`${esc(f.id)}\` | ${esc(label)} | ${esc(f.type)} | ${esc(f.required)} | ${esc(f.source)} | ${esc(f.default)} | ${esc(valid)} | ${esc(f.visibility)} | ${esc(f.usage)} | ${esc(map)} | ${esc(f.status)} |`)
+    lines.push(`| \`${esc(f.id)}\` | ${esc(label)} | ${esc(f.type)} | ${esc(f.required)} | ${esc(source)} | ${esc(f.default)} | ${esc(valid)} | ${esc(f.visibility)} | ${esc(f.usage)} | ${esc(map)} | ${esc(f.status)} |`)
+  }
+  const frs = (project.formRules || []).map(formRuleText).filter(Boolean)
+  if (frs.length) {
+    lines.push('', '## 表單層（跨欄位）規則', '')
+    frs.forEach((t, i) => lines.push(`${i + 1}. ${t}`))
   }
   const dict = project.dictionary || []
   if (dict.length) {
