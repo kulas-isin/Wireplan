@@ -167,13 +167,19 @@ export default function FieldSpec() {
           </div>
           {dictionary.length === 0 ? <div className="muted" style={{ fontSize: 12, padding: 8 }}>還沒有字典項。enum 欄位選「＋新增字典」會自動建立。</div> : (
             <table className="fs-dict-table">
-              <thead><tr><th>ID</th><th>值（用 / 或換行分隔）</th><th>說明</th><th>狀態</th><th></th></tr></thead>
+              <thead><tr><th>ID</th><th>值（用 / 或換行分隔）</th><th>連動於</th><th>說明</th><th>狀態</th><th></th></tr></thead>
               <tbody>
                 {dictionary.map((d) => (
                   <tr key={d._k}>
                     <td><input value={d.id} placeholder="member.plan" onChange={(e) => patchDict(d._k, { id: e.target.value })} /></td>
                     <td><input value={(d.values || []).join(' / ')} placeholder="試聽會員 / 白金會員 / 尊爵會員" onChange={(e) => patchDict(d._k, { values: e.target.value.split(/[/\n]/).map((s) => s.trim()).filter(Boolean) })} /></td>
-                    <td><input value={d.note} onChange={(e) => patchDict(d._k, { note: e.target.value })} /></td>
+                    <td>
+                      <select value={d.cascade || ''} onChange={(e) => patchDict(d._k, { cascade: e.target.value || undefined })} title="這組選項是否隨另一組字典的選擇而變（如 縣市→區域）">
+                        <option value="">無</option>
+                        {dictIds.filter((id) => id !== d.id).map((id) => <option key={id} value={id}>[[{id}]]</option>)}
+                      </select>
+                    </td>
+                    <td><input value={d.note} placeholder={d.cascade ? '描述對應關係：台北市→中山區/大安區…' : ''} onChange={(e) => patchDict(d._k, { note: e.target.value })} /></td>
                     <td><select value={d.status} onChange={(e) => patchDict(d._k, { status: e.target.value })}>{F_STATUS.map((o) => <option key={o}>{o}</option>)}</select></td>
                     <td><button className="ghost sm danger" onClick={() => delDict(d._k)}><X size={14} /></button></td>
                   </tr>
@@ -317,6 +323,8 @@ export default function FieldSpec() {
               )}
               <RuleChips validations={editF.validations || []} suggestions={suggestChips(editF.label, editF.type)}
                 onChange={(v) => patch(editF._k, { validations: v })} />
+              <input className="fe-cond" value={editF.errorNote || ''} placeholder="錯誤碼對照（選填）：E001=必填未填、E011=Email 已註冊"
+                onChange={(e) => patch(editF._k, { errorNote: e.target.value })} />
 
               <div className="fe-q">❸ 誰、什麼狀態下看得到 / 改得動？</div>
               <Pills value={editF.visibility} options={['恆顯示', '僅登入可見', '僅管理員可見', '唯讀']} onChange={(v) => patch(editF._k, { visibility: v })} />
