@@ -1104,6 +1104,11 @@ export default function WireframeBoard() {
     if (Array.isArray(json.fields) && json.fields.length) {
       dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: [...(current.fields || []), ...json.fields.map(normalizeField)] })
     }
+    // JSON 帶 formRules（跨欄位規則）→ 一併帶入
+    if (Array.isArray(json.formRules) && json.formRules.length) {
+      const norm = json.formRules.map((r) => ({ _k: uid('fr'), kind: r.kind || 'custom', a: r.a || '', b: r.b || '', text: r.text || '' }))
+      dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'formRules', value: [...(current.formRules || []), ...norm] })
+    }
     setImportOpen(false); setImportText(''); setImportErr('')
   }
 

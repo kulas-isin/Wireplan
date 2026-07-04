@@ -1029,3 +1029,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rc-chip.on:hover .rc-x { opacity: 1; color: var(--danger, #d4380d); }
 .rc-custom input { flex: 1; min-width: 150px; border: 1px dashed var(--border); border-radius: 999px; padding: 6px 12px; font-size: 12px; background: transparent; }
 .rc-custom input:focus { border-color: var(--primary); outline: none; }
+
+/* ── 表單層（跨欄位）規則 ── */
+.fr-list { display: flex; flex-direction: column; }
+.fr-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-bottom: 1px dashed var(--border); flex-wrap: wrap; }
+.fr-row select { border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 12px; background: #fff; }
+.fr-custom { flex: 1; min-width: 180px; border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; font-size: 12px; }
+.fr-preview { flex: 1; min-width: 160px; font-size: 12px; color: var(--primary-dark, #0b2c20); background: var(--primary-soft); border-radius: 6px; padding: 3px 10px; }

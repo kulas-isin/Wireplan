@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { downloadText } from '../lib/download.js'
-import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, validateField, wireframeSync, FIELD_TEMPLATES, F_TYPES, F_SOURCE, F_STATUS, MODULE_CODES, RULE_CHIPS, suggestChips } from '../lib/fieldSpec.js'
+import { extractFields, emptyField, emptyDictEntry, fieldsToMarkdown, normalizeField, validateField, wireframeSync, FIELD_TEMPLATES, F_TYPES, F_SOURCE, F_STATUS, MODULE_CODES, RULE_CHIPS, suggestChips, FORM_RULE_KINDS, emptyFormRule, formRuleText } from '../lib/fieldSpec.js'
 import WireframePreview from './WireframePreview.jsx'
-import { Plus, Download, X, Sparkles, PanelRight, BookOpen, TriangleAlert, Pencil, Check } from 'lucide-react'
+import { Plus, Download, X, Sparkles, PanelRight, BookOpen, TriangleAlert, Pencil, Check, Link2 } from 'lucide-react'
 
 const idMod = (id) => { const p = String(id || '').split('.'); return p.length > 1 && MODULE_CODES.includes(p[0]) ? p[0] : '' }
 const idName = (id) => { const p = String(id || '').split('.'); return p.length > 1 ? p.slice(1).join('.') : (p[0] && !MODULE_CODES.includes(p[0]) ? p[0] : '') }
@@ -76,6 +76,7 @@ export default function FieldSpec() {
   const [wfId, setWfId] = useState(wireframes[0]?.id || '')
   const [showPreview, setShowPreview] = useState(true)
   const [showDict, setShowDict] = useState(false)
+  const [showRules, setShowRules] = useState(false)
   const [editK, setEditK] = useState(null)
   const [focusComp, setFocusComp] = useState(null)
   const selectedWf = wireframes.find((w) => w.id === wfId)
@@ -88,6 +89,9 @@ export default function FieldSpec() {
   const patchMap = (k, p) => setFields(fields.map((f) => (f._k === k ? { ...f, mapping: { ...f.mapping, ...p } } : f)))
   const del = (k) => { setFields(fields.filter((f) => f._k !== k)); if (editK === k) setEditK(null) }
 
+  const formRules = current.formRules || []
+  const setRules = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'formRules', value: next })
+  const patchRule = (k, p) => setRules(formRules.map((r) => (r._k === k ? { ...r, ...p } : r)))
   const setDict = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'dictionary', value: next })
   const patchDict = (k, p) => setDict(dictionary.map((d) => (d._k === k ? { ...d, ...p } : d)))
   const delDict = (k) => setDict(dictionary.filter((d) => d._k !== k))
@@ -141,6 +145,7 @@ export default function FieldSpec() {
         </select>
         <button onClick={addBlank}><Plus size={15} /> 空白列</button>
         <button className={showDict ? 'active' : ''} onClick={() => setShowDict((v) => !v)}><BookOpen size={15} /> 字典（{dictionary.length}）</button>
+        <button className={showRules ? 'active' : ''} onClick={() => setShowRules((v) => !v)}><Link2 size={15} /> 表單規則（{formRules.length}）</button>
         <button className={showPreview ? 'active' : ''} onClick={() => setShowPreview((v) => !v)}><PanelRight size={15} /> {showPreview ? '隱藏畫面' : '顯示畫面'}</button>
         <button onClick={() => downloadText(`${current.name}-欄位規格.md`, fieldsToMarkdown(current), 'text/markdown')}><Download size={15} /> 匯出</button>
       </div>
@@ -179,6 +184,44 @@ export default function FieldSpec() {
         </div>
       )}
 
+      {showRules && (
+        <div className="fs-dict">
+          <div className="fs-dict-head">
+            <strong>表單層（跨欄位）規則</strong>
+            <span className="muted" style={{ fontSize: 12 }}>結束日≥開始日、兩欄一致、二擇一必填…這種跨兩個欄位的規則寫這裡</span>
+            <div className="spacer" />
+            <button className="sm" onClick={() => setRules([...formRules, emptyFormRule()])}><Plus size={14} /> 規則</button>
+          </div>
+          {formRules.length === 0 ? <div className="muted" style={{ fontSize: 12, padding: 8 }}>還沒有跨欄位規則。例：「結束日」不可早於「開始日」。</div> : (
+            <div className="fr-list">
+              {formRules.map((r) => {
+                const opts = fields.map((f) => f.label).filter(Boolean)
+                return (
+                  <div className="fr-row" key={r._k}>
+                    <select value={r.kind} onChange={(e) => patchRule(r._k, { kind: e.target.value })}>
+                      {FORM_RULE_KINDS.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
+                    </select>
+                    {r.kind !== 'custom' ? (
+                      <>
+                        <select value={r.a} onChange={(e) => patchRule(r._k, { a: e.target.value })}>
+                          <option value="">欄位 A…</option>{opts.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                        <select value={r.b} onChange={(e) => patchRule(r._k, { b: e.target.value })}>
+                          <option value="">欄位 B…</option>{opts.map((o) => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </>
+                    ) : (
+                      <input className="fr-custom" value={r.text} placeholder="自訂規則，例：優惠碼與心禮卡不可同時使用" onChange={(e) => patchRule(r._k, { text: e.target.value })} />
+                    )}
+                    <span className="fr-preview">{formRuleText(r) || '（選好欄位後自動組句）'}</span>
+                    <button className="ghost sm danger" onClick={() => setRules(formRules.filter((x) => x._k !== r._k))}><X size={14} /></button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
       <div className="fs-body">
         {fields.length === 0 ? (
           <div className="empty" style={{ flex: 1 }}><div className="muted">選一張畫面 → 按「從此畫面抽欄位」，或用「＋ 範本」。欄位會出現在清單，點任一列到右側編輯。</div></div>
@@ -254,6 +297,11 @@ export default function FieldSpec() {
 
               <div className="fe-q">❶ 這個值從哪來？</div>
               <Pills value={editF.source} options={F_SOURCE} onChange={(v) => patch(editF._k, { source: v })} />
+              {['系統計算', '前頁帶入', '後台設定'].includes(editF.source) && (
+                <input className="fe-cond" value={editF.formula || ''}
+                  placeholder={editF.source === '系統計算' ? '怎麼算？例：合計 = 單價 × 數量' : editF.source === '前頁帶入' ? '從哪頁帶入什麼？例：從 W.3.0 帶入方案 ID' : '哪個後台頁設定？例：B.8 首頁區塊管理'}
+                  onChange={(e) => patch(editF._k, { formula: e.target.value })} />
+              )}
               <label className="fe-row"><span>預設值</span><input value={editF.default} placeholder="空" onChange={(e) => patch(editF._k, { default: e.target.value })} /></label>
 
               <div className="fe-q">❷ 什麼情況一定要填？怎樣才算合法？</div>

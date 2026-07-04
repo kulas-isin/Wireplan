@@ -170,6 +170,8 @@ JSON 頂層除了 `wireframes`，可再帶 `flows`：描述「某角色完成某
 
 - **只填看得出來/推得出來的**：型別、必填、來源、常見驗證（Email/長度/唯一）、使用情境；不確定的 API/DB 留空給 RD。
 - 列舉型（enum）的驗證寫 `見字典 [[模組.欄位]]`，不就地展開選項。
+- 計算欄位：`"source": "系統計算"` 並加 `"formula": "合計 = 單價 × 數量"`（前頁帶入/後台設定也用 formula 描述來處）。
+- 跨欄位規則放頂層 `formRules`：`[{ "kind": "notBefore|equal|oneOf|sumTo|custom", "a": "欄位A label", "b": "欄位B label", "text": "kind=custom 時的自訂句" }]`（例：結束日不可早於開始日 → `{"kind":"notBefore","a":"結束日","b":"開始日"}`）。
 
 ## 怎麼匯入
 
