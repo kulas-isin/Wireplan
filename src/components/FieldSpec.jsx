@@ -69,6 +69,18 @@ function RuleChips({ validations = [], suggestions = [], onChange }) {
   )
 }
 
+
+// 字典「值」輸入：打字時保留原文（否則 / 會被即時解析吃掉），失焦或 Enter 才拆成陣列
+function DictValuesInput({ entry, onCommit }) {
+  const [txt, setTxt] = useState((entry.values || []).join(' / '))
+  const commit = () => onCommit(txt.split(/[/\n、,，]/).map((s) => s.trim()).filter(Boolean))
+  return (
+    <input value={txt} placeholder="試聽會員 / 白金會員 / 尊爵會員"
+      onChange={(e) => setTxt(e.target.value)} onBlur={commit}
+      onKeyDown={(e) => { if (e.key === 'Enter') { commit(); e.currentTarget.blur() } }} />
+  )
+}
+
 export default function FieldSpec() {
   const { current, dispatch } = useStore()
   const fields = current.fields || []
@@ -172,7 +184,7 @@ export default function FieldSpec() {
                 {dictionary.map((d) => (
                   <tr key={d._k}>
                     <td><input value={d.id} placeholder="member.plan" onChange={(e) => patchDict(d._k, { id: e.target.value })} /></td>
-                    <td><input value={(d.values || []).join(' / ')} placeholder="試聽會員 / 白金會員 / 尊爵會員" onChange={(e) => patchDict(d._k, { values: e.target.value.split(/[/\n]/).map((s) => s.trim()).filter(Boolean) })} /></td>
+                    <td><DictValuesInput key={d._k} entry={d} onCommit={(vals) => patchDict(d._k, { values: vals })} /></td>
                     <td>
                       <select value={d.cascade || ''} onChange={(e) => patchDict(d._k, { cascade: e.target.value || undefined })} title="這組選項是否隨另一組字典的選擇而變（如 縣市→區域）">
                         <option value="">無</option>
