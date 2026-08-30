@@ -34,9 +34,13 @@ function GrowInput({ value, disabled, title, placeholder, onChange, multiline, c
     if (!el) return
     const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
     fit()
+    requestAnimationFrame(fit)
+    const t = setTimeout(fit, 260) // 進場動畫結束後再量一次
+    document.fonts?.ready?.then(fit)
     const ro = new ResizeObserver(fit)
     ro.observe(el)
-    return () => ro.disconnect()
+    if (el.parentElement) ro.observe(el.parentElement)
+    return () => { ro.disconnect(); clearTimeout(t) }
   }, [value])
   return (
     <textarea ref={ref} rows={1} className={className} value={value} disabled={disabled} title={title} placeholder={placeholder}
@@ -53,9 +57,12 @@ function GrowLine({ value, disabled, placeholder, onChange }) {
     if (!el) return
     const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
     fit()
+    requestAnimationFrame(fit)
+    const t = setTimeout(fit, 260)
+    document.fonts?.ready?.then(fit)
     const ro = new ResizeObserver(fit)
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { ro.disconnect(); clearTimeout(t) }
   }, [value])
   return (
     <textarea ref={ref} rows={1} value={value} disabled={disabled} placeholder={placeholder}
