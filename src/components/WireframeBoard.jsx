@@ -1104,6 +1104,17 @@ export default function WireframeBoard() {
     if (Array.isArray(json.fields) && json.fields.length) {
       dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: [...(current.fields || []), ...json.fields.map(normalizeField)] })
     }
+    // JSON 帶 requirementPatches（AI 展開細節）→ 只回填空欄，不覆蓋已有內容
+    if (Array.isArray(json.requirementPatches) && json.requirementPatches.length) {
+      for (const p of json.requirementPatches) {
+        const r = (current.requirements || []).find((x) => x.id === p.id || x.name === p.name)
+        if (!r) continue
+        const patch = {}
+        if (!r.description && p.description) patch.description = p.description
+        if (!r.acceptance && p.acceptance) patch.acceptance = p.acceptance
+        if (Object.keys(patch).length) dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch })
+      }
+    }
     // JSON 帶 formRules（跨欄位規則）→ 一併帶入
     if (Array.isArray(json.formRules) && json.formRules.length) {
       const norm = json.formRules.map((r) => ({ _k: uid('fr'), kind: r.kind || 'custom', a: r.a || '', b: r.b || '', text: r.text || '' }))
