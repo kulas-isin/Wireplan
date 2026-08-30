@@ -44,6 +44,7 @@ export default function App() {
       if (window.location.hash === '#interview') setView('interview')
       else if (window.location.hash === '#triage') setView('triage')
       else if (window.location.hash === '#reqs') setView('reqs')
+      else if (window.location.hash === '#wf') { setTab('wireframe'); setView('workspace'); history.replaceState(null, '', ' ') }
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
