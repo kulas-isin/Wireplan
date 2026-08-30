@@ -1523,3 +1523,29 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 記錄日期 */
 .iv-date { font-size: 11px; color: #98a48d; flex-shrink: 0; }
 input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
+
+/* ═══ 訪談模式 Nuviq 化 ═══ */
+.iv-wrap { background: linear-gradient(165deg, #F7FAEC 0%, #EAF2D8 42%, #DCEBC7 100%); }
+.iv-head { background: rgba(252,254,246,.85); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(60,80,40,.08); color: #22301F; }
+.iv-count { background: rgba(255,255,255,.8); color: #56684C; box-shadow: 0 2px 8px rgba(60,80,40,.06); }
+.iv-done { background: linear-gradient(135deg, #ECF5A6 0%, #C6DC6A 52%, #9CBD48 100%); color: #22301F; box-shadow: 0 3px 12px rgba(120,150,60,.3); }
+.iv-chips { background: transparent; }
+.iv-chip { border: none; background: rgba(255,255,255,.8); color: #56684C; box-shadow: 0 2px 8px rgba(60,80,40,.06); }
+.iv-chip:active { background: #EAF2D4; color: #3A5D25; }
+.iv-chip.iv-tool { background: rgba(255,255,255,.8); }
+.iv-chip.iv-tool.on { background: #3A5D25; color: #EDF7CF; }
+.iv-chip-add { border-color: #B9D45B; background: rgba(255,255,255,.6); }
+.iv-input { background: transparent; border-bottom: none; }
+.iv-input textarea { border: none; background: rgba(255,255,255,.9); box-shadow: inset 0 0 0 1px rgba(60,80,40,.12); border-radius: 16px; }
+.iv-input textarea:focus { box-shadow: inset 0 0 0 2px #B9D45B; }
+.iv-add { background: #274D26; color: #EDF7CF; box-shadow: 0 3px 12px rgba(40,70,35,.3); }
+.iv-voice { border-color: #3A5D25; color: #3A5D25; background: rgba(255,255,255,.9); box-shadow: 0 2px 10px rgba(60,80,40,.08); }
+.iv-card { border: none; background: rgba(255,255,255,.82); backdrop-filter: blur(8px); border-radius: 18px; box-shadow: 0 4px 16px rgba(60,80,40,.08); }
+.iv-card.open { border: none; box-shadow: 0 6px 20px rgba(60,80,40,.12), 0 0 0 2.5px #B9D45B; }
+.iv-name { color: #22301F; }
+.iv-guide { background: rgba(255,251,235,.9); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(180,150,60,.15); border-radius: 0 0 18px 18px; }
+.iv-detail textarea, .iv-detail input { border: none; box-shadow: inset 0 0 0 1px rgba(60,80,40,.12); border-radius: 12px; background: #fff; }
+.iv-detail textarea:focus, .iv-detail input:focus { box-shadow: inset 0 0 0 2px #B9D45B; }
+.iv-wrap .fe-pill { border: none; background: rgba(234,242,212,.8); color: #56684C; }
+.iv-wrap .fe-pill.on { background: #3A5D25; color: #EDF7CF; }
+.iv-empty { color: #8A9A80; }
