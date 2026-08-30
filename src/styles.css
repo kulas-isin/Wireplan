@@ -1235,7 +1235,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rq-name { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 800; color: #14271c; border: none; background: transparent; padding: 2px 0; border-bottom: 1.5px dashed transparent; border-radius: 0; resize: none; overflow: hidden; line-height: 1.4; font-family: inherit; display: block; }
 .rq-name::placeholder { font-weight: 600; color: #9aa8a0; }
 .rq-name:focus { outline: none; border-bottom-color: var(--primary); }
-.rq-name:disabled { color: #35493d; opacity: 1; background: transparent; }
+.rq-name:disabled { color: #35493d; -webkit-text-fill-color: #35493d; opacity: 1; background: transparent; }
 .rq-mid { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rq-catwrap { display: inline-flex; align-items: center; gap: 7px; background: var(--surface, #f4f7f5); border-radius: 999px; padding: 3px 6px 3px 11px; }
 .rq-catwrap i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -1276,3 +1276,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .cr-chip.guess { border-style: dashed; }
 .cr-approx { font-weight: 900; }
 .cr-legend { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; color: var(--muted); }
+
+/* ── 需求整理獨立頁（補回：曾被區塊替換誤刪） ── */
+.rp-wrap { position: fixed; inset: 0; z-index: 80; background: var(--bg); display: flex; flex-direction: column; }
+.rp-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.rp-head strong { font-size: 16px; }
+.rp-body { flex: 1; overflow-y: auto; padding: 14px max(18px, env(safe-area-inset-right)) 44px max(18px, env(safe-area-inset-left)); }
