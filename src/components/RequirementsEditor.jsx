@@ -5,6 +5,7 @@ import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import InterviewMode from './InterviewMode.jsx'
 import ChangeControl from './ChangeControl.jsx'
 import { requirementCoverage } from '../lib/sop.js'
+import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers } from 'lucide-react'
 
@@ -25,17 +26,19 @@ function MobileReqCard({ req, index, total }) {
   const { dispatch } = useStore()
   const [open, setOpen] = useState(false)
   const cat = categoryMeta(req.category)
+  const locked = isLocked(req)
+  const lockTip = locked ? '已確認 — 要修改請先按 ✂ 拆封' : undefined
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
   return (
-    <div className="rq-card">
-      <input className="rq-name" value={req.name} placeholder="功能名稱" onChange={(e) => patch({ name: e.target.value })} />
-      <select className="rq-cat" value={req.category} style={{ borderLeft: `4px solid ${cat.color}` }} onChange={(e) => patch({ category: e.target.value })}>
+    <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
+      <input className="rq-name" value={req.name} placeholder="功能名稱" disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
+      <select className="rq-cat" value={req.category} disabled={locked} title={lockTip} style={{ borderLeft: `4px solid ${cat.color}` }} onChange={(e) => patch({ category: e.target.value })}>
         {CATEGORY_LIST.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
       </select>
       <div className="rq-row">
         <div className="fe-pills rq-pri">
           {['高', '中', '低'].map((p) => (
-            <button key={p} className={'fe-pill' + (req.priority === p ? ' on' : '')} onClick={() => patch({ priority: p })}>{p}</button>
+            <button key={p} className={'fe-pill' + (req.priority === p ? ' on' : '')} disabled={locked} title={lockTip} onClick={() => patch({ priority: p })}>{p}</button>
           ))}
         </div>
         <div className="spacer" />
@@ -47,17 +50,17 @@ function MobileReqCard({ req, index, total }) {
         <div className="spacer" />
         <button className="ghost sm" disabled={index === 0} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={15} /></button>
         <button className="ghost sm" disabled={index === total - 1} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={15} /></button>
-        <button className="sm danger" onClick={() => { if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
+        <button className="sm danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
       </div>
       {open && (
         <div className="rq-detail">
-          <label><span>功能說明</span><textarea rows={2} value={req.description} onChange={(e) => patch({ description: e.target.value })} /></label>
-          <label><span>驗收條件（每行一條）</span><textarea rows={2} value={req.acceptance} placeholder="留空用預設" onChange={(e) => patch({ acceptance: e.target.value })} /></label>
-          <label><span>對應畫面名稱</span><input value={req.screen} onChange={(e) => patch({ screen: e.target.value })} /></label>
-          <label><span>備註</span><input value={req.note} onChange={(e) => patch({ note: e.target.value })} /></label>
+          <label><span>功能說明</span><textarea rows={2} value={req.description} disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} /></label>
+          <label><span>驗收條件（每行一條）</span><textarea rows={2} value={req.acceptance} placeholder="留空用預設" disabled={locked} title={lockTip} onChange={(e) => patch({ acceptance: e.target.value })} /></label>
+          <label><span>對應畫面名稱</span><input value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
+          <label><span>備註</span><input value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
           <div className="rq-2">
-            <label><span>工時</span><input value={req.estimate} onChange={(e) => patch({ estimate: e.target.value })} /></label>
-            <label><span>報價</span><input value={req.price} onChange={(e) => patch({ price: e.target.value })} /></label>
+            <label><span>工時</span><input value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} /></label>
+            <label><span>報價</span><input value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} /></label>
           </div>
           {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
             <div className="req-history">
@@ -75,6 +78,8 @@ function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
   const [open, setOpen] = useState(false)
   const cat = categoryMeta(req.category)
+  const locked = isLocked(req)
+  const lockTip = locked ? '已確認 — 要修改請先按 ✂ 拆封' : undefined
 
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
 
@@ -88,11 +93,12 @@ function RequirementRow({ req, index, total }) {
           </div>
         </td>
         <td style={{ width: '24%' }}>
-          <input value={req.name} onChange={(e) => patch({ name: e.target.value })} />
+          <input value={req.name} disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
         </td>
         <td>
           <select
             value={req.category}
+            disabled={locked} title={lockTip}
             onChange={(e) => patch({ category: e.target.value })}
             style={{ borderLeft: `4px solid ${cat.color}` }}
           >
@@ -102,18 +108,18 @@ function RequirementRow({ req, index, total }) {
           </select>
         </td>
         <td style={{ width: 70 }}>
-          <select value={req.priority} onChange={(e) => patch({ priority: e.target.value })}>
+          <select value={req.priority} disabled={locked} title={lockTip} onChange={(e) => patch({ priority: e.target.value })}>
             <option>高</option><option>中</option><option>低</option>
           </select>
         </td>
         <td style={{ width: 96 }}><ChangeControl req={req} /></td>
-        <td style={{ width: 80 }}><input value={req.estimate} onChange={(e) => patch({ estimate: e.target.value })} placeholder="工時" /></td>
-        <td style={{ width: 90 }}><input value={req.price} onChange={(e) => patch({ price: e.target.value })} placeholder="報價" /></td>
+        <td style={{ width: 80 }}><input value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} placeholder="工時" /></td>
+        <td style={{ width: 90 }}><input value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} placeholder="報價" /></td>
         <td>
           <div className="req-actions">
             <button className="sm" onClick={() => setOpen((o) => !o)}>{open ? '收合' : '詳細'}</button>
             <button className="sm" title="依分類重新產生 wireframe" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 版面</button>
-            <button className="sm danger" title="刪除" onClick={() => { if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
+            <button className="sm danger" title="刪除" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
           </div>
         </td>
       </tr>
@@ -123,19 +129,19 @@ function RequirementRow({ req, index, total }) {
             <div className="grid2" style={{ padding: '6px 2px' }}>
               <label className="field">
                 <span>功能說明</span>
-                <textarea value={req.description} onChange={(e) => patch({ description: e.target.value })} />
+                <textarea value={req.description} disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
               </label>
               <label className="field">
                 <span>驗收條件（每行一條）</span>
-                <textarea value={req.acceptance} onChange={(e) => patch({ acceptance: e.target.value })} placeholder="留空則使用預設驗收條件" />
+                <textarea value={req.acceptance} disabled={locked} title={lockTip} onChange={(e) => patch({ acceptance: e.target.value })} placeholder="留空則使用預設驗收條件" />
               </label>
               <label className="field">
                 <span>對應畫面名稱</span>
-                <input value={req.screen} onChange={(e) => patch({ screen: e.target.value })} />
+                <input value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} />
               </label>
               <label className="field">
                 <span>備註</span>
-                <input value={req.note} onChange={(e) => patch({ note: e.target.value })} />
+                <input value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} />
               </label>
             </div>
             {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
