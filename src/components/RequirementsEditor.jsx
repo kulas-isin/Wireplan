@@ -3,7 +3,9 @@ import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import InterviewMode from './InterviewMode.jsx'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic } from 'lucide-react'
+import { requirementCoverage } from '../lib/sop.js'
+import { generateWireframe } from '../lib/wireframeTemplates.js'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate } from 'lucide-react'
 
 function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
@@ -106,6 +108,12 @@ export default function RequirementsEditor() {
     )
   }
 
+  const missing = requirementCoverage(current)
+  const genMissing = () => {
+    const wfs = missing.map((r) => generateWireframe(r))
+    if (wfs.length) dispatch({ type: 'ADD_WIREFRAME', wireframes: wfs })
+  }
+
   return (
     <div>
       <div className="toolbar">
@@ -115,6 +123,13 @@ export default function RequirementsEditor() {
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
+      {missing.length > 0 && (
+        <div className="fs-alert" style={{ marginBottom: 10 }}>
+          <span className="fs-alert-new"><TriangleAlert size={14} /> {missing.length} 條需求還沒有對應頁面：{missing.slice(0, 4).map((r) => r.name).join('、')}{missing.length > 4 ? '…' : ''}
+            <button className="sm" onClick={genMissing}><LayoutTemplate size={13} /> 一鍵產生缺頁</button>
+          </span>
+        </div>
+      )}
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="req">
           <thead>
