@@ -4,8 +4,8 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { findElementOnPages, suggestElements, findPageByName, suggestPages } from '../lib/elements.js'
-import { generateWireframe } from '../lib/wireframeTemplates.js'
+import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages } from '../lib/elements.js'
+import PageMap from './PageMap.jsx'
 import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
@@ -174,46 +174,8 @@ function ElemList({ req, pages, onChange }) {
   )
 }
 
-// 頁面清單：這條需求應該有哪幾頁（含情境分支）。
-// 已建的打綠勾（點了跳過去）；還沒建的一鍵「建立」— 依分類範本生頁並直接連結這條需求。
-function PageList({ req, wfAll, dispatch, onChange }) {
-  const [txt, setTxt] = useState('')
-  const items = req.pages || []
-  const add = () => { const t = txt.trim(); if (!t) return; if (!items.includes(t)) onChange([...items, t]); setTxt('') }
-  const fill = () => {
-    const sug = suggestPages(req).filter((l) => !items.includes(l))
-    if (!sug.length) { alert('這個分類的建議頁面都已在清單裡了'); return }
-    onChange([...items, ...sug])
-  }
-  const jump = (pid) => { sessionStorage.setItem('wp-open-wf', pid); window.location.hash = 'wf' }
-  const build = (name) => dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ ...generateWireframe(req), name }] })
-  return (
-    <div className="el-wrap">
-      {items.length === 0 && <div className="al-empty">列出這條需求該有的畫面（含分支情境，如付款失敗頁）— 已建的自動打勾，漏頁一眼看到</div>}
-      {items.map((l, i) => {
-        const hit = findPageByName(l, wfAll)
-        return (
-          <div key={i} className={'el-row' + (hit ? ' el-ok' : '')}>
-            <span className="el-dot">{hit && <Check size={12} />}</span>
-            <span className="el-label">{l}</span>
-            {hit
-              ? <button className="el-pg" onClick={() => jump(hit.id)}><LayoutTemplate size={11} /> 前往</button>
-              : <button className="el-mk" onClick={() => build(l)}><Plus size={11} /> 建立</button>}
-            <button className="al-x" onClick={() => onChange(items.filter((_, j) => j !== i))}><X size={13} /></button>
-          </div>
-        )
-      })}
-      <div className="el-add">
-        <input value={txt} placeholder="加一頁，如：付款失敗頁…" onChange={(e) => setTxt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') add() }} />
-        <button className="al-add" disabled={!txt.trim()} onClick={add}><Plus size={13} /> 加入</button>
-      </div>
-      <button className="al-add" onClick={fill}><ArrowDownToLine size={13} /> 依分類帶入建議頁面</button>
-    </div>
-  )
-}
-
 // 全螢幕故事頁：核心三件（故事/對話/驗收）大空間，行政欄位收進「更多資訊」
-function ReqDetailSheet({ req, pages, wfAll, locked, lockTip, patch, dispatch, onClose }) {
+function ReqDetailSheet({ req, pages, locked, lockTip, patch, dispatch, onClose }) {
   const [more, setMore] = useState(false)
   return createPortal(
     <div className="rd-wrap">
@@ -240,17 +202,16 @@ function ReqDetailSheet({ req, pages, wfAll, locked, lockTip, patch, dispatch, o
         <div className="rd-sec"><Check size={14} /> 驗收條件</div>
         <AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} />
 
-        <div className="rd-sec"><LayoutTemplate size={14} /> 頁面清單{(req.pages || []).length > 0 ? `（${(req.pages || []).filter((l) => findPageByName(l, wfAll)).length}/${(req.pages || []).length} 已建）` : ''}</div>
-        <PageList req={req} wfAll={wfAll} dispatch={dispatch} onChange={(v) => patch({ pages: v })} />
-
-        <div className="rd-sec"><Boxes size={14} /> 元件清單{(req.elements || []).length > 0 ? `（${(req.elements || []).filter((l) => findElementOnPages(l, pages)).length}/${(req.elements || []).length} 已畫）` : ''}</div>
-        <ElemList req={req} pages={pages} onChange={(v) => patch({ elements: v })} />
+        <div className="rd-sec"><LayoutTemplate size={14} /> 畫面地圖（該有哪幾頁、每頁裝什麼）</div>
+        <PageMap req={req} pages={pages} patch={patch} />
 
         <button className="rd-more" onClick={() => setMore((m) => !m)}>
-          {more ? <ChevronDown size={15} /> : <ChevronRight size={15} />} 更多資訊（畫面 / 備註 / 工時報價 / 履歷）
+          {more ? <ChevronDown size={15} /> : <ChevronRight size={15} />} 更多資訊（必備元件 / 備註 / 工時報價 / 履歷）
         </button>
         {more && (
           <div className="rd-moresec">
+            <div className="rd-sec"><Boxes size={14} /> 必備元件對帳{(req.elements || []).length > 0 ? `（${(req.elements || []).filter((l) => findElementOnPages(l, pages)).length}/${(req.elements || []).length} 已畫）` : ''}</div>
+            <ElemList req={req} pages={pages} onChange={(v) => patch({ elements: v })} />
             <label><span>記錄日期（哪天的訪談記的）</span>
               <input type="date" className="rd-input" disabled={locked} title={lockTip}
                 value={req.createdAt ? new Date(req.createdAt).toISOString().slice(0, 10) : ''}
@@ -299,7 +260,7 @@ export default function MobileReqCard({ req, index, total }) {
   }
   const els = req.elements || []
   const elOk = els.filter((l) => findElementOnPages(l, pages)).length
-  const expP = req.pages || []
+  const expP = normalizeReqPages(req.pages).map((p) => p.name)
   const expOk = expP.filter((l) => findPageByName(l, current.wireframes || [])).length
   return (
     <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
@@ -339,7 +300,7 @@ export default function MobileReqCard({ req, index, total }) {
         <button disabled={index === total - 1} title="下移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={16} /></button>
         <button className="danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={14} /></button>
       </div>
-      {open && <ReqDetailSheet req={req} pages={pages} wfAll={current.wireframes || []} locked={locked} lockTip={lockTip} patch={patch} dispatch={dispatch} onClose={() => setOpen(false)} />}
+      {open && <ReqDetailSheet req={req} pages={pages} locked={locked} lockTip={lockTip} patch={patch} dispatch={dispatch} onClose={() => setOpen(false)} />}
     </div>
   )
 }

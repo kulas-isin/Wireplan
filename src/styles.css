@@ -1589,3 +1589,58 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   border: none; border-radius: 999px; padding: 3px 10px; font-size: 11px;
   font-weight: 600; cursor: pointer;
 }
+
+/* ===== 畫面地圖（頁卡 + 元件磚） ===== */
+.pm-wrap { display: flex; flex-direction: column; gap: 8px; }
+.pm-strip {
+  display: flex; gap: 10px; overflow-x: auto; padding: 2px 2px 8px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+}
+.pm-card {
+  flex: 0 0 150px; min-height: 118px; scroll-snap-align: start;
+  background: rgba(255, 255, 255, 0.78); border: 1.5px solid rgba(58, 93, 37, 0.16);
+  border-radius: 14px; padding: 9px 9px 10px; display: flex; flex-direction: column; gap: 7px;
+  box-shadow: 0 2px 8px rgba(58, 93, 37, 0.06); cursor: pointer;
+}
+.pm-ghost { border-style: dashed; background: rgba(255, 255, 255, 0.45); cursor: default; }
+.pm-name {
+  display: flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700;
+  color: #2F4A1E; line-height: 1.25; overflow-wrap: anywhere;
+}
+.pm-name svg { flex-shrink: 0; opacity: 0.55; }
+.pm-px { margin-left: auto; border: none; background: none; color: rgba(34, 48, 31, 0.4); padding: 0; cursor: pointer; flex-shrink: 0; }
+.pm-bricks { display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; flex: 1; }
+.pm-brick {
+  position: relative; display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10.5px; line-height: 1; padding: 4px 7px; border-radius: 6px;
+  border: 1px solid transparent; color: #2A3A22; max-width: 100%; overflow-wrap: anywhere; cursor: pointer;
+}
+.pm-b-in { background: #DDEBF7; border-color: #C3DAF0; }
+.pm-b-out { background: #E1F0D8; border-color: #CBE2BC; }
+.pm-b-btn { background: linear-gradient(180deg, #EFF6B4, #D5E58A); border-color: #C6DC6A; font-weight: 600; }
+.pm-b-nav { background: #EBE4F5; border-color: #DACFEC; }
+.pm-b-fb { background: #FBE9D6; border-color: #F2D6B4; }
+.pm-b-lay { background: #EDEFE8; border-color: #DDE1D4; }
+.pm-hollow { background: transparent !important; border-style: dashed; border-color: #D9A75E; color: #B0691F; }
+.pm-bx { border: none; background: none; padding: 0; margin-left: 1px; color: inherit; opacity: 0.55; cursor: pointer; display: inline-flex; }
+.pm-brickadd {
+  display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; padding: 4px 7px;
+  border-radius: 6px; border: 1px dashed rgba(58, 93, 37, 0.35); background: none; color: #3A5D25; cursor: pointer;
+}
+.pm-pal { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 2px; border-top: 1px dashed rgba(58, 93, 37, 0.18); }
+.pm-pal .pm-brick { border-width: 1px; }
+.pm-mk {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  background: linear-gradient(180deg, #ECF5A6, #C6DC6A); color: #2F4A1E;
+  border: none; border-radius: 9px; padding: 6px 8px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+}
+.pm-add { border-style: dashed; background: none; box-shadow: none; justify-content: center; gap: 8px; cursor: default; }
+.pm-addbtn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; border: none; background: none;
+  color: #3A5D25; font-size: 12px; cursor: pointer; padding: 12px 0;
+}
+.pm-add input {
+  border: 1px solid rgba(58, 93, 37, 0.2); border-radius: 9px; padding: 7px 8px; font-size: 12.5px;
+  background: rgba(255, 255, 255, 0.85); color: #22301F; width: 100%; box-sizing: border-box;
+}
+.pm-add input:focus { outline: none; border-color: #9CBD48; box-shadow: 0 0 0 3px rgba(198, 220, 106, 0.35); }
