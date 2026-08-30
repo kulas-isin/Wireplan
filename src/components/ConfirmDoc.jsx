@@ -21,7 +21,7 @@ export default function ConfirmDoc({ onClose }) {
 
   // AI 展開細節：複製「卡片＋指令」貼給 Claude → 回 requirementPatches JSON → 匯入自動回填空欄
   const copyAIPrompt = async () => {
-    const cards = reqs.map((r) => ({ id: r.id, name: r.name, category: r.category, note: quoteOf(r), description: r.description || '', acceptance: r.acceptance || '' }))
+    const cards = reqs.map((r) => ({ id: r.id, name: r.name, category: r.category, note: [quoteOf(r), ...(r.talks || []).map((t) => `${t.who === 'client' ? '客戶' : '我方'}：${t.text}`)].filter(Boolean).join('；'), description: r.description || '', acceptance: r.acceptance || '' }))
     const text = [
       '請幫我為以下需求卡片展開細節。對每張卡：',
       '1. description：2~3 句正式的功能說明（依 name 與 note 推斷合理範圍）',
@@ -92,6 +92,11 @@ export default function ConfirmDoc({ onClose }) {
               <div key={r.id} className="cd-item">
                 <div className="cd-item-h">{i + 1}. {r.name}<span className="cd-item-tag">{r.priority}</span>{(r.versions || []).length > 0 && <span className="cd-v">v{r.versions.length} 已確認</span>}</div>
                 {r.description && <div className="cd-desc">{r.description}</div>}
+                {(r.talks || []).length > 0 && (
+                  <ul className="cd-acc">
+                    {(r.talks || []).map((t, j) => <li key={j}>（{new Date(t.at).toLocaleDateString('zh-TW')} {t.who === 'client' ? '客戶' : '我方'}）{t.text}</li>)}
+                  </ul>
+                )}
                 {quote && <div className="cd-quote">客戶原話：「{quote}」</div>}
                 <div className="cd-acc-t">驗收條件{isDefault && <span className="cd-default">（預設，可再調整）</span>}</div>
                 <ul className="cd-acc">{accepts.map((a, j) => <li key={j}>{a.replace(/^- \[ \] /, '')}</li>)}</ul>
