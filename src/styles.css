@@ -1434,3 +1434,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .as-row span:last-child { display: flex; flex-direction: column; gap: 2px; }
 .as-row b { font-size: 15px; color: #22301F; }
 .as-row small { font-size: 12px; color: #7A8A70; }
+
+/* 工具列標題會被擠壓 → 移除（頁頭已有頁名） */
+.rp-body .toolbar.rp-tools strong, .rp-body .toolbar.rp-tools .spacer { display: none; }
+.rp-body .toolbar.rp-tools { justify-content: flex-start; }
