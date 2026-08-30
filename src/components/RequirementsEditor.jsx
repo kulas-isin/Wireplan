@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList } from 'lucide-react'
+import InterviewMode from './InterviewMode.jsx'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic } from 'lucide-react'
 
 function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
@@ -83,20 +84,24 @@ function RequirementRow({ req, index, total }) {
 export default function RequirementsEditor() {
   const { current, dispatch } = useStore()
   const reqs = current.requirements
+  const [interview, setInterview] = useState(false)
 
   function addBlank() {
     dispatch({ type: 'ADD_REQUIREMENT', requirement: newRequirement({ name: '新功能', screen: '新功能' }) })
   }
+
+  if (interview) return <InterviewMode onClose={() => setInterview(false)} />
 
   if (!reqs.length) {
     return (
       <div className="empty">
         <div className="big"><ClipboardList size={40} /></div>
         <div>尚無需求項目</div>
-        <div style={{ marginTop: 12 }}>
-          <button className="primary" onClick={addBlank}><Plus size={15} /> 手動新增需求</button>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式（快速記卡）</button>
+          <button onClick={addBlank}><Plus size={15} /> 手動新增需求</button>
         </div>
-        <div className="muted" style={{ marginTop: 8 }}>或切換到「匯入」分頁匯入報價單。</div>
+        <div className="muted" style={{ marginTop: 8 }}>訪談時用手機開「訪談模式」邊聽邊記；或到「匯入」分頁匯入報價單。</div>
       </div>
     )
   }
@@ -106,6 +111,7 @@ export default function RequirementsEditor() {
       <div className="toolbar">
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
+        <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式</button>
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
