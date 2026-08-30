@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { sopStats } from '../lib/sop.js'
 import { shareOrDownloadProject, daysSince } from '../lib/sync.js'
-import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud } from 'lucide-react'
+import GithubSync from './GithubSync.jsx'
+import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw } from 'lucide-react'
 
 // 目錄選單：進 app 先選「要做哪件事」— 手機一格一格點，訪談是獨立大入口
 export default function LauncherMenu({ onGo }) {
   const { state, current, dispatch } = useStore()
+  const [ghOpen, setGhOpen] = useState(false)
   const s = sopStats(current)
   // 備份提醒：資料有東西、且從未備份或距上次備份 >3 天且其間有更動
   const days = daysSince(state.lastBackupAt)
@@ -36,6 +39,7 @@ export default function LauncherMenu({ onGo }) {
           {state.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <button className="ghost sm" title="新增專案" onClick={() => dispatch({ type: 'NEW_PROJECT' })}><Plus size={16} /></button>
+        <button className="ghost sm" title="GitHub 同步（跨裝置備份）" onClick={() => setGhOpen(true)}><RefreshCw size={15} /></button>
       </div>
       <div className="lm-greet">今天，把需求<em>優雅收攏</em></div>
       {needBackup && (
@@ -59,6 +63,7 @@ export default function LauncherMenu({ onGo }) {
         ))}
       </div>
       <div className="lm-foot muted">手機可把本頁加到主畫面；「訪談記卡」可用網址 #interview 直達。</div>
+      {ghOpen && <GithubSync onClose={() => setGhOpen(false)} />}
     </div>
   )
 }
