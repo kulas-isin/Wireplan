@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import InterviewMode from './InterviewMode.jsx'
+import ChangeControl from './ChangeControl.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers } from 'lucide-react'
@@ -42,6 +43,7 @@ function RequirementRow({ req, index, total }) {
             <option>高</option><option>中</option><option>低</option>
           </select>
         </td>
+        <td style={{ width: 96 }}><ChangeControl req={req} /></td>
         <td style={{ width: 80 }}><input value={req.estimate} onChange={(e) => patch({ estimate: e.target.value })} placeholder="工時" /></td>
         <td style={{ width: 90 }}><input value={req.price} onChange={(e) => patch({ price: e.target.value })} placeholder="報價" /></td>
         <td>
@@ -54,7 +56,7 @@ function RequirementRow({ req, index, total }) {
       </tr>
       {open && (
         <tr>
-          <td colSpan={7} style={{ background: '#f8fafc' }}>
+          <td colSpan={8} style={{ background: '#f8fafc' }}>
             <div className="grid2" style={{ padding: '6px 2px' }}>
               <label className="field">
                 <span>功能說明</span>
@@ -73,6 +75,12 @@ function RequirementRow({ req, index, total }) {
                 <input value={req.note} onChange={(e) => patch({ note: e.target.value })} />
               </label>
             </div>
+            {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
+              <div className="req-history">
+                {(req.versions || []).map((v) => <span key={'v' + v.v} className="st-badge st-green">v{v.v} ✓ {new Date(v.at).toLocaleDateString('zh-TW')}</span>)}
+                {(req.changeLog || []).map((c, i) => <span key={'c' + i} className="req-h-change">✂ {new Date(c.at).toLocaleDateString('zh-TW')}：{c.note}</span>)}
+              </div>
+            )}
             <div className="row" style={{ paddingBottom: 8 }}>
               <button className="sm" onClick={() => dispatch({ type: 'REDETECT_CATEGORY', id: req.id })}><Wand2 size={13} /> 重新自動判斷分類</button>
             </div>
@@ -139,6 +147,7 @@ export default function RequirementsEditor() {
               <th>功能名稱</th>
               <th>分類（決定版面）</th>
               <th>優先</th>
+              <th>確認</th>
               <th>工時</th>
               <th>報價</th>
               <th>操作</th>
