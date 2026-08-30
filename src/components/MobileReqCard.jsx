@@ -72,17 +72,35 @@ function GrowLine({ value, disabled, placeholder, onChange }) {
   )
 }
 
-// 驗收條件：逐條清單列
+// 驗收條件：逐條清單列。平常收合成一顆「展開 N 條」；鎖定時列為純文字（不可改也不佔輸入框）
 function AcceptList({ value, disabled, onChange }) {
   const lines = value ? value.split('\n') : []
+  const [open, setOpen] = useState(false)
   const set = (arr) => onChange(arr.join('\n'))
+  if (lines.length === 0) {
+    return (
+      <div className="al-wrap">
+        <div className="al-empty">尚未填寫 — 確認書會帶預設驗收條件</div>
+        {!disabled && <button className="al-add" onClick={() => { set(['']); setOpen(true) }}><Plus size={13} /> 新增條件</button>}
+      </div>
+    )
+  }
+  if (!open) {
+    return (
+      <div className="al-wrap">
+        <button className="tk-more" onClick={() => setOpen(true)}>展開 {lines.filter((s) => s.trim()).length} 條驗收條件</button>
+      </div>
+    )
+  }
   return (
     <div className="al-wrap">
-      {lines.length === 0 && <div className="al-empty">尚未填寫 — 確認書會帶預設驗收條件</div>}
+      <button className="tk-more" onClick={() => setOpen(false)}>收合驗收條件</button>
       {lines.map((l, i) => (
         <div key={i} className="al-row">
           <span className="al-dot"><Check size={12} /></span>
-          <GrowLine value={l} disabled={disabled} placeholder="輸入可驗收的條件…" onChange={(e) => set(lines.map((x, j) => (j === i ? e.target.value : x)))} />
+          {disabled
+            ? <div className="al-text">{l}</div>
+            : <GrowLine value={l} placeholder="輸入可驗收的條件…" onChange={(e) => set(lines.map((x, j) => (j === i ? e.target.value : x)))} />}
           {!disabled && <button className="al-x" onClick={() => set(lines.filter((_, j) => j !== i))}><X size={13} /></button>}
         </div>
       ))}
@@ -197,7 +215,8 @@ function ReqDetailSheet({ req, pages, locked, lockTip, patch, dispatch, onClose 
         )}
 
         <div className="rd-sec"><MessageSquareText size={14} /> 對話串（客戶說了什麼 / 我方確認了什麼）</div>
-        <TalkThread talks={req.talks || []} disabled={locked} onChange={(v) => patch({ talks: v })} />
+        {/* 對話是紀錄不是規格變更 — 蓋章鎖定也可繼續記（與 AI 匯入同原則） */}
+        <TalkThread talks={req.talks || []} onChange={(v) => patch({ talks: v })} />
 
         <div className="rd-sec"><Check size={14} /> 驗收條件</div>
         <AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} />
