@@ -3,7 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Check, X, Plus } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine } from 'lucide-react'
 
 
 // 詳細區的自動長高輸入（長頁名/備註不被截斷）
@@ -65,6 +65,43 @@ function TitleArea({ value, disabled, title, placeholder, onChange }) {
   )
 }
 
+
+// 對話串（user story 的 Conversation）：客戶氣泡靠左、我方靠右，一框兩鈕送出，自動帶日期
+function TalkThread({ talks = [], disabled, onChange }) {
+  const [txt, setTxt] = useState('')
+  const add = (who) => {
+    const t = txt.trim()
+    if (!t) return
+    onChange([...talks, { at: Date.now(), who, text: t }])
+    setTxt('')
+  }
+  const del = (i) => onChange(talks.filter((_, j) => j !== i))
+  return (
+    <div className="tk-wrap">
+      {talks.length === 0 && <div className="al-empty">還沒有對話 — 客戶說了什麼、你確認了什麼，逐則記在這裡</div>}
+      {talks.map((t, i) => (
+        <div key={i} className={'tk-row ' + (t.who === 'client' ? 'tk-client' : 'tk-us')}>
+          <div className="tk-bubble">
+            <div className="tk-meta">{t.who === 'client' ? '客戶' : '我方'} · {new Date(t.at).toLocaleDateString('zh-TW')}</div>
+            {t.text}
+            {!disabled && <button className="tk-x" onClick={() => del(i)}><X size={12} /></button>}
+          </div>
+        </div>
+      ))}
+      {!disabled && (
+        <div className="tk-input">
+          <textarea rows={1} value={txt} placeholder="記一則對話…" onChange={(e) => setTxt(e.target.value)}
+            onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px' }} />
+          <div className="tk-btns">
+            <button className="tk-send tk-send-client" disabled={!txt.trim()} onClick={() => add('client')}><User size={13} /> 客戶說</button>
+            <button className="tk-send tk-send-us" disabled={!txt.trim()} onClick={() => add('us')}><Store size={13} /> 我方</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // 手機專屬卡片：名稱如標題、分類膠囊、優先分段器、操作 ghost 列 — 減框線噪音、層級分明
 export default function MobileReqCard({ req, index, total }) {
   const { dispatch } = useStore()
@@ -102,7 +139,18 @@ export default function MobileReqCard({ req, index, total }) {
       </div>
       {open && (
         <div className="rq-detail">
-          <label><span>功能說明</span><GrowInput multiline value={req.description} placeholder="這個功能要做什麼、範圍到哪…" disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} /></label>
+          <label><span>故事句（一句話說清楚）</span>
+            <GrowInput multiline value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿" disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
+          </label>
+          {!locked && !req.description && (
+            <button className="tk-tpl" onClick={() => patch({ description: '身為＿＿，我想要＿＿，以便＿＿' })}><Plus size={13} /> 用故事模板開頭</button>
+          )}
+          {!locked && (req.talks || []).length === 0 && (req.description || '').length > 80 && (
+            <button className="tk-tpl" onClick={() => patch({ talks: [{ at: Date.now(), who: 'us', text: req.description }], description: '' })}><ArrowDownToLine size={13} /> 這段太長 — 搬進對話串</button>
+          )}
+          <div className="rq-acc"><span>對話串（客戶說了什麼 / 我方確認了什麼）</span>
+            <TalkThread talks={req.talks || []} disabled={locked} onChange={(v) => patch({ talks: v })} />
+          </div>
           <div className="rq-acc"><span>驗收條件</span><AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} /></div>
           <label><span>對應畫面名稱</span><GrowInput value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
           <label><span>備註</span><GrowInput value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>

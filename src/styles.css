@@ -1460,3 +1460,23 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .al-x { border: none; background: none; color: #c2410c; cursor: pointer; padding: 4px; flex-shrink: 0; }
 .al-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; border: 1.5px dashed #B9D45B; background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: #3A5D25; cursor: pointer; }
 .al-empty { font-size: 12.5px; color: #98a48d; }
+
+/* ── 對話串（LINE 式氣泡） ── */
+.tk-wrap { display: flex; flex-direction: column; gap: 8px; }
+.tk-row { display: flex; }
+.tk-row.tk-client { justify-content: flex-start; }
+.tk-row.tk-us { justify-content: flex-end; }
+.tk-bubble { position: relative; max-width: 86%; padding: 9px 30px 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.55; color: #22301F; }
+.tk-client .tk-bubble { background: #fff; box-shadow: inset 0 0 0 1px rgba(60,80,40,.12); border-bottom-left-radius: 6px; }
+.tk-us .tk-bubble { background: linear-gradient(135deg, #EFF7B8, #D3E489); border-bottom-right-radius: 6px; }
+.tk-meta { font-size: 10.5px; font-weight: 700; color: #7A8A70; margin-bottom: 2px; }
+.tk-x { position: absolute; top: 6px; right: 6px; border: none; background: none; color: #A6B29B; cursor: pointer; padding: 2px; }
+.tk-input { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.tk-input textarea { width: 100%; border: none; background: #fff; border-radius: 14px; padding: 10px 12px; font-size: 14px; font-family: inherit; resize: none; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(60,80,40,.12); }
+.tk-input textarea:focus { outline: none; box-shadow: inset 0 0 0 2px #B9D45B; }
+.tk-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.tk-send { display: inline-flex; align-items: center; gap: 5px; border: none; border-radius: 999px; padding: 8px 15px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tk-send:disabled { opacity: .4; cursor: not-allowed; }
+.tk-send-client { background: #fff; color: #3A5D25; box-shadow: inset 0 0 0 1.5px rgba(60,80,40,.18); }
+.tk-send-us { background: linear-gradient(135deg, #ECF5A6, #9CBD48); color: #22301F; }
+.tk-tpl { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; border: 1.5px dashed #B9D45B; background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: #3A5D25; cursor: pointer; }
