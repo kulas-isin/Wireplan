@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
@@ -7,6 +7,69 @@ import ChangeControl from './ChangeControl.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers } from 'lucide-react'
+
+
+function useIsMobile() {
+  const [m, setM] = useState(() => window.matchMedia('(max-width: 720px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 720px)')
+    const on = (e) => setM(e.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return m
+}
+
+// 手機專屬卡片：控件滿版好點、不橫向溢出；工時/報價收進「詳細」
+function MobileReqCard({ req, index, total }) {
+  const { dispatch } = useStore()
+  const [open, setOpen] = useState(false)
+  const cat = categoryMeta(req.category)
+  const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
+  return (
+    <div className="rq-card">
+      <input className="rq-name" value={req.name} placeholder="功能名稱" onChange={(e) => patch({ name: e.target.value })} />
+      <select className="rq-cat" value={req.category} style={{ borderLeft: `4px solid ${cat.color}` }} onChange={(e) => patch({ category: e.target.value })}>
+        {CATEGORY_LIST.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+      </select>
+      <div className="rq-row">
+        <div className="fe-pills rq-pri">
+          {['高', '中', '低'].map((p) => (
+            <button key={p} className={'fe-pill' + (req.priority === p ? ' on' : '')} onClick={() => patch({ priority: p })}>{p}</button>
+          ))}
+        </div>
+        <div className="spacer" />
+        <ChangeControl req={req} />
+      </div>
+      <div className="rq-row">
+        <button className="sm" onClick={() => setOpen((o) => !o)}>{open ? '收合' : '詳細'}</button>
+        <button className="sm" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 版面</button>
+        <div className="spacer" />
+        <button className="ghost sm" disabled={index === 0} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={15} /></button>
+        <button className="ghost sm" disabled={index === total - 1} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={15} /></button>
+        <button className="sm danger" onClick={() => { if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
+      </div>
+      {open && (
+        <div className="rq-detail">
+          <label><span>功能說明</span><textarea rows={2} value={req.description} onChange={(e) => patch({ description: e.target.value })} /></label>
+          <label><span>驗收條件（每行一條）</span><textarea rows={2} value={req.acceptance} placeholder="留空用預設" onChange={(e) => patch({ acceptance: e.target.value })} /></label>
+          <label><span>對應畫面名稱</span><input value={req.screen} onChange={(e) => patch({ screen: e.target.value })} /></label>
+          <label><span>備註</span><input value={req.note} onChange={(e) => patch({ note: e.target.value })} /></label>
+          <div className="rq-2">
+            <label><span>工時</span><input value={req.estimate} onChange={(e) => patch({ estimate: e.target.value })} /></label>
+            <label><span>報價</span><input value={req.price} onChange={(e) => patch({ price: e.target.value })} /></label>
+          </div>
+          {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
+            <div className="req-history">
+              {(req.versions || []).map((v) => <span key={'v' + v.v} className="st-badge st-green">v{v.v} ✓ {new Date(v.at).toLocaleDateString('zh-TW')}</span>)}
+              {(req.changeLog || []).map((c, i) => <span key={'c' + i} className="req-h-change">✂ {new Date(c.at).toLocaleDateString('zh-TW')}：{c.note}</span>)}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
@@ -95,6 +158,7 @@ export default function RequirementsEditor() {
   const { current, dispatch } = useStore()
   const reqs = current.requirements
   const [interview, setInterview] = useState(false)
+  const isMobile = useIsMobile()
 
   function addBlank() {
     dispatch({ type: 'ADD_REQUIREMENT', requirement: newRequirement({ name: '新功能', screen: '新功能' }) })
@@ -139,6 +203,11 @@ export default function RequirementsEditor() {
           </span>
         </div>
       )}
+      {isMobile ? (
+        <div className="rq-list">
+          {reqs.map((r, i) => <MobileReqCard key={r.id} req={r} index={i} total={reqs.length} />)}
+        </div>
+      ) : (
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
         <table className="req">
           <thead>
@@ -160,6 +229,7 @@ export default function RequirementsEditor() {
           </tbody>
         </table>
       </div>
+      )}
       <div className="muted" style={{ fontSize: 12 }}>
         提示：變更「分類」後，按該列的「↻ 版面」可依新分類重新產生 wireframe；修改名稱／順序會即時反映到流程文件。
       </div>
