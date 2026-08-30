@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { EffectCoverflow, Mousewheel, FreeMode } from 'swiper/modules'
 import 'swiper/css'
@@ -7,59 +7,25 @@ import 'swiper/css/free-mode'
 import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import MobileReqCard from './MobileReqCard.jsx'
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-// 轉盤模式：coverflow 快速翻滾找卡 + 即時搜尋過濾；中央卡在下方停駐區直接編輯
-export default function ReqCarousel() {
+// 轉盤模式：coverflow 快速翻滾找卡；搜尋/過濾由父層（需求整理頁）統一提供
+export default function ReqCarousel({ list = [], filterKey = '' }) {
   const { current } = useStore()
   const reqs = current.requirements || []
-  const [q, setQ] = useState('')
-  const [cat, setCat] = useState('all')
-  const [activeId, setActiveId] = useState(reqs[0]?.id || null)
+  const [activeId, setActiveId] = useState(list[0]?.id || null)
   const [idx, setIdx] = useState(0)
   const swRef = useRef(null)
-
-  // 分類 tab：只列實際存在的分類 + 數量
-  const cats = useMemo(() => {
-    const m = new Map()
-    for (const r of reqs) m.set(r.category, (m.get(r.category) || 0) + 1)
-    return [...m.entries()]
-  }, [reqs])
-
-  const list = useMemo(() => {
-    const k = q.trim().toLowerCase()
-    return reqs.filter((r) => {
-      if (cat !== 'all' && r.category !== cat) return false
-      if (!k) return true
-      return [r.name, r.note, r.screen, r.description].some((t) => String(t || '').toLowerCase().includes(k))
-    })
-  }, [reqs, q, cat])
   const active = list.find((r) => r.id === activeId) || list[0]
 
   return (
     <div className="rw-wrap">
-      <div className="rw-search">
-        <Search size={16} />
-        <input value={q} placeholder="搜尋需求…（或直接撥轉盤）" onChange={(e) => setQ(e.target.value)} />
-        <span className="muted" style={{ fontSize: 12 }}>{list.length} 張</span>
-      </div>
-      <div className="rw-tabs">
-        <button className={'rw-tab' + (cat === 'all' ? ' on' : '')} onClick={() => { setCat('all'); setIdx(0) }}>全部 {reqs.length}</button>
-        {cats.map(([key, n]) => {
-          const m = categoryMeta(key)
-          return (
-            <button key={key} className={'rw-tab' + (cat === key ? ' on' : '')} onClick={() => { setCat(key); setIdx(0) }}>
-              <i style={{ background: m.color }} />{m.label} {n}
-            </button>
-          )
-        })}
-      </div>
       {list.length === 0 ? (
-        <div className="empty"><div className="muted">這個分類沒有符合的卡</div></div>
+        <div className="empty"><div className="muted">沒有符合條件的卡</div></div>
       ) : (
         <>
           <Swiper
-            key={q + '|' + cat}
+            key={filterKey}
             className="rw-swiper"
             modules={[EffectCoverflow, Mousewheel, FreeMode]}
             effect="coverflow"

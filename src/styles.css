@@ -1514,3 +1514,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 
 /* 根因修復：rd-body 是定高 flex 容器，子項預設 flex-shrink:1 會把 textarea 壓回去 → 全面禁止壓縮，讓內容自然超出改用捲動 */
 .rd-body > *, .rd-body .rd-input, .rd-moresec > * { flex-shrink: 0; }
+.rw-div { width: 1px; align-self: stretch; background: rgba(60,80,40,.18); margin: 4px 3px; flex-shrink: 0; }
+
+/* 訪談：原話直接進對話串 */
+.iv-quote { font-size: 13.5px; color: #6b5d3f; background: #faf6ec; border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.iv-quote small { color: #a89a78; flex-shrink: 0; }
