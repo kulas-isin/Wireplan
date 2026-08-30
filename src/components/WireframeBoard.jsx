@@ -12,7 +12,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 } from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 , Sparkles} from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -29,6 +29,8 @@ import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 import { normalizeField } from '../lib/fieldSpec.js'
 import { applyRequirementPatches } from '../lib/reqPatches.js'
+import { requirementCoverage } from '../lib/sop.js'
+import { generateWireframe } from '../lib/wireframeTemplates.js'
 
 // 頁名比對（去編號/括號/空白）
 const flowCore = (l) => String(l || '')
@@ -1183,6 +1185,12 @@ export default function WireframeBoard() {
         <aside className="wf-screens">
           <div className="ws-head">
             <strong style={{ fontSize: 13 }}>畫面（{wireframes.length}）</strong>
+            {(() => { const miss = requirementCoverage(current); return miss.length > 0 ? (
+              <button className="sm ws-gen" title={'尚無頁面的需求：' + miss.map((r) => r.name).join('、')}
+                onClick={() => dispatch({ type: 'ADD_WIREFRAME', wireframes: miss.map((r) => generateWireframe(r)) })}>
+                <Sparkles size={13} /> 從需求補 {miss.length} 頁
+              </button>
+            ) : null })()}
             <span className="ws-actions">
               <button className="sm" title="新增空白畫面" onClick={() => dispatch({ type: 'ADD_BLANK_WIREFRAME', name: `新畫面 ${wireframes.length + 1}` })}><Plus size={14} /></button>
               <button className="sm" title="匯入畫面 JSON" onClick={() => setImportOpen(true)}><FileJson size={14} /></button>
