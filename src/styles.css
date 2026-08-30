@@ -1352,3 +1352,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .cd-default { font-weight: 400; color: #98a49d; font-size: 11px; }
 .cd-acc { margin: 2px 0 0 2px; padding-left: 18px; font-size: 12.5px; }
 .cd-acc li { margin: 1px 0; }
+
+/* 需求頁匯入視窗 */
+.ip-panel { width: min(520px, 96vw); }
+.ip-panel textarea { font-family: ui-monospace, monospace; font-size: 12px; }
+.ip-msg { font-size: 13px; font-weight: 600; color: var(--primary-dark, #0b2c20); background: var(--primary-soft); border-radius: 8px; padding: 8px 12px; }
