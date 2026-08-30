@@ -1296,3 +1296,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rw-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: auto; }
 .rw-cat { font-size: 12px; font-weight: 700; }
 .rw-dock { border-top: 1px dashed rgba(20,39,28,.12); padding-top: 12px; }
+
+/* 轉盤左右步進 */
+.rw-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: -6px; }
+.rw-arrow { width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff; color: var(--primary-dark, #0b2c20); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 3px 10px rgba(20,39,28,.08); }
+.rw-arrow:active { transform: scale(.94); background: var(--primary-soft); }
+.rw-arrow:disabled { opacity: .3; cursor: not-allowed; }
+.rw-count { font-size: 13px; font-weight: 700; color: var(--muted); min-width: 56px; text-align: center; }

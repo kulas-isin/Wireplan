@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { EffectCoverflow, Mousewheel, FreeMode } from 'swiper/modules'
 import 'swiper/css'
@@ -7,7 +7,7 @@ import 'swiper/css/free-mode'
 import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import MobileReqCard from './MobileReqCard.jsx'
-import { Search } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // 轉盤模式：coverflow 快速翻滾找卡 + 即時搜尋過濾；中央卡在下方停駐區直接編輯
 export default function ReqCarousel() {
@@ -15,6 +15,8 @@ export default function ReqCarousel() {
   const reqs = current.requirements || []
   const [q, setQ] = useState('')
   const [activeId, setActiveId] = useState(reqs[0]?.id || null)
+  const [idx, setIdx] = useState(0)
+  const swRef = useRef(null)
 
   const list = useMemo(() => {
     const k = q.trim().toLowerCase()
@@ -50,7 +52,8 @@ export default function ReqCarousel() {
             longSwipesRatio={0.12}
             longSwipesMs={80}
             mousewheel={{ forceToAxis: true, sensitivity: 1.4 }}
-            onSlideChange={(sw) => { const r = list[sw.activeIndex]; if (r) { setActiveId(r.id); navigator.vibrate?.(8) } }}
+            onSwiper={(sw) => { swRef.current = sw }}
+            onSlideChange={(sw) => { setIdx(sw.activeIndex); const r = list[sw.activeIndex]; if (r) { setActiveId(r.id); navigator.vibrate?.(8) } }}
           >
             {list.map((r) => {
               const cat = categoryMeta(r.category)
@@ -69,6 +72,11 @@ export default function ReqCarousel() {
               )
             })}
           </Swiper>
+          <div className="rw-nav">
+            <button className="rw-arrow" disabled={idx <= 0} onClick={() => swRef.current?.slidePrev()} aria-label="上一張"><ChevronLeft size={22} /></button>
+            <span className="rw-count">{Math.min(idx + 1, list.length)} / {list.length}</span>
+            <button className="rw-arrow" disabled={idx >= list.length - 1} onClick={() => swRef.current?.slideNext()} aria-label="下一張"><ChevronRight size={22} /></button>
+          </div>
           {active && (
             <div className="rw-dock">
               <MobileReqCard key={active.id} req={active} index={reqs.findIndex((r) => r.id === active.id)} total={reqs.length} />
