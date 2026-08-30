@@ -1282,3 +1282,17 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rp-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border); }
 .rp-head strong { font-size: 16px; }
 .rp-body { flex: 1; overflow-y: auto; padding: 14px max(18px, env(safe-area-inset-right)) 44px max(18px, env(safe-area-inset-left)); }
+
+/* ── 轉盤模式（coverflow 快速翻卡） ── */
+.rw-wrap { display: flex; flex-direction: column; gap: 12px; }
+.rw-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; color: var(--muted); }
+.rw-search input { flex: 1; border: none; font-size: 15px; background: transparent; color: var(--text); }
+.rw-search input:focus { outline: none; }
+.rw-swiper { width: 100%; padding: 12px 0 20px; overflow: visible; }
+.rw-slide { width: 235px; }
+.rw-card { background: #fff; border: 1px solid rgba(20,39,28,.08); border-radius: 18px; padding: 18px 16px 14px; min-height: 150px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 16px 32px -20px rgba(20,39,28,.4); }
+.swiper-slide-active .rw-card { border-color: var(--primary); box-shadow: 0 20px 44px -18px rgba(20,39,28,.5), 0 0 0 3px var(--primary-soft); }
+.rw-name { font-size: 16px; font-weight: 800; color: #14271c; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; min-height: 66px; }
+.rw-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: auto; }
+.rw-cat { font-size: 12px; font-weight: 700; }
+.rw-dock { border-top: 1px dashed rgba(20,39,28,.12); padding-top: 12px; }
