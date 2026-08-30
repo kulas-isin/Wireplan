@@ -11,7 +11,7 @@ import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { applyRequirementPatches, parsePatches } from '../lib/reqPatches.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal, MessageSquareText } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -123,11 +123,36 @@ export default function RequirementsEditor() {
   const [pasteText, setPasteText] = useState('')
   const isMobile = useIsMobile()
 
+  const copyLinePrompt = async () => {
+    const cardsList = reqs.map((r) => ({ id: r.id, name: r.name }))
+    const text = [
+      '請閱讀我接著貼上的 LINE 對話紀錄，整理成需求對話串：',
+      '1. 只萃取與下列需求卡相關的「關鍵訊息」，各改寫成精煉的一句（不要原文照貼；略過貼圖、寒暄、與需求無關的內容）',
+      '2. 客戶提出/要求/決定的 → who:"client"；我方（接案方）回覆或確認的 → who:"us"',
+      '3. 訊息有日期就帶 date（格式 YYYY/M/D）',
+      '4. 對不到任何卡的重要新需求，用文字另外告訴我，不要塞進 JSON',
+      '回傳單一 JSON：',
+      '{"requirementPatches":[{"id":"卡片id","talks":[{"who":"client","text":"...","date":"2026/8/30"}]}]}',
+      '',
+      '需求卡：',
+      JSON.stringify(cardsList, null, 1),
+      '',
+      '——以下是 LINE 對話紀錄——',
+      '（把你的 LINE 紀錄貼在這裡再送出）',
+    ].join('\n')
+    try { await navigator.clipboard.writeText(text) } catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove()
+    }
+    setSheet(false)
+    setPasteText('')
+    setPaste('已複製整理指令！貼給 AI 時把你的 LINE 紀錄接在後面。拿到 JSON 後貼回這裡按「套用」。')
+  }
+
   const applyPaste = () => {
     const patches = parsePatches(pasteText)
     if (!patches) { setPaste('看不懂這段內容 — 請貼 AI 回傳的 requirementPatches JSON'); return }
     const r = applyRequirementPatches(reqs, patches, dispatch)
-    setPaste(`已套用 ${r.applied} 張${r.renamed ? `、改名 ${r.renamed} 張（原名記在備註）` : ''}${r.skippedLocked ? `、${r.skippedLocked} 張已蓋章略過改名` : ''}${r.notFound ? `、${r.notFound} 筆對不到卡` : ''}`)
+    setPaste(`已套用 ${r.applied} 張${r.talksAdded ? `、對話 +${r.talksAdded} 則` : ''}${r.renamed ? `、改名 ${r.renamed} 張（原名記在備註）` : ''}${r.skippedLocked ? `、${r.skippedLocked} 張已蓋章略過改名` : ''}${r.notFound ? `、${r.notFound} 筆對不到卡` : ''}`)
     setPasteText('')
   }
 
@@ -188,6 +213,10 @@ export default function RequirementsEditor() {
             <button className="as-row" onClick={() => { setSheet(false); setDoc(true) }}>
               <span className="as-ic"><FileSignature size={18} /></span>
               <span><b>需求確認書</b><small>給客戶回簽的正式文件（列印 / 存 PDF）</small></span>
+            </button>
+            <button className="as-row" onClick={copyLinePrompt}>
+              <span className="as-ic"><MessageSquareText size={18} /></span>
+              <span><b>LINE 紀錄 → 對話串</b><small>複製整理指令，連同 LINE 紀錄貼給 AI，回來匯入</small></span>
             </button>
             <button className="as-row" onClick={() => { setSheet(false); setPaste(''); setPasteText('') }}>
               <span className="as-ic"><ClipboardPaste size={18} /></span>
