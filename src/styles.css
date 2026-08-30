@@ -1059,3 +1059,14 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .iv-detail textarea:focus, .iv-detail input:focus { border-color: var(--primary); outline: none; }
 .iv-pri { display: flex; align-items: center; gap: 6px; }
 .iv-pri .fe-pill { padding: 8px 18px; }
+
+/* ── SOP 進度列 ── */
+.sop-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; padding: 4px 12px; border-bottom: 1px solid var(--border); background: var(--panel); overflow-x: auto; }
+.sop-sep { color: var(--border); margin: 0 2px; font-size: 12px; }
+.sop-step { display: inline-flex; align-items: center; gap: 5px; border: none; background: transparent; border-radius: 8px; padding: 4px 9px; font-size: 12px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.sop-step b { font-weight: 700; }
+.sop-step:hover { background: var(--surface, #f0f4f1); color: var(--text); }
+.sop-step.on { background: var(--primary-soft); color: var(--primary-dark, #0b2c20); font-weight: 700; }
+.sop-stat { font-size: 11px; color: var(--muted); }
+.sop-step.on .sop-stat { color: inherit; }
+.sop-warn { font-size: 11px; color: #b45309; background: #fff7ed; border-radius: 999px; padding: 1px 8px; font-weight: 600; }

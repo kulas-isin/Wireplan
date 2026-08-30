@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from './store/StoreContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
+import SopBar from './components/SopBar.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
 import SpecView from './components/SpecView.jsx'
@@ -103,6 +104,8 @@ export default function App() {
           <div className="spacer" />
           <button className="focus-btn" title="專注模式（隱藏上方列，畫面最大化）" onClick={() => setFocus(true)}><Maximize2 size={14} /> 專注</button>
         </div>}
+
+        {!focus && <SopBar tab={tab} setTab={setTab} />}
 
         <div className="content">
           {tab === 'import' && <ImportPanel onDone={() => { setTab('requirements'); showToast('已匯入需求並產生 wireframe / 流程') }} />}
