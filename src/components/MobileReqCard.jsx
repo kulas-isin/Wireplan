@@ -4,7 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
@@ -167,6 +167,11 @@ function ReqDetailSheet({ req, locked, lockTip, patch, dispatch, onClose }) {
         </button>
         {more && (
           <div className="rd-moresec">
+            <label><span>記錄日期（哪天的訪談記的）</span>
+              <input type="date" className="rd-input" disabled={locked} title={lockTip}
+                value={req.createdAt ? new Date(req.createdAt).toISOString().slice(0, 10) : ''}
+                onChange={(e) => { const v = e.target.value; if (v) patch({ createdAt: Date.parse(v + 'T09:00:00') }) }} />
+            </label>
             <label><span>對應畫面名稱</span><GrowInput className="rd-input" value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
             <label><span>備註</span><GrowInput className="rd-input" value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
             <div className="rq-2">
@@ -217,8 +222,9 @@ export default function MobileReqCard({ req, index, total }) {
           ))}
         </span>
       </div>
-      {(talksN > 0 || accN > 0 || req.description) && (
+      {(talksN > 0 || accN > 0 || req.description || req.createdAt) && (
         <div className="rq-hints" onClick={() => setOpen(true)}>
+          {req.createdAt && <span className="rq-hint"><CalendarDays size={12} /> {new Date(req.createdAt).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}</span>}
           {req.description && <span className="rq-hint"><BookOpen size={12} /> 故事</span>}
           {talksN > 0 && <span className="rq-hint"><MessageSquareText size={12} /> {talksN}</span>}
           {accN > 0 && <span className="rq-hint"><Check size={12} /> {accN}</span>}
