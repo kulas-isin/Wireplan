@@ -1,5 +1,6 @@
 import { useStore } from '../store/StoreContext.jsx'
 import { sopStats } from '../lib/sop.js'
+import { TriangleAlert } from 'lucide-react'
 
 // SOP 進度列：五站數字 + 缺漏警示，點站名跳分頁 — SOP 不用背，打開就知道卡在哪
 export default function SopBar({ tab, setTab }) {
@@ -20,7 +21,7 @@ export default function SopBar({ tab, setTab }) {
           <button className={'sop-step' + (tab === st.key ? ' on' : '') + (st.warn ? ' warn' : '')} onClick={() => setTab(st.key)}>
             <b>{st.n}</b> {st.name}
             {st.stat && <span className="sop-stat">{st.stat}</span>}
-            {st.warn > 0 && <span className="sop-warn">⚠ {st.warnText}</span>}
+            {st.warn > 0 && <span className="sop-warn"><TriangleAlert size={11} /> {st.warnText}</span>}
           </button>
         </span>
       ))}

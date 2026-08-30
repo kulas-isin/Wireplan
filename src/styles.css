@@ -1172,3 +1172,13 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .tg-confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .tg-confetti span { position: absolute; top: -20px; border-radius: 2px; animation: tg-fall linear forwards; }
 @keyframes tg-fall { to { transform: translateY(110vh) rotate(540deg); } }
+
+/* emoji → icon 微調 */
+.tg-vs { font-size: 13px; font-weight: 900; color: var(--muted); letter-spacing: 1px; border: 2px solid var(--border); border-radius: 999px; padding: 4px 10px; background: #fff; }
+.tg-legend { display: inline-flex; align-items: center; gap: 3px; margin-left: 10px; font-size: 12.5px; color: var(--muted); font-weight: 600; vertical-align: middle; }
+.tg-legend svg { margin-left: 6px; }
+.tg-trophy { color: #E8B931; background: #FFF7DC; border-radius: 50%; width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(232,185,49,.25); }
+.tg-stats span { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+.tg-stats svg { color: var(--primary); }
+.tg-pri, .tg-big { display: inline-flex; align-items: center; gap: 6px; }
+.lm-warn, .sop-warn { display: inline-flex; align-items: center; gap: 3px; }
