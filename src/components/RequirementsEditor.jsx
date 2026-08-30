@@ -120,6 +120,7 @@ export default function RequirementsEditor() {
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
         <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式</button>
+        <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要">🎴 收整</button>
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
