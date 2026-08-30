@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta, CATEGORY_LIST } from '../lib/categories.js'
-import { Check, Copy, LayoutGrid, ListChecks, Sparkles } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUp, Check, ClipboardList, Copy, Flame, HelpCircle, LayoutGrid, ListChecks, Merge, Sparkles, Split, Trophy } from 'lucide-react'
 
 // ── 相似度：字元 bigram Dice 係數（抓「會員登入」vs「登入/註冊」這類重複卡）──
 const norm = (s) => String(s || '').toLowerCase().replace(/[\s/／、,，.。()（）\-_]/g, '')
@@ -166,12 +166,12 @@ export default function TriageGame({ onExit }) {
               <div className="tg-q">這兩張是同一件事嗎？<span className="muted">（{pairIdx + 1}/{pairs.length}）</span></div>
               <div className={'tg-pair ' + pairAnim}>
                 <div className="tg-card tg-a">{byId(curPair[0])?.name}</div>
-                <div className="tg-vs">🆚</div>
+                <div className="tg-vs">VS</div>
                 <div className="tg-card tg-b">{byId(curPair[1])?.name}</div>
               </div>
               <div className="tg-btns">
-                <button className="tg-big primary" onClick={() => decidePair(true)}>🃏 合併</button>
-                <button className="tg-big" onClick={() => decidePair(false)}>不是，分開</button>
+                <button className="tg-big primary" onClick={() => decidePair(true)}><Merge size={16} /> 合併</button>
+                <button className="tg-big" onClick={() => decidePair(false)}><Split size={16} /> 不是，分開</button>
               </div>
             </>
           )}
@@ -182,7 +182,7 @@ export default function TriageGame({ onExit }) {
         <div className="tg-stage">
           {!swipeCard ? null : (
             <>
-              <div className="tg-q">這件事多重要？<span className="muted">（剩 {q.length} 張）</span> 👉高 👈低 👆中</div>
+              <div className="tg-q">這件事多重要？<span className="muted">（剩 {q.length} 張）</span><span className="tg-legend"><ArrowRight size={13} />高<ArrowLeft size={13} />低<ArrowUp size={13} />中</span></div>
               <div className="tg-deck">
                 {q[1] && byId(q[1]) && <div className="tg-card tg-under">{byId(q[1]).name}</div>}
                 <div
@@ -208,9 +208,9 @@ export default function TriageGame({ onExit }) {
                 </div>
               </div>
               <div className="tg-btns">
-                <button className="tg-pri lo" onClick={() => setPriority('低', 'l')}>👈 低</button>
-                <button className="tg-pri mid" onClick={() => setPriority('中', 'u')}>👆 中</button>
-                <button className="tg-pri hi" onClick={() => setPriority('高', 'r')}>👉 高</button>
+                <button className="tg-pri lo" onClick={() => setPriority('低', 'l')}><ArrowLeft size={15} /> 低</button>
+                <button className="tg-pri mid" onClick={() => setPriority('中', 'u')}><ArrowUp size={15} /> 中</button>
+                <button className="tg-pri hi" onClick={() => setPriority('高', 'r')}><ArrowRight size={15} /> 高</button>
                 <button className="ghost sm" onClick={skip}>跳過</button>
               </div>
             </>
@@ -242,14 +242,14 @@ export default function TriageGame({ onExit }) {
       {stage === 'done' && (
         <div className="tg-stage tg-done">
           <Confetti />
-          <div className="tg-trophy">🎉</div>
+          <div className="tg-trophy"><Trophy size={54} /></div>
           <div className="tg-result">
             <div className="tg-rt">本場戰果</div>
             <div className="tg-stats">
-              <span>🎴 {reqs.length} 項需求</span>
-              <span>🃏 合併 {mergeCount} 張</span>
-              <span>🔥 高優先 {high} 項</span>
-              <span>{guideRemain === 0 ? '✅ 引導題全問完' : `❓ 引導題剩 ${guideRemain} 題沒問`}</span>
+              <span><ClipboardList size={16} /> {reqs.length} 項需求</span>
+              <span><Merge size={16} /> 合併 {mergeCount} 張</span>
+              <span><Flame size={16} /> 高優先 {high} 項</span>
+              <span>{guideRemain === 0 ? <><Check size={16} /> 引導題全問完</> : <><HelpCircle size={16} /> 引導題剩 {guideRemain} 題沒問</>}</span>
             </div>
           </div>
           <div className="tg-btns tg-col">

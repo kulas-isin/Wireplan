@@ -5,7 +5,7 @@ import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import InterviewMode from './InterviewMode.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers } from 'lucide-react'
 
 function RequirementRow({ req, index, total }) {
   const { dispatch } = useStore()
@@ -120,7 +120,7 @@ export default function RequirementsEditor() {
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
         <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式</button>
-        <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要">🎴 收整</button>
+        <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
@@ -152,7 +152,7 @@ export default function RequirementsEditor() {
         </table>
       </div>
       <div className="muted" style={{ fontSize: 12 }}>
-        💡 變更「分類」後，按該列的「↻ 版面」可依新分類重新產生 wireframe；修改名稱／順序會即時反映到流程文件。
+        提示：變更「分類」後，按該列的「↻ 版面」可依新分類重新產生 wireframe；修改名稱／順序會即時反映到流程文件。
       </div>
     </div>
   )

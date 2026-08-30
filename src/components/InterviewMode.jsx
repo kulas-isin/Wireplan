@@ -109,7 +109,7 @@ export default function InterviewMode({ onClose }) {
           )}
         </div>
       )}
-      {listening && <div className="iv-live">🎤 聆聽中… <span>{live || '請說話'}</span></div>}
+      {listening && <div className="iv-live"><Mic size={15} /> 聆聽中… <span>{live || '請說話'}</span></div>}
       <div className="iv-input">
         <textarea ref={inputRef} autoFocus rows={2} value={txt}
           placeholder="客戶說了什麼？一句話記下來…（Enter 記一筆）"
@@ -129,7 +129,7 @@ export default function InterviewMode({ onClose }) {
       </div>
       <div className="iv-cards">
         {cards.length === 0 && (
-          <div className="iv-empty">還沒有卡片。聽到需求就記、不用整理 — 回頭再讓 AI 補分類 / 故事 / 頁面。{SR ? '也可以按住 🎤 說話，放開自動成卡。' : ''}</div>
+          <div className="iv-empty">還沒有卡片。聽到需求就記、不用整理 — 回頭再讓 AI 補分類 / 故事 / 頁面。{SR ? '也可以按住「說話」鈕，放開自動成卡。' : ''}</div>
         )}
         {cards.map((r) => (
           <div key={r.id} className={'iv-card' + (openId === r.id ? ' open' : '')}>

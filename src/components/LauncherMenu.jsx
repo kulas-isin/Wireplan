@@ -1,6 +1,6 @@
 import { useStore } from '../store/StoreContext.jsx'
 import { sopStats } from '../lib/sop.js'
-import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus } from 'lucide-react'
+import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert } from 'lucide-react'
 
 // 目錄選單：進 app 先選「要做哪件事」— 手機一格一格點，訪談是獨立大入口
 export default function LauncherMenu({ onGo }) {
@@ -35,12 +35,12 @@ export default function LauncherMenu({ onGo }) {
             <span className="lm-desc">{t.desc}</span>
             <span className="lm-meta">
               {t.stat && <span className="lm-stat">{t.stat}</span>}
-              {t.warn && <span className="lm-warn">⚠ {t.warn}</span>}
+              {t.warn && <span className="lm-warn"><TriangleAlert size={11} /> {t.warn}</span>}
             </span>
           </button>
         ))}
       </div>
-      <div className="lm-foot muted">💡 手機可把本頁加到主畫面；「訪談記卡」可直接用網址 #interview 開啟。</div>
+      <div className="lm-foot muted">手機可把本頁加到主畫面；「訪談記卡」可用網址 #interview 直達。</div>
     </div>
   )
 }
