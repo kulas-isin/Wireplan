@@ -29,7 +29,7 @@ export default function App() {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
   // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
-  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : 'menu'))
+  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : window.location.hash === '#reqs' ? 'reqs' : 'menu'))
   const [focus, setFocus] = useState(false)
   const [toast, setToast] = useState('')
   const importRef = useRef(null)
@@ -43,6 +43,7 @@ export default function App() {
     const onHash = () => {
       if (window.location.hash === '#interview') setView('interview')
       else if (window.location.hash === '#triage') setView('triage')
+      else if (window.location.hash === '#reqs') setView('reqs')
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
@@ -50,6 +51,7 @@ export default function App() {
 
   const go = (key) => {
     if (key === 'interview') { window.location.hash = 'interview'; setView('interview') }
+    else if (key === 'requirements') { window.location.hash = 'reqs'; setView('reqs') }
     else { setTab(key); setView('workspace'); if (window.location.hash) history.replaceState(null, '', ' ') }
   }
   const backToMenu = () => { setView('menu'); if (window.location.hash) history.replaceState(null, '', ' ') }
@@ -91,11 +93,23 @@ export default function App() {
   }
 
   const exitTriage = (dest) => {
-    if (window.location.hash) history.replaceState(null, '', ' ')
-    if (dest === 'requirements') { setTab('requirements'); setView('workspace') } else setView('menu')
+    if (dest === 'requirements') { window.location.hash = 'reqs'; setView('reqs') }
+    else { if (window.location.hash) history.replaceState(null, '', ' '); setView('menu') }
   }
 
   if (view === 'menu') return <LauncherMenu onGo={go} />
+  if (view === 'reqs') return (
+    <div className="rp-wrap">
+      <div className="rp-head">
+        <button className="ghost sm" onClick={backToMenu}><LayoutGrid size={16} /> 目錄</button>
+        <strong>需求整理</strong>
+        <span className="muted" style={{ fontSize: 12 }}>{current.name}</span>
+        <div className="spacer" />
+        <button className="ghost sm" onClick={() => { setTab('requirements'); setView('workspace'); if (window.location.hash) history.replaceState(null, '', ' ') }}>完整工作區 ›</button>
+      </div>
+      <div className="rp-body"><RequirementsEditor /></div>
+    </div>
+  )
   if (view === 'interview') return <InterviewMode onClose={() => ((current.requirements || []).length >= 2 ? (setView('triage'), window.location.hash = 'triage') : backToMenu())} />
   if (view === 'triage') return <TriageGame onExit={exitTriage} />
 
