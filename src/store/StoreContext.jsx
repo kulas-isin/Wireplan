@@ -92,6 +92,9 @@ function reducer(state, action) {
     case 'SET_CURRENT':
       return { ...state, currentId: action.id }
 
+    case 'UPDATE_LIBRARY':
+      return { ...state, library: { ...state.library, [action.field]: action.value } }
+
     case 'NEW_PROJECT': {
       const p = emptyProject(action.name || '新專案')
       return { ...state, projects: [...state.projects, p], currentId: p.id }
@@ -360,7 +363,7 @@ function reducer(state, action) {
 
 // ── Undo/Redo 歷史包裝 ──
 const HISTORY_LIMIT = 60
-const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT'])
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT', 'UPDATE_LIBRARY'])
 
 function withHistory(baseReducer) {
   return (h, action) => {

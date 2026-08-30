@@ -1101,3 +1101,14 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .lm-tile.primary .lm-meta { margin: 0 0 0 auto; }
 .lm-foot { padding: 10px 18px 22px; font-size: 12px; text-align: center; }
 @media (max-width: 600px) { .lm-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; } .lm-tile { padding: 14px 12px; min-height: 104px; } }
+
+/* ── 訪談：可編輯常用庫 + 引導清單 ── */
+.iv-chip.iv-tool { border-style: solid; background: var(--surface, #f0f4f1); display: inline-flex; align-items: center; gap: 4px; }
+.iv-chip.iv-tool.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.iv-chip-add { flex-shrink: 0; border: 1.5px dashed var(--primary); border-radius: 999px; padding: 8px 14px; font-size: 13px; min-width: 140px; background: #fff; }
+.iv-chip-add:focus { outline: none; box-shadow: 0 0 0 3px var(--primary-soft); }
+.iv-guide { display: flex; flex-direction: column; gap: 2px; padding: 10px 16px; background: #fffdf2; border-bottom: 1px solid #f3e8b8; max-height: 40vh; overflow-y: auto; }
+.iv-gq { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-size: 14px; color: #14271c; cursor: pointer; }
+.iv-gq input { width: 20px; height: 20px; accent-color: var(--primary); }
+.iv-gq.done span { color: var(--muted); text-decoration: line-through; }
+.iv-gq-del { margin-left: auto; border: none; background: none; color: #b91c1c; cursor: pointer; padding: 4px; }

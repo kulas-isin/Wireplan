@@ -2,17 +2,24 @@ import { useState, useRef } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { detectCategory, categoryMeta } from '../lib/categories.js'
-import { Plus, Mic, Check, Trash2 } from 'lucide-react'
-
-// 高頻需求快捷鍵：客戶提到就點一下成卡
-const QUICK_REQS = ['會員系統', '登入 / 註冊', '後台管理', '推播通知', '報表統計', '金流付款', '搜尋功能', '上傳檔案', '權限角色', '多語系']
+import { Plus, Mic, Check, Trash2, Pencil, HelpCircle, X } from 'lucide-react'
 
 const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null
 
 // 訪談模式：客戶面前（手機）快速記需求卡 — 只抓不整理，回頭再補
 export default function InterviewMode({ onClose }) {
-  const { current, dispatch } = useStore()
+  const { state, current, dispatch } = useStore()
   const reqs = current.requirements || []
+  const chips = state.library?.chips || []
+  const guide = state.library?.guide || []
+  const checks = current.guideChecks || {}
+  const remain = guide.filter((q) => !checks[q]).length
+  const [editLib, setEditLib] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
+  const [newChip, setNewChip] = useState('')
+  const [newQ, setNewQ] = useState('')
+  const setLib = (field, value) => dispatch({ type: 'UPDATE_LIBRARY', field, value })
+  const toggleCheck = (q) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'guideChecks', value: { ...checks, [q]: !checks[q] } })
   const [txt, setTxt] = useState('')
   const [openId, setOpenId] = useState(null)
   const [listening, setListening] = useState(false)
@@ -71,10 +78,37 @@ export default function InterviewMode({ onClose }) {
         <button className="iv-done" onClick={onClose}><Check size={16} /> 完成</button>
       </div>
       <div className="iv-chips">
-        {QUICK_REQS.map((q) => (
-          <button key={q} className="iv-chip" onClick={() => addCard(q)}>＋{q}</button>
+        <button className={'iv-chip iv-tool' + (showGuide ? ' on' : '')} onClick={() => setShowGuide((v) => !v)}>
+          <HelpCircle size={14} /> 引導{remain > 0 ? `（剩 ${remain}）` : ' ✓'}
+        </button>
+        {chips.map((q) => (
+          <button key={q} className="iv-chip" onClick={() => (editLib ? setLib('chips', chips.filter((c) => c !== q)) : addCard(q))}>
+            {editLib ? <>{q} <X size={12} /></> : `＋${q}`}
+          </button>
         ))}
+        {editLib && (
+          <input className="iv-chip-add" value={newChip} placeholder="新增常用…Enter" onChange={(e) => setNewChip(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && newChip.trim()) { setLib('chips', [...chips, newChip.trim()]); setNewChip('') } }} />
+        )}
+        <button className={'iv-chip iv-tool' + (editLib ? ' on' : '')} onClick={() => setEditLib((v) => !v)}>
+          <Pencil size={13} /> {editLib ? '完成' : '編輯'}
+        </button>
       </div>
+      {showGuide && (
+        <div className="iv-guide">
+          {guide.map((q) => (
+            <label key={q} className={'iv-gq' + (checks[q] ? ' done' : '')}>
+              <input type="checkbox" checked={!!checks[q]} onChange={() => toggleCheck(q)} />
+              <span>{q}</span>
+              {editLib && <button className="iv-gq-del" onClick={(e) => { e.preventDefault(); setLib('guide', guide.filter((x) => x !== q)) }}><X size={13} /></button>}
+            </label>
+          ))}
+          {editLib && (
+            <input className="iv-chip-add" value={newQ} placeholder="新增引導問題…Enter" onChange={(e) => setNewQ(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && newQ.trim()) { setLib('guide', [...guide, newQ.trim()]); setNewQ('') } }} />
+          )}
+        </div>
+      )}
       {listening && <div className="iv-live">🎤 聆聽中… <span>{live || '請說話'}</span></div>}
       <div className="iv-input">
         <textarea ref={inputRef} autoFocus rows={2} value={txt}

@@ -26,15 +26,34 @@ export function loadState() {
     if (!raw) return defaultState()
     const parsed = JSON.parse(raw)
     if (!parsed.projects || !parsed.projects.length) return defaultState()
+    parsed.library = { ...DEFAULT_LIBRARY, ...(parsed.library || {}) }
     return parsed
   } catch {
     return defaultState()
   }
 }
 
+
+// 訪談常用庫（全域、可在 UI 編輯）：快捷需求 chips + 引導問題
+export const DEFAULT_LIBRARY = {
+  chips: ['會員系統', '登入 / 註冊', '後台管理', '推播通知', '報表統計', '金流付款', '搜尋功能', '上傳檔案', '權限角色', '多語系'],
+  guide: [
+    '有哪些角色 / 身分？',
+    '怎麼登入？（帳密 / 手機 / 第三方）',
+    '前台給誰看？後台誰管理？',
+    '需要通知嗎？（推播 / Email / 簡訊）',
+    '有金流嗎？怎麼收費？',
+    '要報表 / 匯出嗎？',
+    '資料從哪來？（手動建 / 匯入 / 串接）',
+    '需要多語系嗎？',
+    '有現有系統要串接嗎？',
+    '上線時間 / 預算範圍？',
+  ],
+}
+
 function defaultState() {
   const p = emptyProject('範例專案')
-  return { projects: [p], currentId: p.id }
+  return { projects: [p], currentId: p.id, library: DEFAULT_LIBRARY }
 }
 
 export function saveState(state) {
