@@ -1310,3 +1310,34 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rw-tab i { width: 8px; height: 8px; border-radius: 50%; }
 .rw-tab.on { background: var(--primary); border-color: var(--primary); color: #fff; }
 .rw-tab.on i { background: #fff !important; }
+
+/* ── 需求確認書 ── */
+.cd-wrap { position: fixed; inset: 0; z-index: 96; background: #e8ebe9; display: flex; flex-direction: column; }
+.cd-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.cd-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--muted); }
+.cd-party { border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 13px; width: 150px; }
+.cd-scroll { flex: 1; overflow-y: auto; padding: 18px 10px 40px; }
+.cd-doc { background: #fff; max-width: 700px; margin: 0 auto; padding: 36px 34px; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.12); font-size: 13.5px; color: #1a2b21; line-height: 1.65; }
+.cd-title { font-size: 22px; font-weight: 800; text-align: center; letter-spacing: 6px; margin-bottom: 18px; }
+.cd-meta { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 13px; margin-bottom: 8px; }
+.cd-table { width: 100%; border-collapse: collapse; margin: 16px 0 6px; }
+.cd-table th, .cd-table td { border: 1px solid #c8d2cc; padding: 7px 9px; text-align: left; vertical-align: top; font-size: 12.5px; }
+.cd-table th { background: #f0f4f1; font-weight: 700; }
+.cd-nm { font-weight: 700; }
+.cd-v { font-weight: 400; font-size: 11px; color: #15803d; }
+.cd-changes { margin-top: 14px; }
+.cd-st { font-weight: 800; margin-bottom: 4px; }
+.cd-ch { font-size: 12.5px; color: #444; }
+.cd-sign { margin-top: 22px; border-top: 1px solid #c8d2cc; padding-top: 14px; }
+.cd-sign p { font-size: 12.5px; color: #333; }
+.cd-sig-row { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 26px; font-size: 14px; }
+.cd-foot { margin-top: 26px; text-align: center; font-size: 11px; color: #98a49d; }
+
+@media print {
+  body * { visibility: hidden !important; }
+  .cd-wrap { position: static !important; overflow: visible !important; background: #fff !important; }
+  .cd-scroll { overflow: visible !important; padding: 0 !important; }
+  .cd-doc, .cd-doc * { visibility: visible !important; }
+  .cd-doc { position: absolute; left: 0; top: 0; width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
+  .cd-table tr { page-break-inside: avoid; }
+}

@@ -6,10 +6,11 @@ import InterviewMode from './InterviewMode.jsx'
 import ChangeControl from './ChangeControl.jsx'
 import MobileReqCard from './MobileReqCard.jsx'
 import ReqCarousel from './ReqCarousel.jsx'
+import ConfirmDoc from './ConfirmDoc.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -115,6 +116,7 @@ export default function RequirementsEditor() {
   const reqs = current.requirements
   const [interview, setInterview] = useState(false)
   const [wheel, setWheel] = useState(false)
+  const [doc, setDoc] = useState(false)
   const isMobile = useIsMobile()
 
   function addBlank() {
@@ -145,12 +147,14 @@ export default function RequirementsEditor() {
 
   return (
     <div>
+      {doc && <ConfirmDoc onClose={() => setDoc(false)} />}
       <div className="toolbar">
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
         <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式</button>
         <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button className={wheel ? 'active' : ''} onClick={() => setWheel((w) => !w)} title="轉盤模式：快速翻滾找卡">{wheel ? <List size={15} /> : <Orbit size={15} />} {wheel ? '清單' : '轉盤'}</button>
+        <button onClick={() => setDoc(true)} title="產出給客戶回簽的需求確認書（列印/存 PDF）"><FileSignature size={15} /> 確認書</button>
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
