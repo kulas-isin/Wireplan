@@ -37,6 +37,7 @@ export function buildFieldMapping(headers = []) {
 function newRequirement(partial = {}) {
   return {
     id: uid('req'),
+    createdAt: Date.now(),
     name: '',
     description: '',
     category: 'generic',

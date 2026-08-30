@@ -135,6 +135,7 @@ export default function InterviewMode({ onClose }) {
           <div key={r.id} className={'iv-card' + (openId === r.id ? ' open' : '')}>
             <div className="iv-card-row" onClick={() => setOpenId(openId === r.id ? null : r.id)}>
               <span className="iv-name">{r.name}</span>
+              {r.createdAt && <span className="iv-date">{new Date(r.createdAt).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}</span>}
               <span className="iv-cat" style={{ background: categoryMeta(r.category).color + '22', color: categoryMeta(r.category).color }}>
                 {categoryMeta(r.category).label}
               </span>

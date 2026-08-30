@@ -1519,3 +1519,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 訪談：原話直接進對話串 */
 .iv-quote { font-size: 13.5px; color: #6b5d3f; background: #faf6ec; border-radius: 10px; padding: 8px 12px; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .iv-quote small { color: #a89a78; flex-shrink: 0; }
+
+/* 記錄日期 */
+.iv-date { font-size: 11px; color: #98a48d; flex-shrink: 0; }
+input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
