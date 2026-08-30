@@ -1182,3 +1182,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .tg-stats svg { color: var(--primary); }
 .tg-pri, .tg-big { display: inline-flex; align-items: center; gap: 6px; }
 .lm-warn, .sop-warn { display: inline-flex; align-items: center; gap: 3px; }
+
+/* ── 備份提醒 ── */
+.lm-backup { display: flex; align-items: center; gap: 10px; margin: 12px 18px 0; padding: 10px 14px; max-width: 944px; align-self: center; width: calc(100% - 36px); border-radius: 12px; background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; font-size: 13px; }
+.lm-backup span { flex: 1; }
+.lm-backup button { display: inline-flex; align-items: center; gap: 6px; border: none; background: #ea580c; color: #fff; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
