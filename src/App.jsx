@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar.jsx'
 import SopBar from './components/SopBar.jsx'
 import LauncherMenu from './components/LauncherMenu.jsx'
 import InterviewMode from './components/InterviewMode.jsx'
+import TriageGame from './components/TriageGame.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
 import SpecView from './components/SpecView.jsx'
@@ -28,7 +29,7 @@ export default function App() {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
   // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
-  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : 'menu'))
+  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : 'menu'))
   const [focus, setFocus] = useState(false)
   const [toast, setToast] = useState('')
   const importRef = useRef(null)
@@ -39,7 +40,10 @@ export default function App() {
   }
 
   useEffect(() => {
-    const onHash = () => { if (window.location.hash === '#interview') setView('interview') }
+    const onHash = () => {
+      if (window.location.hash === '#interview') setView('interview')
+      else if (window.location.hash === '#triage') setView('triage')
+    }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
@@ -85,8 +89,14 @@ export default function App() {
     flow: ((current.flow?.graph?.nodes || current.flow?.nodes || []).filter((n) => n.type === 'page' || n.type === 'screen' || n.type === 'decision')).length,
   }
 
+  const exitTriage = (dest) => {
+    if (window.location.hash) history.replaceState(null, '', ' ')
+    if (dest === 'requirements') { setTab('requirements'); setView('workspace') } else setView('menu')
+  }
+
   if (view === 'menu') return <LauncherMenu onGo={go} />
-  if (view === 'interview') return <InterviewMode onClose={backToMenu} />
+  if (view === 'interview') return <InterviewMode onClose={() => ((current.requirements || []).length >= 2 ? (setView('triage'), window.location.hash = 'triage') : backToMenu())} />
+  if (view === 'triage') return <TriageGame onExit={exitTriage} />
 
   return (
     <div className={'app' + (focus ? ' focus' : '')}>
