@@ -1511,3 +1511,6 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .lm-ic { flex-shrink: 0; }
 .lm-tile.primary .lm-name { white-space: nowrap; }
 .lm-tile.primary .lm-desc { flex: 1; min-width: 0; }
+
+/* 根因修復：rd-body 是定高 flex 容器，子項預設 flex-shrink:1 會把 textarea 壓回去 → 全面禁止壓縮，讓內容自然超出改用捲動 */
+.rd-body > *, .rd-body .rd-input, .rd-moresec > * { flex-shrink: 0; }
