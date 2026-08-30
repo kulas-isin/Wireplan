@@ -34,6 +34,29 @@ export function findElementOnPages(label, pages = []) {
   return null
 }
 
+// 頁面清單：依名稱在全部 wireframe 中找已建的頁（模糊比對，與卡片「N 頁」chip 同邏輯）
+export function findPageByName(name, wireframes = []) {
+  const k = norm(name)
+  if (!k) return null
+  return wireframes.find((w) => { const n = norm(w.name); return n && (n.includes(k) || k.includes(n)) }) || null
+}
+
+// 依需求分類建議「這條需求通常涵蓋哪幾頁」（含常見情境分支）
+const PAGE_SUGGEST = {
+  auth: ['登入頁', '註冊頁', '忘記密碼頁'],
+  list: ['列表頁', '新增／編輯頁', '詳情頁'],
+  form: ['表單頁', '送出完成頁'],
+  detail: ['詳情頁'],
+  dashboard: ['儀表板'],
+  report: ['報表頁'],
+  workflow: ['申請頁', '審核頁', '完成頁'],
+  setting: ['設定頁'],
+  payment: ['購物車頁', '結帳頁', '付款完成頁', '付款失敗頁'],
+}
+export function suggestPages(req) {
+  return PAGE_SUGGEST[req.category] || [req.screen || req.name || '頁面'].filter(Boolean)
+}
+
 // 依需求分類範本建議元件：略過版面雜訊（頂列/側欄/標題…），按鈕逐顆展開
 const SKIP = new Set(['topbar', 'sidenav', 'header', 'pageHeader', 'breadcrumb', 'divider', 'image', 'text', 'link', 'row', 'card'])
 export function suggestElements(req) {
