@@ -1270,3 +1270,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .req input:disabled, .req select:disabled, .req textarea:disabled,
 .tg-row input:disabled, .tg-row select:disabled { opacity: .65; cursor: not-allowed; background: #f8faf9; }
 .rq-card .fe-pill:disabled { opacity: .55; cursor: not-allowed; }
+
+/* 影響連鎖：連結 vs 推測 */
+.cr-chip { display: inline-flex; align-items: center; gap: 5px; }
+.cr-chip.guess { border-style: dashed; }
+.cr-approx { font-weight: 900; }
+.cr-legend { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 11.5px; color: var(--muted); }

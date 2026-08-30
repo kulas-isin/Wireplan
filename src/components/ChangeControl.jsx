@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { impactOf, changeMessage } from '../lib/change.js'
-import { Copy, X, ScissorsLineDashed } from 'lucide-react'
+import { Copy, X, ScissorsLineDashed, Link2 } from 'lucide-react'
 
 // 長按蓋章：按住 0.8 秒才觸發 — 簽核是鄭重的動作
 export function HoldStamp({ children, onStamp, className = '' }) {
@@ -80,13 +80,19 @@ function ChangeRipple({ req, onClose }) {
             {pending.impact.length === 0 ? (
               <div className="muted" style={{ fontSize: 13, textAlign: 'center' }}>沒有偵測到關聯的頁面/欄位/流程 — 確認影響後即可重新蓋章。</div>
             ) : (
-              <div className="cr-chips">
-                {pending.impact.map((it) => (
-                  <button key={it.key} className={'cr-chip' + (it.done ? ' done' : '')} onClick={() => toggle(it.key)}>
-                    <span className="cr-kind">{it.kind}</span>{it.label}{it.done ? ' ✓' : ''}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="cr-chips">
+                  {pending.impact.map((it) => (
+                    <button key={it.key} className={'cr-chip' + (it.done ? ' done' : '') + (it.via === 'guess' ? ' guess' : '')} onClick={() => toggle(it.key)}
+                      title={it.via === 'link' ? '由此需求產生（精準連結）' : '名稱相似推測，可自行判斷'}>
+                      <span className="cr-kind">{it.kind}</span>
+                      {it.via === 'link' ? <Link2 size={11} /> : it.via === 'guess' ? <span className="cr-approx">≈</span> : null}
+                      {it.label}{it.done ? ' ✓' : ''}
+                    </button>
+                  ))}
+                </div>
+                <div className="cr-legend"><Link2 size={11} /> 連結建立（準）　<span className="cr-approx">≈</span> 名稱推測（自行判斷）</div>
+              </>
             )}
             <div className="cr-actions">
               <button className="tg-big" onClick={copyMsg}><Copy size={15} /> {copied ? '已複製！' : '複製異動確認訊息'}</button>
