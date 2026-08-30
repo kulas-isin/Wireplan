@@ -2,7 +2,7 @@
 import { isLocked } from './change.js'
 
 export function applyRequirementPatches(requirements, patches, dispatch) {
-  let applied = 0, renamed = 0, skippedLocked = 0, notFound = 0, talksAdded = 0
+  let applied = 0, renamed = 0, skippedLocked = 0, notFound = 0, talksAdded = 0, elementsAdded = 0
   for (const p of patches || []) {
     const r = (requirements || []).find((x) => x.id === p.id || (p.name && x.name === p.name))
     if (!r) { notFound++; continue }
@@ -17,13 +17,19 @@ export function applyRequirementPatches(requirements, patches, dispatch) {
         .map((t) => ({ at: (t.date && Date.parse(t.date)) || Date.now(), who: t.who === 'us' ? 'us' : 'client', text: String(t.text) }))
       if (add.length) { patch.talks = [...(r.talks || []), ...add]; talksAdded += add.length }
     }
+    // 元件清單：追加（去重）；是畫面規劃清單不是規格，鎖定卡也可追加
+    if (Array.isArray(p.elements) && p.elements.length) {
+      const ex = new Set((r.elements || []).map((s) => String(s).trim()))
+      const add = p.elements.map((s) => String(s).trim()).filter((s) => s && !ex.has(s))
+      if (add.length) { patch.elements = [...(r.elements || []), ...add]; elementsAdded += add.length }
+    }
     if (p.name && p.name !== r.name) {
       if (isLocked(r)) skippedLocked++
       else { patch.name = p.name; patch.note = [r.note, `（原名：${r.name}）`].filter(Boolean).join('｜'); renamed++ }
     }
     if (Object.keys(patch).length) { dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch }); applied++ }
   }
-  return { applied, renamed, skippedLocked, notFound, talksAdded }
+  return { applied, renamed, skippedLocked, notFound, talksAdded, elementsAdded }
 }
 
 // 寬容解析：整包物件 / 純陣列 / 前後有雜文字皆可
