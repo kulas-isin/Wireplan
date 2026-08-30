@@ -34,11 +34,49 @@ export function findElementOnPages(label, pages = []) {
   return null
 }
 
+// 頁面名比對用：再去掉「頁/頁面/畫面」尾綴（「詳情頁」要對得到「訂單詳情」）
+const normPage = (s) => norm(s).replace(/(頁面|畫面|頁)$/, '')
+
 // 頁面清單：依名稱在全部 wireframe 中找已建的頁（模糊比對，與卡片「N 頁」chip 同邏輯）
 export function findPageByName(name, wireframes = []) {
-  const k = norm(name)
+  const k = normPage(name)
   if (!k) return null
-  return wireframes.find((w) => { const n = norm(w.name); return n && (n.includes(k) || k.includes(n)) }) || null
+  return wireframes.find((w) => { const n = normPage(w.name); return n && (n.includes(k) || k.includes(n)) }) || null
+}
+
+// —— 畫面地圖（頁卡+磚）——
+
+// req.pages 舊資料是字串陣列，新資料是 { name, bricks:[{type,label}] }；讀取端一律先正規化
+export const normalizeReqPages = (pages) => (pages || []).map((p) => (typeof p === 'string' ? { name: p, bricks: [] } : { name: p.name || '', bricks: p.bricks || [] }))
+
+export const groupOf = (type) => (type === 'buttonRow' ? '按鈕' : COMPONENT_TYPES[type]?.group || '版面')
+
+// 把已建 wireframe 降維成磚（與元件比對同一套過濾：略過版面雜訊、按鈕逐顆展開）
+export function pageBricks(wf) {
+  const out = []
+  for (const c of walk(wf?.components || [])) {
+    if (c.type === 'buttonRow') { for (const b of c.buttons || []) out.push({ type: 'buttonRow', label: `${b}鈕` }); continue }
+    if (SKIP.has(c.type)) continue
+    out.push({ type: c.type, label: c.label || COMPONENT_TYPES[c.type]?.label || '元件' })
+  }
+  return out
+}
+
+// 從文字猜元件型別（AI 回傳的磚是純文字時用）
+export function brickFromLabel(label) {
+  const l = String(label || '')
+  const type = /鈕|按鈕|按鍵/.test(l) ? 'buttonRow'
+    : /表格|列表|清單/.test(l) ? 'table'
+    : /圖表|統計圖|趨勢/.test(l) ? 'chart'
+    : /搜尋/.test(l) ? 'searchbar'
+    : /篩選/.test(l) ? 'filter'
+    : /上傳|附件/.test(l) ? 'upload'
+    : /表單|欄位|輸入/.test(l) ? 'formgrid'
+    : /頁籤/.test(l) ? 'tabs'
+    : /步驟|流程列/.test(l) ? 'steps'
+    : /明細|描述|資訊/.test(l) ? 'descriptions'
+    : 'text'
+  return { type, label: l }
 }
 
 // 依需求分類建議「這條需求通常涵蓋哪幾頁」（含常見情境分支）

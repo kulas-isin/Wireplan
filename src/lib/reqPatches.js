@@ -1,5 +1,6 @@
 // AI 展開結果（requirementPatches）套用：只補空欄；未蓋章才改名且原名留痕
 import { isLocked } from './change.js'
+import { brickFromLabel } from './elements.js'
 
 export function applyRequirementPatches(requirements, patches, dispatch) {
   let applied = 0, renamed = 0, skippedLocked = 0, notFound = 0, talksAdded = 0, elementsAdded = 0, pagesAdded = 0
@@ -23,10 +24,13 @@ export function applyRequirementPatches(requirements, patches, dispatch) {
       const add = p.elements.map((s) => String(s).trim()).filter((s) => s && !ex.has(s))
       if (add.length) { patch.elements = [...(r.elements || []), ...add]; elementsAdded += add.length }
     }
-    // 頁面清單：追加（去重）；同為畫面規劃清單，鎖定卡也可追加
+    // 畫面地圖頁：追加（依頁名去重）；接受純字串或 { name, bricks:[...] }（磚可為文字，自動猜型別）
     if (Array.isArray(p.pages) && p.pages.length) {
-      const ex = new Set((r.pages || []).map((s) => String(s).trim()))
-      const add = p.pages.map((s) => String(s).trim()).filter((s) => s && !ex.has(s))
+      const nameOf = (x) => String((typeof x === 'string' ? x : x?.name) || '').trim()
+      const ex = new Set((r.pages || []).map(nameOf))
+      const add = p.pages
+        .filter((x) => nameOf(x) && !ex.has(nameOf(x)))
+        .map((x) => ({ name: nameOf(x), bricks: (typeof x === 'object' ? x.bricks || x.elements || [] : []).map((b) => (typeof b === 'string' ? brickFromLabel(b) : b)) }))
       if (add.length) { patch.pages = [...(r.pages || []), ...add]; pagesAdded += add.length }
     }
     if (p.name && p.name !== r.name) {
