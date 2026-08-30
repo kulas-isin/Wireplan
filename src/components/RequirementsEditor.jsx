@@ -27,7 +27,14 @@ function TitleArea({ value, disabled, title, placeholder, onChange }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
-    if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+    if (!el) return
+    const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+    fit()
+    // 寬度改變或字型載入完成時重算，避免初次量測過窄造成高度撐大
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    document.fonts?.ready?.then(fit)
+    return () => ro.disconnect()
   }, [value])
   return (
     <textarea ref={ref} rows={1} className="rq-name" value={value} disabled={disabled} title={title}
