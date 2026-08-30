@@ -348,10 +348,17 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, specOverride: action.value }))
 
     case 'LOAD_PROJECT': {
-      // 匯入專案 JSON
-      const proj = { ...action.project, id: uid('proj') }
-      return { ...state, projects: [...state.projects, proj], currentId: proj.id }
+      // 匯入專案 JSON：同 id 視為「同步更新」覆蓋既有專案；否則新增（保留原 id 讓下次同步能對上）
+      const incoming = action.project || {}
+      const pid = incoming.id || uid('proj')
+      const proj = { ...incoming, id: pid }
+      const exists = state.projects.some((p) => p.id === pid)
+      const projects = exists ? state.projects.map((p) => (p.id === pid ? proj : p)) : [...state.projects, proj]
+      return { ...state, projects, currentId: pid }
     }
+
+    case 'MARK_BACKUP':
+      return { ...state, lastBackupAt: Date.now() }
 
     case 'REPLACE_STATE':
       return action.state
@@ -363,7 +370,7 @@ function reducer(state, action) {
 
 // ── Undo/Redo 歷史包裝 ──
 const HISTORY_LIMIT = 60
-const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT', 'UPDATE_LIBRARY'])
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT', 'UPDATE_LIBRARY', 'MARK_BACKUP'])
 
 function withHistory(baseReducer) {
   return (h, action) => {

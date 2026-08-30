@@ -69,6 +69,7 @@ export default function App() {
 
   function exportProject() {
     downloadText(`${current.name}.wireplan.json`, JSON.stringify(current, null, 2), 'application/json')
+    dispatch({ type: 'MARK_BACKUP' })
   }
 
   async function importProject(file) {

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta, CATEGORY_LIST } from '../lib/categories.js'
-import { ArrowLeft, ArrowRight, ArrowUp, Check, ClipboardList, Copy, Flame, HelpCircle, LayoutGrid, ListChecks, Merge, Sparkles, Split, Trophy } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUp, Check, ClipboardList, Copy, Flame, HelpCircle, LayoutGrid, ListChecks, Merge, Send, Sparkles, Split, Trophy } from 'lucide-react'
+import { shareOrDownloadProject } from '../lib/sync.js'
 
 // ── 相似度：字元 bigram Dice 係數（抓「會員登入」vs「登入/註冊」這類重複卡）──
 const norm = (s) => String(s || '').toLowerCase().replace(/[\s/／、,，.。()（）\-_]/g, '')
@@ -45,6 +46,7 @@ export default function TriageGame({ onExit }) {
   const [drag, setDrag] = useState(null)
   const [editing, setEditing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [synced, setSynced] = useState('')
   const downRef = useRef(null)
 
   // 回合1：相似卡配對（每張卡最多出現一次）
@@ -254,6 +256,10 @@ export default function TriageGame({ onExit }) {
           </div>
           <div className="tg-btns tg-col">
             <button className="tg-big primary" onClick={copySummary}><Copy size={16} /> {copied ? '已複製！貼給客戶吧' : '複製摘要給客戶確認'}</button>
+            <button className="tg-big" onClick={async () => {
+              const r = await shareOrDownloadProject(current)
+              if (r !== 'cancelled') { dispatch({ type: 'MARK_BACKUP' }); setSynced(r === 'shared' ? '已開啟分享，傳給電腦上的自己' : '已下載同步檔，到電腦「匯入專案」') }
+            }}><Send size={16} /> {synced || '傳到電腦（同步檔）'}</button>
             <button className="tg-big" onClick={() => onExit('requirements')}><ListChecks size={16} /> 進需求清單</button>
             <button className="ghost" onClick={() => onExit('menu')}><LayoutGrid size={15} /> 回目錄</button>
           </div>
