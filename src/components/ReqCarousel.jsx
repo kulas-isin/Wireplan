@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { EffectCoverflow, Mousewheel } from 'swiper/modules'
+import { EffectCoverflow, Mousewheel, FreeMode } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/effect-coverflow'
+import 'swiper/css/free-mode'
 import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import MobileReqCard from './MobileReqCard.jsx'
@@ -36,14 +37,19 @@ export default function ReqCarousel() {
           <Swiper
             key={q}
             className="rw-swiper"
-            modules={[EffectCoverflow, Mousewheel]}
+            modules={[EffectCoverflow, Mousewheel, FreeMode]}
             effect="coverflow"
             grabCursor
             centeredSlides
             slidesPerView="auto"
             coverflowEffect={{ rotate: 34, stretch: 0, depth: 240, modifier: 1, slideShadows: false }}
             speed={380}
-            mousewheel={{ forceToAxis: true }}
+            freeMode={{ enabled: true, sticky: true, momentum: true, momentumRatio: 1.7, momentumVelocityRatio: 1.5, momentumBounce: false }}
+            touchRatio={1.35}
+            touchAngle={60}
+            longSwipesRatio={0.12}
+            longSwipesMs={80}
+            mousewheel={{ forceToAxis: true, sensitivity: 1.4 }}
             onSlideChange={(sw) => { const r = list[sw.activeIndex]; if (r) { setActiveId(r.id); navigator.vibrate?.(8) } }}
           >
             {list.map((r) => {
