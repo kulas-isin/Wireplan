@@ -87,7 +87,7 @@ function RequirementRow({ req, index, total }) {
               </label>
               <label className="field">
                 <span>對應畫面名稱</span>
-                <input value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} />
+                <textarea rows={2} value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} />
               </label>
               <label className="field">
                 <span>備註</span>

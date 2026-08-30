@@ -5,6 +5,26 @@ import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
 import { ChevronUp, ChevronDown, RotateCw, Trash2 } from 'lucide-react'
 
+
+// 詳細區的自動長高輸入（長頁名/備註不被截斷）
+function GrowInput({ value, disabled, title, placeholder, onChange }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [value])
+  return (
+    <textarea ref={ref} rows={1} value={value} disabled={disabled} title={title} placeholder={placeholder}
+      onChange={onChange} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+      style={{ resize: 'none', overflow: 'hidden' }} />
+  )
+}
+
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
   const ref = useRef(null)
@@ -65,8 +85,8 @@ export default function MobileReqCard({ req, index, total }) {
         <div className="rq-detail">
           <label><span>功能說明</span><textarea rows={2} value={req.description} disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} /></label>
           <label><span>驗收條件（每行一條）</span><textarea rows={2} value={req.acceptance} placeholder="留空用預設" disabled={locked} title={lockTip} onChange={(e) => patch({ acceptance: e.target.value })} /></label>
-          <label><span>對應畫面名稱</span><input value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
-          <label><span>備註</span><input value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
+          <label><span>對應畫面名稱</span><GrowInput value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
+          <label><span>備註</span><GrowInput value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
           <div className="rq-2">
             <label><span>工時</span><input value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} /></label>
             <label><span>報價</span><input value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} /></label>
