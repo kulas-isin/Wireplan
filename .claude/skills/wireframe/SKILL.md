@@ -173,6 +173,19 @@ JSON 頂層除了 `wireframes`，可再帶 `flows`：描述「某角色完成某
 - 計算欄位：`"source": "系統計算"` 並加 `"formula": "合計 = 單價 × 數量"`（前頁帶入/後台設定也用 formula 描述來處）。
 - 跨欄位規則放頂層 `formRules`：`[{ "kind": "notBefore|equal|oneOf|sumTo|custom", "a": "欄位A label", "b": "欄位B label", "text": "kind=custom 時的自訂句" }]`（例：結束日不可早於開始日 → `{"kind":"notBefore","a":"結束日","b":"開始日"}`）。
 
+
+## 需求細節展開 `requirementPatches`（選填）
+
+使用者從「需求確認書」複製卡片請你展開細節時，回傳頂層 `requirementPatches`（匯入後只回填空欄）：
+
+```jsonc
+"requirementPatches": [
+  { "id": "req_xxx", "description": "2~3 句正式功能說明", "acceptance": "條件一\n條件二\n條件三" }
+]
+```
+- description 依 name/note 推斷合理範圍，不要腦補未提及的大功能。
+- acceptance 每行一條、可驗收（有明確的動作與預期結果）。
+
 ## 怎麼匯入
 
 把產生的 JSON 給使用者後，請告訴他：

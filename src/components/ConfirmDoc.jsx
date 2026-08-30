@@ -1,17 +1,43 @@
 import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
-import { X, Printer } from 'lucide-react'
+import { X, Printer, Sparkles } from 'lucide-react'
 
-// 需求確認書：給客戶回簽的正式文件 — 列印友善頁，用系統「列印→儲存為 PDF」輸出
+const DEFAULT_ACCEPT = ['使用者可正常進入此功能畫面', '主要操作流程可順利完成並儲存', '異常情況有適當提示']
+
+// 客戶原話：note 以｜分段，濾掉合併標記後取第一段
+const quoteOf = (r) => (r.note || '').split('｜').map((s) => s.trim()).filter((s) => s && !s.startsWith('（合併自'))[0] || ''
+
+// 需求確認書：總覽表 + 逐條詳情（簽的是細節不是標題）；列印→儲存為 PDF
 export default function ConfirmDoc({ onClose }) {
   const { current, dispatch } = useStore()
   const reqs = current.requirements || []
   const [showCost, setShowCost] = useState(false)
+  const [copiedAI, setCopiedAI] = useState(false)
   const parties = current.parties || { vendor: '', client: '' }
   const setParty = (k, v) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'parties', value: { ...parties, [k]: v } })
   const maxV = Math.max(0, ...reqs.map((r) => (r.versions || []).length))
   const changes = reqs.flatMap((r) => (r.changeLog || []).map((c) => ({ name: r.name, ...c })))
   const today = new Date().toLocaleDateString('zh-TW')
+
+  // AI 展開細節：複製「卡片＋指令」貼給 Claude → 回 requirementPatches JSON → 匯入自動回填空欄
+  const copyAIPrompt = async () => {
+    const cards = reqs.map((r) => ({ id: r.id, name: r.name, category: r.category, note: quoteOf(r), description: r.description || '', acceptance: r.acceptance || '' }))
+    const text = [
+      '請幫我為以下需求卡片展開細節。對每張卡：',
+      '1. description：2~3 句正式的功能說明（依 name 與 note 推斷合理範圍）',
+      '2. acceptance：3~5 條可驗收的條件，每行一條',
+      '只補「目前為空」的欄位；已有內容的原樣保留不要回傳。',
+      '回傳格式（單一 JSON，可直接匯入 Wireplan）：',
+      '{"requirementPatches":[{"id":"卡片id","description":"...","acceptance":"條件一\\n條件二"}]}',
+      '',
+      '卡片：',
+      JSON.stringify(cards, null, 1),
+    ].join('\n')
+    try { await navigator.clipboard.writeText(text) } catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove()
+    }
+    setCopiedAI(true); setTimeout(() => setCopiedAI(false), 2400)
+  }
 
   return (
     <div className="cd-wrap">
@@ -21,6 +47,7 @@ export default function ConfirmDoc({ onClose }) {
         <input className="cd-party" value={parties.vendor} placeholder="提供方（你的公司）" onChange={(e) => setParty('vendor', e.target.value)} />
         <input className="cd-party" value={parties.client} placeholder="客戶方" onChange={(e) => setParty('client', e.target.value)} />
         <div className="spacer" />
+        <button onClick={copyAIPrompt} title="複製卡片＋指令貼給 AI，回傳 JSON 後用「匯入畫面 JSON」自動回填說明與驗收條件"><Sparkles size={15} /> {copiedAI ? '已複製，貼給 AI' : 'AI 展開細節'}</button>
         <button className="primary" onClick={() => window.print()}><Printer size={15} /> 列印 / 存 PDF</button>
         <button className="ghost sm" onClick={onClose}><X size={16} /></button>
       </div>
@@ -36,30 +63,50 @@ export default function ConfirmDoc({ onClose }) {
             <span>提供方：{parties.vendor || '＿＿＿＿＿＿＿＿'}</span>
             <span>客戶方：{parties.client || '＿＿＿＿＿＿＿＿'}</span>
           </div>
+
+          <div className="cd-st">一、需求總覽</div>
           <table className="cd-table">
             <thead>
-              <tr><th style={{ width: 30 }}>#</th><th>需求</th><th>說明</th><th style={{ width: 44 }}>優先</th>{showCost && <><th style={{ width: 60 }}>工時</th><th style={{ width: 72 }}>報價</th></>}</tr>
+              <tr><th style={{ width: 30 }}>#</th><th>需求</th><th style={{ width: 44 }}>優先</th><th style={{ width: 86 }}>狀態</th>{showCost && <><th style={{ width: 58 }}>工時</th><th style={{ width: 72 }}>報價</th></>}</tr>
             </thead>
             <tbody>
               {reqs.map((r, i) => (
                 <tr key={r.id}>
                   <td>{i + 1}</td>
-                  <td className="cd-nm">{r.name}{(r.versions || []).length > 0 && <span className="cd-v">（v{r.versions.length} 已確認）</span>}</td>
-                  <td>{[r.description, (r.note || '').split('｜')[0]].filter(Boolean).join('；')}</td>
+                  <td className="cd-nm">{r.name}</td>
                   <td>{r.priority}</td>
+                  <td>{(r.versions || []).length > 0 ? `v${r.versions.length} 已確認` : '待確認'}</td>
                   {showCost && <><td>{r.estimate}</td><td>{r.price}</td></>}
                 </tr>
               ))}
             </tbody>
           </table>
+
+          <div className="cd-st">二、需求詳情</div>
+          {reqs.map((r, i) => {
+            const quote = quoteOf(r)
+            const accepts = r.acceptance ? r.acceptance.split('\n').map((s) => s.trim()).filter(Boolean) : DEFAULT_ACCEPT
+            const isDefault = !r.acceptance
+            return (
+              <div key={r.id} className="cd-item">
+                <div className="cd-item-h">{i + 1}. {r.name}<span className="cd-item-tag">{r.priority}</span>{(r.versions || []).length > 0 && <span className="cd-v">v{r.versions.length} 已確認</span>}</div>
+                {r.description && <div className="cd-desc">{r.description}</div>}
+                {quote && <div className="cd-quote">客戶原話：「{quote}」</div>}
+                <div className="cd-acc-t">驗收條件{isDefault && <span className="cd-default">（預設，可再調整）</span>}</div>
+                <ul className="cd-acc">{accepts.map((a, j) => <li key={j}>{a.replace(/^- \[ \] /, '')}</li>)}</ul>
+              </div>
+            )
+          })}
+
           {changes.length > 0 && (
             <div className="cd-changes">
-              <div className="cd-st">異動紀錄</div>
+              <div className="cd-st">三、異動紀錄</div>
               {changes.map((c, i) => (
                 <div key={i} className="cd-ch">・{new Date(c.at).toLocaleDateString('zh-TW')}　「{c.name}」：{c.note}</div>
               ))}
             </div>
           )}
+
           <div className="cd-sign">
             <p>上述需求內容經雙方確認無誤，同意依此進行後續設計與開發；後續如有異動，將另以異動確認記錄之。回簽本文件或以訊息回覆「確認」視為同意。</p>
             <div className="cd-sig-row">

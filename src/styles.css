@@ -1341,3 +1341,14 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   .cd-doc { position: absolute; left: 0; top: 0; width: 100%; max-width: none; box-shadow: none; border-radius: 0; padding: 0; }
   .cd-table tr { page-break-inside: avoid; }
 }
+
+/* 確認書：逐條詳情 */
+.cd-item { margin: 12px 0 16px; page-break-inside: avoid; }
+.cd-item-h { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e2e8e4; padding-bottom: 4px; margin-bottom: 6px; }
+.cd-item-tag { font-size: 11px; font-weight: 700; border: 1px solid #c8d2cc; border-radius: 999px; padding: 0 8px; color: #556; }
+.cd-desc { font-size: 12.5px; margin: 4px 0; }
+.cd-quote { font-size: 12px; color: #6b5d3f; background: #faf6ec; border-radius: 6px; padding: 5px 10px; margin: 4px 0; }
+.cd-acc-t { font-size: 12px; font-weight: 700; margin-top: 6px; }
+.cd-default { font-weight: 400; color: #98a49d; font-size: 11px; }
+.cd-acc { margin: 2px 0 0 2px; padding-left: 18px; font-size: 12.5px; }
+.cd-acc li { margin: 1px 0; }
