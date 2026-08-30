@@ -179,7 +179,7 @@ export default function RequirementsEditor() {
     const patches = parsePatches(pasteText)
     if (!patches) { setPaste('看不懂這段內容 — 請貼 AI 回傳的 requirementPatches JSON'); return }
     const r = applyRequirementPatches(reqs, patches, dispatch)
-    setPaste(`已套用 ${r.applied} 張${r.talksAdded ? `、對話 +${r.talksAdded} 則` : ''}${r.elementsAdded ? `、元件 +${r.elementsAdded} 個` : ''}${r.renamed ? `、改名 ${r.renamed} 張（原名記在備註）` : ''}${r.skippedLocked ? `、${r.skippedLocked} 張已蓋章略過改名` : ''}${r.notFound ? `、${r.notFound} 筆對不到卡` : ''}`)
+    setPaste(`已套用 ${r.applied} 張${r.talksAdded ? `、對話 +${r.talksAdded} 則` : ''}${r.elementsAdded ? `、元件 +${r.elementsAdded} 個` : ''}${r.pagesAdded ? `、頁面 +${r.pagesAdded} 個` : ''}${r.renamed ? `、改名 ${r.renamed} 張（原名記在備註）` : ''}${r.skippedLocked ? `、${r.skippedLocked} 張已蓋章略過改名` : ''}${r.notFound ? `、${r.notFound} 筆對不到卡` : ''}`)
     setPasteText('')
   }
 

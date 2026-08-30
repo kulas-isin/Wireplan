@@ -1583,3 +1583,9 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .el-add .al-add { flex-shrink: 0; }
 .rq-hint-ok { background: #E7F2DC; color: #3A5D25; }
 .rq-hint-warn { background: #FBF0DC; color: #B0691F; }
+.el-mk {
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  background: linear-gradient(180deg, #ECF5A6, #C6DC6A); color: #2F4A1E;
+  border: none; border-radius: 999px; padding: 3px 10px; font-size: 11px;
+  font-weight: 600; cursor: pointer;
+}
