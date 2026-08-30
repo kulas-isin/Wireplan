@@ -1209,7 +1209,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .cr-panel { width: min(560px, 96vw); max-height: 92vh; overflow-y: auto; background: var(--bg); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: flex; flex-direction: column; }
 .cr-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 0; }
 .cr-center { position: relative; display: flex; align-items: center; justify-content: center; padding: 34px 0 26px; }
-.cr-ring { position: absolute; border: 2px solid #fdba74; border-radius: 50%; opacity: 0; animation: cr-ripple 2.6s ease-out infinite; }
+.cr-ring { position: absolute; border: 2px solid #fdba74; border-radius: 50%; opacity: 0; animation: cr-ripple 2.6s ease-out infinite; pointer-events: none; }
+.cr-center { pointer-events: none; }
+.cr-center .cr-card { pointer-events: auto; }
 .cr-ring.r2 { animation-delay: .8s; } .cr-ring.r3 { animation-delay: 1.6s; }
 @keyframes cr-ripple { 0% { width: 130px; height: 130px; opacity: .7; } 100% { width: 340px; height: 340px; opacity: 0; } }
 .cr-card { position: relative; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 18px 26px; font-size: 16px; font-weight: 800; color: #14271c; box-shadow: 0 10px 26px rgba(0,0,0,.12); max-width: 78%; text-align: center; }
