@@ -122,6 +122,7 @@ export default function RequirementsEditor() {
   const [sheet, setSheet] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [q, setQ] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
   const [cat, setCat] = useState('all')
   const [status, setStatus] = useState('all')
   const isMobile = useIsMobile()
@@ -229,6 +230,7 @@ export default function RequirementsEditor() {
         <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談</button>
         <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button className={wheel ? 'active' : ''} onClick={() => setWheel((w) => !w)} title="轉盤模式：快速翻滾找卡">{wheel ? <List size={15} /> : <Orbit size={15} />} {wheel ? '清單' : '轉盤'}</button>
+        <button className={'rp-icbtn' + (showSearch || q ? ' active' : '')} onClick={() => { if (showSearch) { setQ('') } setShowSearch((v) => !v) }} title="搜尋"><Search size={17} /></button>
         <button className="rp-icbtn" onClick={addBlank} title="新增需求"><Plus size={18} /></button>
         <button className="rp-icbtn" onClick={() => setSheet(true)} title="更多功能"><MoreHorizontal size={18} /></button>
       </div>
@@ -262,11 +264,13 @@ export default function RequirementsEditor() {
           </span>
         </div>
       )}
-      <div className="rw-search">
-        <Search size={16} />
-        <input value={q} placeholder="搜尋需求 / 對話 / 說明…" onChange={(e) => setQ(e.target.value)} />
-        <span className="muted" style={{ fontSize: 12 }}>{list.length} 張</span>
-      </div>
+      {showSearch && (
+        <div className="rw-search">
+          <Search size={16} />
+          <input autoFocus value={q} placeholder="搜尋需求 / 對話 / 說明…" onChange={(e) => setQ(e.target.value)} />
+          <span className="muted" style={{ fontSize: 12 }}>{list.length} 張</span>
+        </div>
+      )}
       <div className="rw-tabs">
         {[['all', `全部 ${stCounts.all}`], ['draft', `待確認 ${stCounts.draft}`], ['confirmed', `已確認 ${stCounts.confirmed}`], ['pending', `異動中 ${stCounts.pending}`]]
           .filter(([k]) => k === 'all' || stCounts[k] > 0)
