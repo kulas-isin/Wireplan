@@ -55,7 +55,7 @@ function RequirementRow({ req, index, total }) {
         </td>
       </tr>
       {open && (
-        <tr>
+        <tr className="req-detail">
           <td colSpan={8} style={{ background: '#f8fafc' }}>
             <div className="grid2" style={{ padding: '6px 2px' }}>
               <label className="field">
