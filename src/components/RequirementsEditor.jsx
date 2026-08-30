@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
@@ -21,6 +21,21 @@ function useIsMobile() {
   return m
 }
 
+
+// 標題輸入：多行自動長高（需求名稱常常一行放不下）
+function TitleArea({ value, disabled, title, placeholder, onChange }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+  }, [value])
+  return (
+    <textarea ref={ref} rows={1} className="rq-name" value={value} disabled={disabled} title={title}
+      placeholder={placeholder} onChange={onChange}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }} />
+  )
+}
+
 // 手機專屬卡片：名稱如標題、分類膠囊、優先分段器、操作 ghost 列 — 減框線噪音、層級分明
 function MobileReqCard({ req, index, total }) {
   const { dispatch } = useStore()
@@ -32,7 +47,7 @@ function MobileReqCard({ req, index, total }) {
   return (
     <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
       <div className="rq-top">
-        <input className="rq-name" value={req.name} placeholder="功能名稱" disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
+        <TitleArea value={req.name} placeholder="功能名稱" disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
         <ChangeControl req={req} />
       </div>
       <div className="rq-mid">

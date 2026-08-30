@@ -1230,8 +1230,9 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* ── 需求清單：手機專屬卡片（柔和陰影、低框線噪音） ── */
 .rq-list { display: flex; flex-direction: column; gap: 12px; }
 .rq-card { background: #fff; border: 1px solid rgba(20,39,28,.07); border-radius: 16px; padding: 14px 14px 6px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(20,39,28,.04), 0 12px 28px -20px rgba(20,39,28,.28); }
-.rq-top { display: flex; align-items: center; gap: 10px; }
-.rq-name { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 800; color: #14271c; border: none; background: transparent; padding: 2px 0; border-bottom: 1.5px dashed transparent; border-radius: 0; }
+.rq-top { display: flex; align-items: flex-start; gap: 10px; }
+.rq-top > :not(.rq-name) { margin-top: 2px; }
+.rq-name { flex: 1; min-width: 0; font-size: 16.5px; font-weight: 800; color: #14271c; border: none; background: transparent; padding: 2px 0; border-bottom: 1.5px dashed transparent; border-radius: 0; resize: none; overflow: hidden; line-height: 1.4; font-family: inherit; display: block; }
 .rq-name::placeholder { font-weight: 600; color: #9aa8a0; }
 .rq-name:focus { outline: none; border-bottom-color: var(--primary); }
 .rq-name:disabled { color: #35493d; opacity: 1; background: transparent; }
