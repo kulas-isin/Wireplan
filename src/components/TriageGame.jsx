@@ -3,6 +3,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { categoryMeta, CATEGORY_LIST } from '../lib/categories.js'
 import { ArrowLeft, ArrowRight, ArrowUp, Check, ClipboardList, Copy, Flame, HelpCircle, LayoutGrid, ListChecks, Merge, Send, Sparkles, Split, Trophy } from 'lucide-react'
 import { shareOrDownloadProject } from '../lib/sync.js'
+import { isLocked } from '../lib/change.js'
 
 // ── 相似度：字元 bigram Dice 係數（抓「會員登入」vs「登入/註冊」這類重複卡）──
 const norm = (s) => String(s || '').toLowerCase().replace(/[\s/／、,，.。()（）\-_]/g, '')
@@ -53,9 +54,9 @@ export default function TriageGame({ onExit }) {
   const pairs = useMemo(() => {
     const used = new Set(), out = []
     for (let i = 0; i < reqs.length; i++) {
-      if (used.has(reqs[i].id)) continue
+      if (used.has(reqs[i].id) || isLocked(reqs[i])) continue
       for (let j = i + 1; j < reqs.length; j++) {
-        if (used.has(reqs[j].id)) continue
+        if (used.has(reqs[j].id) || isLocked(reqs[j])) continue
         if (similar(reqs[i].name, reqs[j].name) >= 0.5) { out.push([reqs[i].id, reqs[j].id]); used.add(reqs[i].id); used.add(reqs[j].id); break }
       }
     }
@@ -90,7 +91,7 @@ export default function TriageGame({ onExit }) {
   }
 
   // 回合2：滑卡
-  const startSwipe = () => { setQueue((current.requirements || []).map((r) => r.id)); setStage('swipe') }
+  const startSwipe = () => { setQueue((current.requirements || []).filter((r) => !isLocked(r)).map((r) => r.id)); setStage('swipe') }
   const q = queue || []
   const swipeCard = q.length ? byId(q[0]) : null
   const setPriority = (p, dir) => {
@@ -229,8 +230,8 @@ export default function TriageGame({ onExit }) {
               {rows.map((r) => (
                 <div key={r.id} className="tg-row">
                   <span className={'tg-pchip p' + r.priority}>{r.priority}</span>
-                  <input value={r.name} onChange={(e) => dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch: { name: e.target.value } })} />
-                  <select value={r.category} onChange={(e) => dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch: { category: e.target.value } })}>
+                  <input value={r.name} disabled={isLocked(r)} title={isLocked(r) ? '已確認 — 修改請先拆封' : undefined} onChange={(e) => dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch: { name: e.target.value } })} />
+                  <select value={r.category} disabled={isLocked(r)} onChange={(e) => dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch: { category: e.target.value } })}>
                     {CATEGORY_LIST.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </select>
                 </div>

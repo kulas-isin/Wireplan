@@ -36,3 +36,6 @@ export function changeMessage(req) {
     '請回覆「確認」，我們就依此調整，謝謝！',
   ].join('\n')
 }
+
+// 已確認且無進行中異動 = 鎖定（要改請先拆封）
+export const isLocked = (r) => ((r?.versions || []).length > 0) && !r?.pending
