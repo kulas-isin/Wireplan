@@ -1438,3 +1438,25 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 工具列標題會被擠壓 → 移除（頁頭已有頁名） */
 .rp-body .toolbar.rp-tools strong, .rp-body .toolbar.rp-tools .spacer { display: none; }
 .rp-body .toolbar.rp-tools { justify-content: flex-start; }
+
+/* ── 匯入/拆封彈窗 Nuviq 色系 ── */
+.cr-panel { background: rgba(252,254,246,.98); border-radius: 26px; }
+.ip-panel textarea { border: none; background: #fff; border-radius: 16px; box-shadow: inset 0 0 0 1px rgba(60,80,40,.14); padding: 12px; }
+.ip-panel textarea:focus { outline: none; box-shadow: inset 0 0 0 2px #B9D45B; }
+.ip-msg { background: #EAF2D4; color: #3A5D25; border-radius: 12px; }
+.ip-panel .tg-big.primary, .cr-panel .tg-big.primary { background: linear-gradient(135deg, #ECF5A6 0%, #C6DC6A 52%, #9CBD48 100%); color: #22301F; border: none; }
+.cr-form textarea { border: none; background: #fff; box-shadow: inset 0 0 0 1px rgba(60,80,40,.14); }
+.cr-form textarea:focus { box-shadow: inset 0 0 0 2px #B9D45B; }
+
+/* ── 驗收條件清單列 ── */
+.rq-acc { display: flex; flex-direction: column; gap: 6px; }
+.rq-acc > span { font-size: 12px; font-weight: 700; color: #5a6e62; }
+.al-wrap { display: flex; flex-direction: column; gap: 8px; }
+.al-row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px 12px; box-shadow: inset 0 0 0 1px rgba(60,80,40,.10); }
+.al-dot { width: 22px; height: 22px; border-radius: 50%; background: #EAF2D4; color: #3A5D25; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.al-row input { flex: 1; min-width: 0; border: none; background: transparent; font-size: 14px; color: #22301F; }
+.al-row input:focus { outline: none; }
+.al-row input:disabled { color: #35493d; -webkit-text-fill-color: #35493d; opacity: 1; }
+.al-x { border: none; background: none; color: #c2410c; cursor: pointer; padding: 4px; flex-shrink: 0; }
+.al-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; border: 1.5px dashed #B9D45B; background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: #3A5D25; cursor: pointer; }
+.al-empty { font-size: 12.5px; color: #98a48d; }

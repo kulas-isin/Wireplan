@@ -3,11 +3,11 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2 } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Check, X, Plus } from 'lucide-react'
 
 
 // 詳細區的自動長高輸入（長頁名/備註不被截斷）
-function GrowInput({ value, disabled, title, placeholder, onChange }) {
+function GrowInput({ value, disabled, title, placeholder, onChange, multiline }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
@@ -20,8 +20,27 @@ function GrowInput({ value, disabled, title, placeholder, onChange }) {
   }, [value])
   return (
     <textarea ref={ref} rows={1} value={value} disabled={disabled} title={title} placeholder={placeholder}
-      onChange={onChange} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+      onChange={onChange} onKeyDown={(e) => { if (e.key === 'Enter' && !multiline) e.preventDefault() }}
       style={{ resize: 'none', overflow: 'hidden' }} />
+  )
+}
+
+// 驗收條件：逐條清單列（圓勾徽章 + 一行一條 + 新增/刪除），儲存為換行字串
+function AcceptList({ value, disabled, onChange }) {
+  const lines = value ? value.split('\n') : []
+  const set = (arr) => onChange(arr.join('\n'))
+  return (
+    <div className="al-wrap">
+      {lines.length === 0 && <div className="al-empty">尚未填寫 — 確認書會帶預設驗收條件</div>}
+      {lines.map((l, i) => (
+        <div key={i} className="al-row">
+          <span className="al-dot"><Check size={12} /></span>
+          <input value={l} disabled={disabled} placeholder="輸入可驗收的條件…" onChange={(e) => set(lines.map((x, j) => (j === i ? e.target.value : x)))} />
+          {!disabled && <button className="al-x" onClick={() => set(lines.filter((_, j) => j !== i))}><X size={13} /></button>}
+        </div>
+      ))}
+      {!disabled && <button className="al-add" onClick={() => set([...lines, ''])}><Plus size={13} /> 新增條件</button>}
+    </div>
   )
 }
 
@@ -83,8 +102,8 @@ export default function MobileReqCard({ req, index, total }) {
       </div>
       {open && (
         <div className="rq-detail">
-          <label><span>功能說明</span><textarea rows={2} value={req.description} disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} /></label>
-          <label><span>驗收條件（每行一條）</span><textarea rows={2} value={req.acceptance} placeholder="留空用預設" disabled={locked} title={lockTip} onChange={(e) => patch({ acceptance: e.target.value })} /></label>
+          <label><span>功能說明</span><GrowInput multiline value={req.description} placeholder="這個功能要做什麼、範圍到哪…" disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} /></label>
+          <div className="rq-acc"><span>驗收條件</span><AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} /></div>
           <label><span>對應畫面名稱</span><GrowInput value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
           <label><span>備註</span><GrowInput value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
           <div className="rq-2">
