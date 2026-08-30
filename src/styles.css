@@ -1550,3 +1550,4 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .iv-wrap .fe-pill.on { background: #3A5D25; color: #EDF7CF; }
 .iv-empty { color: #8A9A80; }
 .ws-gen { background: #fff7ed !important; color: #b45309 !important; border-color: #fdba74 !important; }
+.rq-hint-wf { background: #E4F0FA; color: #2563A8; cursor: pointer; }

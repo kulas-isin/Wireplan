@@ -1087,6 +1087,16 @@ export default function WireframeBoard() {
   const { current, dispatch } = useStore()
   const wireframes = current.wireframes || []
   const [selectedId, setSelectedId] = useState(null)
+
+  // 從需求卡「查看畫面」跳轉：讀一次性訊號選中該頁
+  useEffect(() => {
+    const id = sessionStorage.getItem('wp-open-wf')
+    if (id && (current.wireframes || []).some((w) => w.id === id)) {
+      setSelectedId(id)
+      sessionStorage.removeItem('wp-open-wf')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [demo, setDemo] = useState(false)
   const [navOpen, setNavOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 820 : true))
   const [importOpen, setImportOpen] = useState(false)

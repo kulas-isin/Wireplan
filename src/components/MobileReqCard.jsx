@@ -4,7 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
@@ -195,7 +195,7 @@ function ReqDetailSheet({ req, locked, lockTip, patch, dispatch, onClose }) {
 
 // 手機專屬卡片：精簡清單卡 + 摘要 chips；詳細 → 全螢幕故事頁
 export default function MobileReqCard({ req, index, total }) {
-  const { dispatch } = useStore()
+  const { current, dispatch } = useStore()
   const [open, setOpen] = useState(false)
   const cat = categoryMeta(req.category)
   const locked = isLocked(req)
@@ -203,6 +203,16 @@ export default function MobileReqCard({ req, index, total }) {
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
   const talksN = (req.talks || []).length
   const accN = req.acceptance ? req.acceptance.split('\n').filter((s) => s.trim()).length : 0
+  // 對應畫面：requirementId 連結優先，名稱模糊比對補
+  const coreN = (l) => String(l || '').replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').replace(/\s+/g, '').trim()
+  const k = coreN(req.screen || req.name)
+  const pages = (current.wireframes || []).filter((w) => w.requirementId === req.id || (k && coreN(w.name) && (coreN(w.name).includes(k) || k.includes(coreN(w.name)))))
+  const openWf = (e) => {
+    e.stopPropagation()
+    if (!pages.length) return
+    sessionStorage.setItem('wp-open-wf', pages[0].id)
+    window.location.hash = 'wf'
+  }
   return (
     <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
       <div className="rq-top">
@@ -222,12 +232,13 @@ export default function MobileReqCard({ req, index, total }) {
           ))}
         </span>
       </div>
-      {(talksN > 0 || accN > 0 || req.description || req.createdAt) && (
+      {(talksN > 0 || accN > 0 || req.description || req.createdAt || pages.length > 0) && (
         <div className="rq-hints" onClick={() => setOpen(true)}>
           {req.createdAt && <span className="rq-hint"><CalendarDays size={12} /> {new Date(req.createdAt).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}</span>}
           {req.description && <span className="rq-hint"><BookOpen size={12} /> 故事</span>}
           {talksN > 0 && <span className="rq-hint"><MessageSquareText size={12} /> {talksN}</span>}
           {accN > 0 && <span className="rq-hint"><Check size={12} /> {accN}</span>}
+          {pages.length > 0 && <span className="rq-hint rq-hint-wf" onClick={openWf} title={'查看畫面：' + pages.map((w) => w.name).join('、')}><LayoutTemplate size={12} /> {pages.length} 頁</span>}
         </div>
       )}
       <div className="rq-foot">
