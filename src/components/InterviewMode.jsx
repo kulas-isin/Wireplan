@@ -141,8 +141,16 @@ export default function InterviewMode({ onClose }) {
             </div>
             {openId === r.id && (
               <div className="iv-detail">
-                <textarea rows={2} value={r.note} placeholder="客戶原話 / 補充…"
-                  onChange={(e) => patch(r.id, { note: e.target.value })} />
+                {(r.talks || []).filter((t) => t.who === 'client').map((t, i) => (
+                  <div key={i} className="iv-quote">「{t.text}」<small>{new Date(t.at).toLocaleDateString('zh-TW')}</small></div>
+                ))}
+                <input placeholder="客戶原話…（Enter 記入對話串）"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                      patch(r.id, { talks: [...(r.talks || []), { at: Date.now(), who: 'client', text: e.currentTarget.value.trim() }] })
+                      e.currentTarget.value = ''
+                    }
+                  }} />
                 <input value={r.screen} placeholder="對應頁面（可先留白）"
                   onChange={(e) => patch(r.id, { screen: e.target.value })} />
                 <div className="iv-pri">

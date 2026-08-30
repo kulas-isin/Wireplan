@@ -131,7 +131,10 @@ export default function TriageGame({ onExit }) {
   const high = reqs.filter((r) => r.priority === '高').length
   const summaryText = () => {
     const lines = [`【${current.name}】訪談需求確認`, `今天訪談整理出 ${reqs.length} 項需求：`]
-    reqs.forEach((r, i) => lines.push(`${i + 1}. ${r.name}（${r.priority}）${r.note ? ' — ' + r.note.split('｜')[0] : ''}`))
+    reqs.forEach((r, i) => {
+      const quote = (r.talks || []).find((t) => t.who === 'client')?.text || (r.note || '').split('｜')[0]
+      lines.push(`${i + 1}. ${r.name}（${r.priority}）${quote ? ' — ' + quote : ''}`)
+    })
     lines.push('', '麻煩幫我確認有沒有漏掉或理解錯的地方，謝謝！')
     return lines.join('\n')
   }

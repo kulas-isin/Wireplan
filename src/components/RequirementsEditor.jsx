@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { newRequirement } from '../lib/requirementExtractor.js'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
@@ -11,7 +11,7 @@ import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { applyRequirementPatches, parsePatches } from '../lib/reqPatches.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal, MessageSquareText } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal, MessageSquareText, Search } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -121,7 +121,33 @@ export default function RequirementsEditor() {
   const [paste, setPaste] = useState(null) // null=關閉, ''=開啟輸入中, 其他=結果訊息
   const [sheet, setSheet] = useState(false)
   const [pasteText, setPasteText] = useState('')
+  const [q, setQ] = useState('')
+  const [cat, setCat] = useState('all')
+  const [status, setStatus] = useState('all')
   const isMobile = useIsMobile()
+
+  const statusOf = (r) => (r.pending ? 'pending' : (r.versions || []).length ? 'confirmed' : 'draft')
+  const stCounts = useMemo(() => {
+    const c = { all: reqs.length, draft: 0, confirmed: 0, pending: 0 }
+    for (const r of reqs) c[statusOf(r)]++
+    return c
+  }, [reqs])
+  const cats = useMemo(() => {
+    const m = new Map()
+    for (const r of reqs) m.set(r.category, (m.get(r.category) || 0) + 1)
+    return [...m.entries()]
+  }, [reqs])
+  const list = useMemo(() => {
+    const k = q.trim().toLowerCase()
+    return reqs.filter((r) => {
+      if (status !== 'all' && statusOf(r) !== status) return false
+      if (cat !== 'all' && r.category !== cat) return false
+      if (!k) return true
+      const texts = [r.name, r.note, r.screen, r.description, ...(r.talks || []).map((t) => t.text)]
+      return texts.some((t) => String(t || '').toLowerCase().includes(k))
+    })
+  }, [reqs, q, cat, status])
+  const filterKey = q + '|' + cat + '|' + status
 
   const copyLinePrompt = async () => {
     const cardsList = reqs.map((r) => ({ id: r.id, name: r.name }))
@@ -236,11 +262,32 @@ export default function RequirementsEditor() {
           </span>
         </div>
       )}
+      <div className="rw-search">
+        <Search size={16} />
+        <input value={q} placeholder="搜尋需求 / 對話 / 說明…" onChange={(e) => setQ(e.target.value)} />
+        <span className="muted" style={{ fontSize: 12 }}>{list.length} 張</span>
+      </div>
+      <div className="rw-tabs">
+        {[['all', `全部 ${stCounts.all}`], ['draft', `待確認 ${stCounts.draft}`], ['confirmed', `已確認 ${stCounts.confirmed}`], ['pending', `異動中 ${stCounts.pending}`]]
+          .filter(([k]) => k === 'all' || stCounts[k] > 0)
+          .map(([k, label]) => (
+            <button key={k} className={'rw-tab' + (status === k ? ' on' : '')} onClick={() => setStatus(status === k ? 'all' : k)}>{label}</button>
+          ))}
+        <span className="rw-div" />
+        {cats.map(([key, n]) => {
+          const m = categoryMeta(key)
+          return (
+            <button key={key} className={'rw-tab' + (cat === key ? ' on' : '')} onClick={() => setCat(cat === key ? 'all' : key)}>
+              <i style={{ background: m.color }} />{m.label} {n}
+            </button>
+          )
+        })}
+      </div>
       {wheel ? (
-        <ReqCarousel />
+        <ReqCarousel list={list} filterKey={filterKey} />
       ) : isMobile ? (
         <div className="rq-list">
-          {reqs.map((r, i) => <MobileReqCard key={r.id} req={r} index={i} total={reqs.length} />)}
+          {list.map((r) => <MobileReqCard key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} />)}
         </div>
       ) : (
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
@@ -258,8 +305,8 @@ export default function RequirementsEditor() {
             </tr>
           </thead>
           <tbody>
-            {reqs.map((r, i) => (
-              <RequirementRow key={r.id} req={r} index={i} total={reqs.length} />
+            {list.map((r) => (
+              <RequirementRow key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} />
             ))}
           </tbody>
         </table>
