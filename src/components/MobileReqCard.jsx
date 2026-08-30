@@ -1,13 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen } from 'lucide-react'
 
+// 標題輸入：多行自動長高（需求名稱常常一行放不下）
+function TitleArea({ value, disabled, title, placeholder, onChange }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    document.fonts?.ready?.then(fit)
+    return () => ro.disconnect()
+  }, [value])
+  return (
+    <textarea ref={ref} rows={1} className="rq-name" value={value} disabled={disabled} title={title}
+      placeholder={placeholder} onChange={onChange}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }} />
+  )
+}
 
-// 詳細區的自動長高輸入（長頁名/備註不被截斷）
-function GrowInput({ value, disabled, title, placeholder, onChange, multiline }) {
+// 詳細區的自動長高輸入
+function GrowInput({ value, disabled, title, placeholder, onChange, multiline, className }) {
   const ref = useRef(null)
   useEffect(() => {
     const el = ref.current
@@ -19,13 +39,13 @@ function GrowInput({ value, disabled, title, placeholder, onChange, multiline })
     return () => ro.disconnect()
   }, [value])
   return (
-    <textarea ref={ref} rows={1} value={value} disabled={disabled} title={title} placeholder={placeholder}
+    <textarea ref={ref} rows={1} className={className} value={value} disabled={disabled} title={title} placeholder={placeholder}
       onChange={onChange} onKeyDown={(e) => { if (e.key === 'Enter' && !multiline) e.preventDefault() }}
       style={{ resize: 'none', overflow: 'hidden' }} />
   )
 }
 
-// 單行語意、多行顯示的自動長高輸入（驗收條件整句可見）
+// 單行語意、多行顯示（驗收條件整句可見）
 function GrowLine({ value, disabled, placeholder, onChange }) {
   const ref = useRef(null)
   useEffect(() => {
@@ -43,7 +63,7 @@ function GrowLine({ value, disabled, placeholder, onChange }) {
   )
 }
 
-// 驗收條件：逐條清單列（圓勾徽章 + 一行一條 + 新增/刪除），儲存為換行字串
+// 驗收條件：逐條清單列
 function AcceptList({ value, disabled, onChange }) {
   const lines = value ? value.split('\n') : []
   const set = (arr) => onChange(arr.join('\n'))
@@ -62,29 +82,7 @@ function AcceptList({ value, disabled, onChange }) {
   )
 }
 
-// 標題輸入：多行自動長高（需求名稱常常一行放不下）
-function TitleArea({ value, disabled, title, placeholder, onChange }) {
-  const ref = useRef(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
-    fit()
-    // 寬度改變或字型載入完成時重算，避免初次量測過窄造成高度撐大
-    const ro = new ResizeObserver(fit)
-    ro.observe(el)
-    document.fonts?.ready?.then(fit)
-    return () => ro.disconnect()
-  }, [value])
-  return (
-    <textarea ref={ref} rows={1} className="rq-name" value={value} disabled={disabled} title={title}
-      placeholder={placeholder} onChange={onChange}
-      onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }} />
-  )
-}
-
-
-// 對話串（user story 的 Conversation）：客戶氣泡靠左、我方靠右，一框兩鈕送出，自動帶日期
+// 對話串（LINE 式氣泡；預設只顯示最近 2 則）
 function TalkThread({ talks = [], disabled, onChange }) {
   const [txt, setTxt] = useState('')
   const [expand, setExpand] = useState(false)
@@ -95,7 +93,6 @@ function TalkThread({ talks = [], disabled, onChange }) {
     setTxt('')
   }
   const del = (i) => onChange(talks.filter((_, j) => j !== i))
-  // 預設只顯示最近 2 則，避免對話一長卡片爆長
   const indexed = talks.map((t, i) => ({ t, i }))
   const shown = expand || talks.length <= 3 ? indexed : indexed.slice(-2)
   return (
@@ -130,7 +127,61 @@ function TalkThread({ talks = [], disabled, onChange }) {
   )
 }
 
-// 手機專屬卡片：名稱如標題、分類膠囊、優先分段器、操作 ghost 列 — 減框線噪音、層級分明
+// 全螢幕故事頁：核心三件（故事/對話/驗收）大空間，行政欄位收進「更多資訊」
+function ReqDetailSheet({ req, locked, lockTip, patch, dispatch, onClose }) {
+  const [more, setMore] = useState(false)
+  return createPortal(
+    <div className="rd-wrap">
+      <div className="rd-head">
+        <button className="rd-back" onClick={onClose}><ArrowLeft size={18} /></button>
+        <strong className="rd-title">{req.name || '需求詳情'}</strong>
+        <div className="spacer" />
+        <ChangeControl req={req} />
+      </div>
+      <div className="rd-body">
+        <div className="rd-sec"><BookOpen size={14} /> 故事句（一句話說清楚）</div>
+        <GrowInput multiline className="rd-input" value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿"
+          disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
+        {!locked && !req.description && (
+          <button className="tk-tpl" onClick={() => patch({ description: '身為＿＿，我想要＿＿，以便＿＿' })}><Plus size={13} /> 用故事模板開頭</button>
+        )}
+        {!locked && (req.talks || []).length === 0 && (req.description || '').length > 80 && (
+          <button className="tk-tpl" onClick={() => patch({ talks: [{ at: Date.now(), who: 'us', text: req.description }], description: '' })}><ArrowDownToLine size={13} /> 這段太長 — 搬進對話串</button>
+        )}
+
+        <div className="rd-sec"><MessageSquareText size={14} /> 對話串（客戶說了什麼 / 我方確認了什麼）</div>
+        <TalkThread talks={req.talks || []} disabled={locked} onChange={(v) => patch({ talks: v })} />
+
+        <div className="rd-sec"><Check size={14} /> 驗收條件</div>
+        <AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} />
+
+        <button className="rd-more" onClick={() => setMore((m) => !m)}>
+          {more ? <ChevronDown size={15} /> : <ChevronRight size={15} />} 更多資訊（畫面 / 備註 / 工時報價 / 履歷）
+        </button>
+        {more && (
+          <div className="rd-moresec">
+            <label><span>對應畫面名稱</span><GrowInput className="rd-input" value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
+            <label><span>備註</span><GrowInput className="rd-input" value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
+            <div className="rq-2">
+              <label><span>工時</span><GrowInput className="rd-input" value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} /></label>
+              <label><span>報價</span><GrowInput className="rd-input" value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} /></label>
+            </div>
+            {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
+              <div className="req-history">
+                {(req.versions || []).map((v) => <span key={'v' + v.v} className="st-badge st-green">v{v.v} ✓ {new Date(v.at).toLocaleDateString('zh-TW')}</span>)}
+                {(req.changeLog || []).map((c, i) => <span key={'c' + i} className="req-h-change">✂ {new Date(c.at).toLocaleDateString('zh-TW')}：{c.note}</span>)}
+              </div>
+            )}
+            <button className="tk-tpl" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 依分類重新產生 wireframe</button>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// 手機專屬卡片：精簡清單卡 + 摘要 chips；詳細 → 全螢幕故事頁
 export default function MobileReqCard({ req, index, total }) {
   const { dispatch } = useStore()
   const [open, setOpen] = useState(false)
@@ -138,6 +189,8 @@ export default function MobileReqCard({ req, index, total }) {
   const locked = isLocked(req)
   const lockTip = locked ? '已確認 — 要修改請先按 ✂ 拆封' : undefined
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
+  const talksN = (req.talks || []).length
+  const accN = req.acceptance ? req.acceptance.split('\n').filter((s) => s.trim()).length : 0
   return (
     <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
       <div className="rq-top">
@@ -157,45 +210,21 @@ export default function MobileReqCard({ req, index, total }) {
           ))}
         </span>
       </div>
+      {(talksN > 0 || accN > 0 || req.description) && (
+        <div className="rq-hints" onClick={() => setOpen(true)}>
+          {req.description && <span className="rq-hint"><BookOpen size={12} /> 故事</span>}
+          {talksN > 0 && <span className="rq-hint"><MessageSquareText size={12} /> {talksN}</span>}
+          {accN > 0 && <span className="rq-hint"><Check size={12} /> {accN}</span>}
+        </div>
+      )}
       <div className="rq-foot">
-        <button onClick={() => setOpen((o) => !o)}>{open ? <ChevronUp size={15} /> : <ChevronDown size={15} />} 詳細</button>
-        <button onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={14} /> 版面</button>
+        <button onClick={() => setOpen(true)}><ChevronRight size={15} /> 詳細</button>
         <div className="spacer" />
         <button disabled={index === 0} title="上移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={16} /></button>
         <button disabled={index === total - 1} title="下移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={16} /></button>
         <button className="danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={14} /></button>
       </div>
-      {open && (
-        <div className="rq-detail">
-          <label><span>故事句（一句話說清楚）</span>
-            <GrowInput multiline value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿" disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
-          </label>
-          {!locked && !req.description && (
-            <button className="tk-tpl" onClick={() => patch({ description: '身為＿＿，我想要＿＿，以便＿＿' })}><Plus size={13} /> 用故事模板開頭</button>
-          )}
-          {!locked && (req.talks || []).length === 0 && (req.description || '').length > 80 && (
-            <button className="tk-tpl" onClick={() => patch({ talks: [{ at: Date.now(), who: 'us', text: req.description }], description: '' })}><ArrowDownToLine size={13} /> 這段太長 — 搬進對話串</button>
-          )}
-          <div className="rq-acc"><span>對話串（客戶說了什麼 / 我方確認了什麼）</span>
-            <TalkThread talks={req.talks || []} disabled={locked} onChange={(v) => patch({ talks: v })} />
-          </div>
-          <div className="rq-acc"><span>驗收條件</span><AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} /></div>
-          <label><span>對應畫面名稱</span><GrowInput value={req.screen} disabled={locked} title={lockTip} onChange={(e) => patch({ screen: e.target.value })} /></label>
-          <label><span>備註</span><GrowInput value={req.note} disabled={locked} title={lockTip} onChange={(e) => patch({ note: e.target.value })} /></label>
-          <div className="rq-2">
-            <label><span>工時</span><input value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} /></label>
-            <label><span>報價</span><input value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} /></label>
-          </div>
-          {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
-            <div className="req-history">
-              {(req.versions || []).map((v) => <span key={'v' + v.v} className="st-badge st-green">v{v.v} ✓ {new Date(v.at).toLocaleDateString('zh-TW')}</span>)}
-              {(req.changeLog || []).map((c, i) => <span key={'c' + i} className="req-h-change">✂ {new Date(c.at).toLocaleDateString('zh-TW')}：{c.note}</span>)}
-            </div>
-          )}
-        </div>
-      )}
+      {open && <ReqDetailSheet req={req} locked={locked} lockTip={lockTip} patch={patch} dispatch={dispatch} onClose={() => setOpen(false)} />}
     </div>
   )
 }
-
-
