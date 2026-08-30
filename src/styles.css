@@ -1506,3 +1506,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rd-moresec { display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,.55); border-radius: 18px; padding: 14px; }
 .rd-moresec label { display: flex; flex-direction: column; gap: 5px; }
 .rd-moresec label span { font-size: 12px; font-weight: 700; color: #5a6e62; }
+
+/* 首頁主磁磚：徽章鎖圓形、標題不折行 */
+.lm-ic { flex-shrink: 0; }
+.lm-tile.primary .lm-name { white-space: nowrap; }
+.lm-tile.primary .lm-desc { flex: 1; min-width: 0; }
