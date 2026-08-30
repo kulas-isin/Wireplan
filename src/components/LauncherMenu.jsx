@@ -37,6 +37,7 @@ export default function LauncherMenu({ onGo }) {
         </select>
         <button className="ghost sm" title="新增專案" onClick={() => dispatch({ type: 'NEW_PROJECT' })}><Plus size={16} /></button>
       </div>
+      <div className="lm-greet">今天，把需求<em>優雅收攏</em></div>
       {needBackup && (
         <div className="lm-backup">
           <TriangleAlert size={15} />
@@ -47,7 +48,7 @@ export default function LauncherMenu({ onGo }) {
       <div className="lm-grid">
         {tiles.map((t) => (
           <button key={t.key} className={'lm-tile' + (t.primary ? ' primary' : '')} onClick={() => onGo(t.key)}>
-            <t.Icon size={t.primary ? 30 : 24} />
+            <span className="lm-ic"><t.Icon size={t.primary ? 24 : 19} /></span>
             <span className="lm-name">{t.name}</span>
             <span className="lm-desc">{t.desc}</span>
             <span className="lm-meta">
