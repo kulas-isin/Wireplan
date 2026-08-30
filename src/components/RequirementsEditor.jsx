@@ -238,6 +238,11 @@ export default function RequirementsEditor() {
         <div className="as-backdrop" onClick={() => setSheet(false)}>
           <div className="as-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="as-grab" />
+            <button className="as-row" disabled={missing.length === 0} style={missing.length === 0 ? { opacity: .55 } : undefined}
+              onClick={() => { if (!missing.length) return; setSheet(false); genMissing(); alert(`已依需求產生 ${missing.length} 頁，到「完整工作區 › Wireframe」查看`) }}>
+              <span className="as-ic"><LayoutTemplate size={18} /></span>
+              <span><b>產生缺頁畫面</b><small>{missing.length ? `${missing.length} 條需求還沒有頁面 → 一鍵產生` : '所有需求都已有對應頁面 ✓'}</small></span>
+            </button>
             <button className="as-row" onClick={() => { setSheet(false); setDoc(true) }}>
               <span className="as-ic"><FileSignature size={18} /></span>
               <span><b>需求確認書</b><small>給客戶回簽的正式文件（列印 / 存 PDF）</small></span>
