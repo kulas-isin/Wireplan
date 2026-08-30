@@ -10,7 +10,8 @@ import ConfirmDoc from './ConfirmDoc.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature } from 'lucide-react'
+import { applyRequirementPatches, parsePatches } from '../lib/reqPatches.js'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -117,7 +118,17 @@ export default function RequirementsEditor() {
   const [interview, setInterview] = useState(false)
   const [wheel, setWheel] = useState(false)
   const [doc, setDoc] = useState(false)
+  const [paste, setPaste] = useState(null) // null=關閉, ''=開啟輸入中, 其他=結果訊息
+  const [pasteText, setPasteText] = useState('')
   const isMobile = useIsMobile()
+
+  const applyPaste = () => {
+    const patches = parsePatches(pasteText)
+    if (!patches) { setPaste('看不懂這段內容 — 請貼 AI 回傳的 requirementPatches JSON'); return }
+    const r = applyRequirementPatches(reqs, patches, dispatch)
+    setPaste(`已套用 ${r.applied} 張${r.renamed ? `、改名 ${r.renamed} 張（原名記在備註）` : ''}${r.skippedLocked ? `、${r.skippedLocked} 張已蓋章略過改名` : ''}${r.notFound ? `、${r.notFound} 筆對不到卡` : ''}`)
+    setPasteText('')
+  }
 
   function addBlank() {
     dispatch({ type: 'ADD_REQUIREMENT', requirement: newRequirement({ name: '新功能', screen: '新功能' }) })
@@ -148,6 +159,18 @@ export default function RequirementsEditor() {
   return (
     <div>
       {doc && <ConfirmDoc onClose={() => setDoc(false)} />}
+      {paste !== null && (
+        <div className="cr-backdrop" onClick={() => setPaste(null)}>
+          <div className="cr-panel ip-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="cr-head"><strong>匯入 AI 展開結果</strong><button className="ghost sm" onClick={() => setPaste(null)}><X size={16} /></button></div>
+            <div className="cr-form">
+              <textarea rows={7} autoFocus value={pasteText} placeholder='貼上 AI 回傳的 JSON（{"requirementPatches":[…]}）' onChange={(e) => setPasteText(e.target.value)} />
+              {paste && <div className="ip-msg">{paste}</div>}
+              <button className="tg-big primary" disabled={!pasteText.trim()} onClick={applyPaste}><ClipboardPaste size={15} /> 套用</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="toolbar">
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
@@ -155,6 +178,7 @@ export default function RequirementsEditor() {
         <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button className={wheel ? 'active' : ''} onClick={() => setWheel((w) => !w)} title="轉盤模式：快速翻滾找卡">{wheel ? <List size={15} /> : <Orbit size={15} />} {wheel ? '清單' : '轉盤'}</button>
         <button onClick={() => setDoc(true)} title="產出給客戶回簽的需求確認書（列印/存 PDF）"><FileSignature size={15} /> 確認書</button>
+        <button onClick={() => { setPaste(''); setPasteText('') }} title="貼上 AI 展開結果（requirementPatches JSON）回填卡片"><ClipboardPaste size={15} /> 匯入</button>
         <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
         <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
       </div>
