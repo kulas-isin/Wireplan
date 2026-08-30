@@ -1480,3 +1480,11 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .tk-send-client { background: #fff; color: #3A5D25; box-shadow: inset 0 0 0 1.5px rgba(60,80,40,.18); }
 .tk-send-us { background: linear-gradient(135deg, #ECF5A6, #9CBD48); color: #22301F; }
 .tk-tpl { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; border: 1.5px dashed #B9D45B; background: transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: #3A5D25; cursor: pointer; }
+
+/* 驗收條件多行 + 對話收合 */
+.al-row textarea { flex: 1; min-width: 0; border: none; background: transparent; font-size: 14px; color: #22301F; font-family: inherit; line-height: 1.55; resize: none; overflow: hidden; padding: 0; }
+.al-row textarea:focus { outline: none; }
+.al-row textarea:disabled { color: #35493d; -webkit-text-fill-color: #35493d; opacity: 1; }
+.al-row { align-items: flex-start; }
+.al-row .al-dot { margin-top: 1px; }
+.tk-more { align-self: center; border: none; background: rgba(255,255,255,.8); border-radius: 999px; padding: 7px 16px; font-size: 12.5px; font-weight: 700; color: #3A5D25; cursor: pointer; box-shadow: 0 2px 8px rgba(60,80,40,.08); }
