@@ -28,6 +28,7 @@ let cmpClipboard = null
 import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
 import { normalizeField } from '../lib/fieldSpec.js'
+import { isLocked } from '../lib/change.js'
 
 // 頁名比對（去編號/括號/空白）
 const flowCore = (l) => String(l || '')
@@ -1112,6 +1113,11 @@ export default function WireframeBoard() {
         const patch = {}
         if (!r.description && p.description) patch.description = p.description
         if (!r.acceptance && p.acceptance) patch.acceptance = p.acceptance
+        // 名稱潤飾：僅未確認(未蓋章)的卡可改名，且原名記進備註可追溯
+        if (p.name && p.name !== r.name && !isLocked(r)) {
+          patch.name = p.name
+          patch.note = [r.note, `（原名：${r.name}）`].filter(Boolean).join('｜')
+        }
         if (Object.keys(patch).length) dispatch({ type: 'UPDATE_REQUIREMENT', id: r.id, patch })
       }
     }
