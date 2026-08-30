@@ -1407,3 +1407,30 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rq-foot button { color: #647459; }
 .st-green { background: #E4F3C5; color: #3E5C22; box-shadow: inset 0 0 0 1.5px #B9D45B; }
 .hs, .hs-small { border-color: #274D26; color: #274D26; }
+
+/* ── 工具列收斂 + 色彩統一（檸檬橄欖系，蓋掉殘留墨綠） ── */
+.rp-body .toolbar.rp-tools { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+.rp-body .toolbar.rp-tools button { flex-shrink: 0; }
+.rp-body .toolbar button.primary { background: linear-gradient(135deg, #ECF5A6 0%, #C6DC6A 52%, #9CBD48 100%); color: #22301F; }
+.rp-body .toolbar button.active { background: #3A5D25; color: #EDF7CF; }
+.rp-icbtn { width: 42px; height: 42px; padding: 0 !important; border-radius: 50% !important; display: inline-flex; align-items: center; justify-content: center; }
+/* 轉盤配色統一 */
+.rp-body .rw-search { border: none; background: rgba(255,255,255,.78); backdrop-filter: blur(8px); border-radius: 999px; box-shadow: 0 2px 10px rgba(60,80,40,.08); }
+.rp-body .rw-tab { border: none; background: rgba(255,255,255,.78); color: #56684C; box-shadow: 0 2px 8px rgba(60,80,40,.06); }
+.rp-body .rw-tab.on { background: #3A5D25; color: #EDF7CF; }
+.rp-body .rw-arrow { border: none; background: rgba(255,255,255,.85); color: #3A5D25; box-shadow: 0 3px 12px rgba(60,80,40,.12); }
+.rp-body .rw-card { border: none; border-radius: 22px; box-shadow: 0 14px 30px -18px rgba(60,80,40,.4); }
+.rp-body .swiper-slide-active .rw-card { box-shadow: 0 18px 40px -16px rgba(60,80,40,.45), 0 0 0 3px rgba(185,212,91,.5); }
+/* 分段器選中統一橄欖 */
+.rq-seg button.on { background: #3A5D25; }
+/* 底部抽屜選單（Nuviq 列表列） */
+.as-backdrop { position: fixed; inset: 0; z-index: 97; background: rgba(30,45,25,.35); display: flex; align-items: flex-end; justify-content: center; }
+.as-sheet { width: min(560px, 100%); background: rgba(252,254,246,.97); backdrop-filter: blur(12px); border-radius: 26px 26px 0 0; padding: 10px 16px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; box-shadow: 0 -10px 40px rgba(30,45,25,.2); animation: as-up .22s ease; }
+@keyframes as-up { from { transform: translateY(40px); opacity: 0; } }
+.as-grab { width: 40px; height: 4px; border-radius: 999px; background: #C9D6BC; margin: 4px auto 8px; }
+.as-row { display: flex; align-items: center; gap: 14px; border: none; background: rgba(255,255,255,.85); border-radius: 18px; padding: 14px 16px; cursor: pointer; text-align: left; box-shadow: 0 2px 8px rgba(60,80,40,.06); }
+.as-row:active { background: #EAF2D4; }
+.as-ic { width: 42px; height: 42px; border-radius: 50%; background: #EAF2D4; color: #3A5D25; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.as-row span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.as-row b { font-size: 15px; color: #22301F; }
+.as-row small { font-size: 12px; color: #7A8A70; }

@@ -11,7 +11,7 @@ import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { applyRequirementPatches, parsePatches } from '../lib/reqPatches.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -119,6 +119,7 @@ export default function RequirementsEditor() {
   const [wheel, setWheel] = useState(false)
   const [doc, setDoc] = useState(false)
   const [paste, setPaste] = useState(null) // null=關閉, ''=開啟輸入中, 其他=結果訊息
+  const [sheet, setSheet] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const isMobile = useIsMobile()
 
@@ -171,17 +172,34 @@ export default function RequirementsEditor() {
           </div>
         </div>
       )}
-      <div className="toolbar">
+      <div className="toolbar rp-tools">
         <strong>需求清單（{reqs.length} 項）</strong>
         <div className="spacer" />
-        <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談模式</button>
+        <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談</button>
         <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button className={wheel ? 'active' : ''} onClick={() => setWheel((w) => !w)} title="轉盤模式：快速翻滾找卡">{wheel ? <List size={15} /> : <Orbit size={15} />} {wheel ? '清單' : '轉盤'}</button>
-        <button onClick={() => setDoc(true)} title="產出給客戶回簽的需求確認書（列印/存 PDF）"><FileSignature size={15} /> 確認書</button>
-        <button onClick={() => { setPaste(''); setPasteText('') }} title="貼上 AI 展開結果（requirementPatches JSON）回填卡片"><ClipboardPaste size={15} /> 匯入</button>
-        <button onClick={addBlank}><Plus size={15} /> 新增需求</button>
-        <button onClick={() => dispatch({ type: 'REGENERATE_FLOW' })}><RotateCw size={14} /> 重新產生流程</button>
+        <button className="rp-icbtn" onClick={addBlank} title="新增需求"><Plus size={18} /></button>
+        <button className="rp-icbtn" onClick={() => setSheet(true)} title="更多功能"><MoreHorizontal size={18} /></button>
       </div>
+      {sheet && (
+        <div className="as-backdrop" onClick={() => setSheet(false)}>
+          <div className="as-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="as-grab" />
+            <button className="as-row" onClick={() => { setSheet(false); setDoc(true) }}>
+              <span className="as-ic"><FileSignature size={18} /></span>
+              <span><b>需求確認書</b><small>給客戶回簽的正式文件（列印 / 存 PDF）</small></span>
+            </button>
+            <button className="as-row" onClick={() => { setSheet(false); setPaste(''); setPasteText('') }}>
+              <span className="as-ic"><ClipboardPaste size={18} /></span>
+              <span><b>匯入 AI 展開結果</b><small>貼上 JSON，自動回填說明與驗收條件</small></span>
+            </button>
+            <button className="as-row" onClick={() => { setSheet(false); dispatch({ type: 'REGENERATE_FLOW' }) }}>
+              <span className="as-ic"><RotateCw size={18} /></span>
+              <span><b>重新產生流程</b><small>依目前需求清單重建業務流程圖</small></span>
+            </button>
+          </div>
+        </div>
+      )}
       {missing.length > 0 && (
         <div className="fs-alert" style={{ marginBottom: 10 }}>
           <span className="fs-alert-new"><TriangleAlert size={14} /> {missing.length} 條需求還沒有對應頁面：{missing.slice(0, 4).map((r) => r.name).join('、')}{missing.length > 4 ? '…' : ''}
