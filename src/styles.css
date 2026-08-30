@@ -1303,3 +1303,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .rw-arrow:active { transform: scale(.94); background: var(--primary-soft); }
 .rw-arrow:disabled { opacity: .3; cursor: not-allowed; }
 .rw-count { font-size: 13px; font-weight: 700; color: var(--muted); min-width: 56px; text-align: center; }
+
+/* 轉盤分類 tab */
+.rw-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px 2px 4px; -webkit-overflow-scrolling: touch; }
+.rw-tab { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--border); background: #fff; border-radius: 999px; padding: 8px 15px; font-size: 13px; font-weight: 700; color: #475467; cursor: pointer; white-space: nowrap; }
+.rw-tab i { width: 8px; height: 8px; border-radius: 50%; }
+.rw-tab.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.rw-tab.on i { background: #fff !important; }
