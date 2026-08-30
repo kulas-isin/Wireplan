@@ -21,7 +21,7 @@ function useIsMobile() {
   return m
 }
 
-// 手機專屬卡片：控件滿版好點、不橫向溢出；工時/報價收進「詳細」
+// 手機專屬卡片：名稱如標題、分類膠囊、優先分段器、操作 ghost 列 — 減框線噪音、層級分明
 function MobileReqCard({ req, index, total }) {
   const { dispatch } = useStore()
   const [open, setOpen] = useState(false)
@@ -31,26 +31,30 @@ function MobileReqCard({ req, index, total }) {
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
   return (
     <div className={'rq-card' + (locked ? ' rq-locked' : '')}>
-      <input className="rq-name" value={req.name} placeholder="功能名稱" disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
-      <select className="rq-cat" value={req.category} disabled={locked} title={lockTip} style={{ borderLeft: `4px solid ${cat.color}` }} onChange={(e) => patch({ category: e.target.value })}>
-        {CATEGORY_LIST.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-      </select>
-      <div className="rq-row">
-        <div className="fe-pills rq-pri">
-          {['高', '中', '低'].map((p) => (
-            <button key={p} className={'fe-pill' + (req.priority === p ? ' on' : '')} disabled={locked} title={lockTip} onClick={() => patch({ priority: p })}>{p}</button>
-          ))}
-        </div>
-        <div className="spacer" />
+      <div className="rq-top">
+        <input className="rq-name" value={req.name} placeholder="功能名稱" disabled={locked} title={lockTip} onChange={(e) => patch({ name: e.target.value })} />
         <ChangeControl req={req} />
       </div>
-      <div className="rq-row">
-        <button className="sm" onClick={() => setOpen((o) => !o)}>{open ? '收合' : '詳細'}</button>
-        <button className="sm" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 版面</button>
+      <div className="rq-mid">
+        <span className="rq-catwrap">
+          <i style={{ background: cat.color }} />
+          <select value={req.category} disabled={locked} title={lockTip} onChange={(e) => patch({ category: e.target.value })}>
+            {CATEGORY_LIST.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+        </span>
+        <span className="rq-seg" title={lockTip}>
+          {['高', '中', '低'].map((p) => (
+            <button key={p} className={req.priority === p ? 'on' : ''} disabled={locked} onClick={() => patch({ priority: p })}>{p}</button>
+          ))}
+        </span>
+      </div>
+      <div className="rq-foot">
+        <button onClick={() => setOpen((o) => !o)}>{open ? <ChevronUp size={15} /> : <ChevronDown size={15} />} 詳細</button>
+        <button onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={14} /> 版面</button>
         <div className="spacer" />
-        <button className="ghost sm" disabled={index === 0} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={15} /></button>
-        <button className="ghost sm" disabled={index === total - 1} onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={15} /></button>
-        <button className="sm danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={13} /></button>
+        <button disabled={index === 0} title="上移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: -1 })}><ChevronUp size={16} /></button>
+        <button disabled={index === total - 1} title="下移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={16} /></button>
+        <button className="danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={14} /></button>
       </div>
       {open && (
         <div className="rq-detail">
