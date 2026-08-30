@@ -4,22 +4,61 @@ import { newRequirement } from '../lib/requirementExtractor.js'
 import { detectCategory, categoryMeta } from '../lib/categories.js'
 import { Plus, Mic, Check, Trash2 } from 'lucide-react'
 
+// 高頻需求快捷鍵：客戶提到就點一下成卡
+const QUICK_REQS = ['會員系統', '登入 / 註冊', '後台管理', '推播通知', '報表統計', '金流付款', '搜尋功能', '上傳檔案', '權限角色', '多語系']
+
+const SR = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null
+
 // 訪談模式：客戶面前（手機）快速記需求卡 — 只抓不整理，回頭再補
 export default function InterviewMode({ onClose }) {
   const { current, dispatch } = useStore()
   const reqs = current.requirements || []
   const [txt, setTxt] = useState('')
   const [openId, setOpenId] = useState(null)
+  const [listening, setListening] = useState(false)
+  const [live, setLive] = useState('')
   const inputRef = useRef(null)
+  const recRef = useRef(null)
+  const heardRef = useRef('')
 
-  const add = () => {
-    const name = txt.trim()
-    if (!name) return
-    dispatch({ type: 'ADD_REQUIREMENT', requirement: newRequirement({ name, screen: name, category: detectCategory(name) }) })
-    setTxt('')
-    inputRef.current?.focus()
+  const addCard = (name) => {
+    const n = String(name || '').trim()
+    if (!n) return false
+    dispatch({ type: 'ADD_REQUIREMENT', requirement: newRequirement({ name: n, screen: n, category: detectCategory(n) }) })
+    return true
   }
+  const add = () => { if (addCard(txt)) { setTxt(''); inputRef.current?.focus() } }
   const patch = (id, p) => dispatch({ type: 'UPDATE_REQUIREMENT', id, patch: p })
+
+  // 按住說話：放開自動成卡（辨識錯了點卡片改就好）
+  const startRec = () => {
+    if (!SR || listening) return
+    try {
+      const rec = new SR()
+      rec.lang = 'zh-TW'
+      rec.continuous = true
+      rec.interimResults = true
+      heardRef.current = ''
+      rec.onresult = (e) => {
+        let all = ''
+        for (let i = 0; i < e.results.length; i++) all += e.results[i][0].transcript
+        heardRef.current = all
+        setLive(all)
+      }
+      rec.onend = () => {
+        setListening(false)
+        setLive('')
+        const heard = heardRef.current.trim()
+        if (heard.length >= 2) addCard(heard)
+        else if (heard) setTxt((t) => t + heard)
+      }
+      rec.onerror = () => { setListening(false); setLive('') }
+      recRef.current = rec
+      rec.start()
+      setListening(true)
+    } catch { setListening(false) }
+  }
+  const stopRec = () => { try { recRef.current?.stop() } catch { /* noop */ } }
 
   const cards = [...reqs].reverse() // 最新的在最上面
   return (
@@ -31,16 +70,32 @@ export default function InterviewMode({ onClose }) {
         <div className="spacer" />
         <button className="iv-done" onClick={onClose}><Check size={16} /> 完成</button>
       </div>
+      <div className="iv-chips">
+        {QUICK_REQS.map((q) => (
+          <button key={q} className="iv-chip" onClick={() => addCard(q)}>＋{q}</button>
+        ))}
+      </div>
+      {listening && <div className="iv-live">🎤 聆聽中… <span>{live || '請說話'}</span></div>}
       <div className="iv-input">
         <textarea ref={inputRef} autoFocus rows={2} value={txt}
           placeholder="客戶說了什麼？一句話記下來…（Enter 記一筆）"
           onChange={(e) => setTxt(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); add() } }} />
-        <button className="iv-add" onClick={add}><Plus size={20} /> 記一筆</button>
+        <div className="iv-btns">
+          {SR && (
+            <button className={'iv-voice' + (listening ? ' rec' : '')}
+              onPointerDown={(e) => { e.preventDefault(); startRec() }}
+              onPointerUp={stopRec} onPointerLeave={stopRec} onPointerCancel={stopRec}
+              onContextMenu={(e) => e.preventDefault()}>
+              <Mic size={20} /> {listening ? '放開成卡' : '按住說話'}
+            </button>
+          )}
+          <button className="iv-add" onClick={add}><Plus size={20} /> 記一筆</button>
+        </div>
       </div>
       <div className="iv-cards">
         {cards.length === 0 && (
-          <div className="iv-empty">還沒有卡片。聽到需求就記、不用整理 — 回頭再讓 AI 補分類 / 故事 / 頁面。</div>
+          <div className="iv-empty">還沒有卡片。聽到需求就記、不用整理 — 回頭再讓 AI 補分類 / 故事 / 頁面。{SR ? '也可以按住 🎤 說話，放開自動成卡。' : ''}</div>
         )}
         {cards.map((r) => (
           <div key={r.id} className={'iv-card' + (openId === r.id ? ' open' : '')}>

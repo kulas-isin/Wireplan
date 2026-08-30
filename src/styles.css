@@ -1070,3 +1070,14 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .sop-stat { font-size: 11px; color: var(--muted); }
 .sop-step.on .sop-stat { color: inherit; }
 .sop-warn { font-size: 11px; color: #b45309; background: #fff7ed; border-radius: 999px; padding: 1px 8px; font-weight: 600; }
+
+/* ── 訪談模式：語音 + 快捷 chips ── */
+.iv-chips { display: flex; gap: 6px; padding: 10px 16px 0; overflow-x: auto; background: var(--panel); -webkit-overflow-scrolling: touch; }
+.iv-chip { flex-shrink: 0; border: 1.5px dashed var(--border); background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 600; color: #475467; cursor: pointer; white-space: nowrap; }
+.iv-chip:active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-dark, #0b2c20); }
+.iv-live { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fef2f2; border-bottom: 1px solid #fecaca; font-size: 14px; font-weight: 700; color: #b91c1c; }
+.iv-live span { font-weight: 500; color: #7f1d1d; flex: 1; }
+.iv-btns { display: flex; flex-direction: column; gap: 6px; }
+.iv-voice { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 110px; padding: 12px 14px; background: #fff; border: 2px solid var(--primary); color: var(--primary-dark, #0b2c20); border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; }
+.iv-voice.rec { background: #dc2626; border-color: #dc2626; color: #fff; animation: iv-pulse 1.2s ease-in-out infinite; }
+@keyframes iv-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(220,38,38,.35); } 50% { box-shadow: 0 0 0 10px rgba(220,38,38,0); } }
