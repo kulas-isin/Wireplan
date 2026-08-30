@@ -1644,3 +1644,4 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   background: rgba(255, 255, 255, 0.85); color: #22301F; width: 100%; box-sizing: border-box;
 }
 .pm-add input:focus { outline: none; border-color: #9CBD48; box-shadow: 0 0 0 3px rgba(198, 220, 106, 0.35); }
+.al-text { flex: 1; min-width: 0; font-size: 13px; line-height: 1.55; color: #22301F; padding: 2px 0; overflow-wrap: anywhere; }
