@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { impactOf, changeMessage } from '../lib/change.js'
 import { Copy, X, ScissorsLineDashed, Link2 } from 'lucide-react'
@@ -57,7 +58,8 @@ function ChangeRipple({ req, onClose }) {
     setTimeout(onClose, 700)
   }
 
-  return (
+  // 磨砂卡片的 backdrop-filter 會讓 fixed 以卡片為基準 → portal 掛回 body 才會置中全螢幕
+  return createPortal(
     <div className="cr-backdrop" onClick={onClose}>
       <div className="cr-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cr-head">
@@ -105,7 +107,8 @@ function ChangeRipple({ req, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
