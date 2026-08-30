@@ -1,9 +1,9 @@
 name: Deploy to GitHub Pages
 
+# 只在 main 觸發：分支 push 跑了也無法部署 Pages，只會留下誤導的紅色 run
 on:
   push:
     branches:
-      - claude/quote-wireframe-generator-JncOH
       - main
   workflow_dispatch:
 
