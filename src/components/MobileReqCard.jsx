@@ -25,6 +25,24 @@ function GrowInput({ value, disabled, title, placeholder, onChange, multiline })
   )
 }
 
+// 單行語意、多行顯示的自動長高輸入（驗收條件整句可見）
+function GrowLine({ value, disabled, placeholder, onChange }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [value])
+  return (
+    <textarea ref={ref} rows={1} value={value} disabled={disabled} placeholder={placeholder}
+      onChange={onChange} onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }} />
+  )
+}
+
 // 驗收條件：逐條清單列（圓勾徽章 + 一行一條 + 新增/刪除），儲存為換行字串
 function AcceptList({ value, disabled, onChange }) {
   const lines = value ? value.split('\n') : []
@@ -35,7 +53,7 @@ function AcceptList({ value, disabled, onChange }) {
       {lines.map((l, i) => (
         <div key={i} className="al-row">
           <span className="al-dot"><Check size={12} /></span>
-          <input value={l} disabled={disabled} placeholder="輸入可驗收的條件…" onChange={(e) => set(lines.map((x, j) => (j === i ? e.target.value : x)))} />
+          <GrowLine value={l} disabled={disabled} placeholder="輸入可驗收的條件…" onChange={(e) => set(lines.map((x, j) => (j === i ? e.target.value : x)))} />
           {!disabled && <button className="al-x" onClick={() => set(lines.filter((_, j) => j !== i))}><X size={13} /></button>}
         </div>
       ))}
@@ -69,6 +87,7 @@ function TitleArea({ value, disabled, title, placeholder, onChange }) {
 // 對話串（user story 的 Conversation）：客戶氣泡靠左、我方靠右，一框兩鈕送出，自動帶日期
 function TalkThread({ talks = [], disabled, onChange }) {
   const [txt, setTxt] = useState('')
+  const [expand, setExpand] = useState(false)
   const add = (who) => {
     const t = txt.trim()
     if (!t) return
@@ -76,10 +95,19 @@ function TalkThread({ talks = [], disabled, onChange }) {
     setTxt('')
   }
   const del = (i) => onChange(talks.filter((_, j) => j !== i))
+  // 預設只顯示最近 2 則，避免對話一長卡片爆長
+  const indexed = talks.map((t, i) => ({ t, i }))
+  const shown = expand || talks.length <= 3 ? indexed : indexed.slice(-2)
   return (
     <div className="tk-wrap">
       {talks.length === 0 && <div className="al-empty">還沒有對話 — 客戶說了什麼、你確認了什麼，逐則記在這裡</div>}
-      {talks.map((t, i) => (
+      {talks.length > 3 && !expand && (
+        <button className="tk-more" onClick={() => setExpand(true)}>查看全部 {talks.length} 則對話</button>
+      )}
+      {talks.length > 3 && expand && (
+        <button className="tk-more" onClick={() => setExpand(false)}>收合，只看最近 2 則</button>
+      )}
+      {shown.map(({ t, i }) => (
         <div key={i} className={'tk-row ' + (t.who === 'client' ? 'tk-client' : 'tk-us')}>
           <div className="tk-bubble">
             <div className="tk-meta">{t.who === 'client' ? '客戶' : '我方'} · {new Date(t.at).toLocaleDateString('zh-TW')}</div>
