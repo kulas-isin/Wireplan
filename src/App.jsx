@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useStore } from './store/StoreContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import SopBar from './components/SopBar.jsx'
+import LauncherMenu from './components/LauncherMenu.jsx'
+import InterviewMode from './components/InterviewMode.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
 import SpecView from './components/SpecView.jsx'
@@ -11,7 +13,7 @@ const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
 const FlowCanvas = lazy(() => import('./components/FlowCanvas.jsx'))
 import FieldSpec from './components/FieldSpec.jsx'
 import { downloadText, readFileAsText } from './lib/download.js'
-import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2 } from 'lucide-react'
+import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid } from 'lucide-react'
 
 const TABS = [
   { key: 'import', label: '匯入', Icon: FileInput },
@@ -25,6 +27,8 @@ const TABS = [
 export default function App() {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
+  // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
+  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : 'menu'))
   const [focus, setFocus] = useState(false)
   const [toast, setToast] = useState('')
   const importRef = useRef(null)
@@ -33,6 +37,18 @@ export default function App() {
     setToast(msg)
     setTimeout(() => setToast(''), 2200)
   }
+
+  useEffect(() => {
+    const onHash = () => { if (window.location.hash === '#interview') setView('interview') }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  const go = (key) => {
+    if (key === 'interview') { window.location.hash = 'interview'; setView('interview') }
+    else { setTab(key); setView('workspace'); if (window.location.hash) history.replaceState(null, '', ' ') }
+  }
+  const backToMenu = () => { setView('menu'); if (window.location.hash) history.replaceState(null, '', ' ') }
 
   // 鍵盤快捷鍵：Ctrl/Cmd+Z 復原、Ctrl/Cmd+Shift+Z 或 Ctrl+Y 重做
   useEffect(() => {
@@ -69,6 +85,9 @@ export default function App() {
     flow: ((current.flow?.graph?.nodes || current.flow?.nodes || []).filter((n) => n.type === 'page' || n.type === 'screen' || n.type === 'decision')).length,
   }
 
+  if (view === 'menu') return <LauncherMenu onGo={go} />
+  if (view === 'interview') return <InterviewMode onClose={backToMenu} />
+
   return (
     <div className={'app' + (focus ? ' focus' : '')}>
       {!focus && <Sidebar />}
@@ -102,6 +121,7 @@ export default function App() {
             </div>
           ))}
           <div className="spacer" />
+          <button className="focus-btn" title="回目錄選單" onClick={backToMenu}><LayoutGrid size={14} /> 目錄</button>
           <button className="focus-btn" title="專注模式（隱藏上方列，畫面最大化）" onClick={() => setFocus(true)}><Maximize2 size={14} /> 專注</button>
         </div>}
 
