@@ -221,7 +221,7 @@ function ReqDetailSheet({ req, pages, locked, lockTip, patch, dispatch, onClose 
         <div className="rd-sec"><Check size={14} /> 驗收條件</div>
         <AcceptList value={req.acceptance} disabled={locked} onChange={(v) => patch({ acceptance: v })} />
 
-        <div className="rd-sec"><LayoutTemplate size={14} /> 畫面地圖（該有哪幾頁、每頁裝什麼）</div>
+        <div className="rd-sec rd-sec-blue"><LayoutTemplate size={14} /> 畫面地圖（該有哪幾頁、每頁裝什麼）</div>
         <PageMap req={req} pages={pages} patch={patch} />
 
         <button className="rd-more" onClick={() => setMore((m) => !m)}>

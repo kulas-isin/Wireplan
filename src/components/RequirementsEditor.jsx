@@ -280,7 +280,7 @@ export default function RequirementsEditor() {
         {[['all', `全部 ${stCounts.all}`], ['draft', `待確認 ${stCounts.draft}`], ['confirmed', `已確認 ${stCounts.confirmed}`], ['pending', `異動中 ${stCounts.pending}`]]
           .filter(([k]) => k === 'all' || stCounts[k] > 0)
           .map(([k, label]) => (
-            <button key={k} className={'rw-tab' + (status === k ? ' on' : '')} onClick={() => setStatus(status === k ? 'all' : k)}>{label}</button>
+            <button key={k} className={'rw-tab' + (status === k ? ' on' : '') + (k === 'draft' ? ' rw-blue' : '')} onClick={() => setStatus(status === k ? 'all' : k)}>{label}</button>
           ))}
         <span className="rw-div" />
         {cats.map(([key, n]) => {
