@@ -1696,3 +1696,7 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   box-shadow: 0 2px 8px rgba(60, 80, 40, 0.08);
 }
 .rd-nav button:disabled { opacity: 0.35; cursor: default; }
+
+/* iOS Safari 會把 button flex 內容置中(無視 justify-content)—— 文字區撐滿剩餘寬度強制貼左 */
+.as-row { justify-content: flex-start; }
+.as-row span:last-child { flex: 1; min-width: 0; text-align: left; }
