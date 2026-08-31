@@ -1700,3 +1700,20 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 /* iOS Safari 會把 button flex 內容置中(無視 justify-content)—— 文字區撐滿剩餘寬度強制貼左 */
 .as-row { justify-content: flex-start; }
 .as-row span:last-child { flex: 1; min-width: 0; text-align: left; }
+
+/* ===== 履歷時間線（蓋章/拆封依時間交錯） ===== */
+.ht-wrap {
+  display: flex; flex-direction: column; gap: 7px;
+  background: rgba(255, 255, 255, 0.65); border-radius: 14px; padding: 11px 13px;
+}
+.ht-title { font-size: 12px; font-weight: 700; color: #5A6B4E; margin-bottom: 2px; }
+.ht-row { display: flex; align-items: flex-start; gap: 9px; font-size: 12.5px; }
+.ht-dot {
+  width: 21px; height: 21px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.ht-seal .ht-dot { background: #E1F0D8; color: #3A5D25; }
+.ht-cut .ht-dot { background: #FBE9D6; color: #B0691F; }
+.ht-txt { flex: 1; min-width: 0; line-height: 1.5; color: #22301F; overflow-wrap: anywhere; padding-top: 2px; }
+.ht-cut .ht-txt { color: #8A5A1F; }
+.ht-date { flex-shrink: 0; font-size: 11px; color: #7A8A70; padding-top: 4px; }

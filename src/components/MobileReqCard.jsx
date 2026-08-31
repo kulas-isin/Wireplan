@@ -6,7 +6,7 @@ import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
 import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages, linkedPages } from '../lib/elements.js'
 import PageMap from './PageMap.jsx'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes, Scissors } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
@@ -206,6 +206,11 @@ function ReqDetailSheet({ startId, list, onClose }) {
   const lockTip = locked ? '已確認 — 要修改請先按 ✂ 拆封' : undefined
   const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
   const pages = linkedPages(req, current.wireframes || [])
+  // 履歷時間線：蓋章與拆封依時間交錯，讀得出「蓋了 → 為何拆 → 再蓋」的因果
+  const histEvents = [
+    ...(req.versions || []).map((v) => ({ kind: 'seal', v: v.v, at: v.at })),
+    ...(req.changeLog || []).map((c) => ({ kind: 'cut', at: c.at, note: c.note })),
+  ].sort((a, b) => (a.at || 0) - (b.at || 0))
   const go = (d) => { const n = idx + d; if (n < 0 || n >= list.length) return; setId(list[n].id); setMore(false) }
   const touch = useRef(null)
   const onTS = (e) => {
@@ -275,10 +280,16 @@ function ReqDetailSheet({ startId, list, onClose }) {
               <label><span>工時</span><GrowInput className="rd-input" value={req.estimate} disabled={locked} title={lockTip} onChange={(e) => patch({ estimate: e.target.value })} /></label>
               <label><span>報價</span><GrowInput className="rd-input" value={req.price} disabled={locked} title={lockTip} onChange={(e) => patch({ price: e.target.value })} /></label>
             </div>
-            {((req.versions || []).length > 0 || (req.changeLog || []).length > 0) && (
-              <div className="req-history">
-                {(req.versions || []).map((v) => <span key={'v' + v.v} className="st-badge st-green">v{v.v} ✓ {new Date(v.at).toLocaleDateString('zh-TW')}</span>)}
-                {(req.changeLog || []).map((c, i) => <span key={'c' + i} className="req-h-change">✂ {new Date(c.at).toLocaleDateString('zh-TW')}：{c.note}</span>)}
+            {histEvents.length > 0 && (
+              <div className="ht-wrap">
+                <span className="ht-title">履歷（蓋章與拆封的時間線）</span>
+                {histEvents.map((e, i) => (
+                  <div key={i} className={'ht-row ' + (e.kind === 'seal' ? 'ht-seal' : 'ht-cut')}>
+                    <span className="ht-dot">{e.kind === 'seal' ? <Check size={11} /> : <Scissors size={11} />}</span>
+                    <span className="ht-txt">{e.kind === 'seal' ? `蓋章確認 v${e.v}` : `拆封調整${e.note ? '：' + e.note : ''}`}</span>
+                    <span className="ht-date">{new Date(e.at).toLocaleDateString('zh-TW')}</span>
+                  </div>
+                ))}
               </div>
             )}
             <button className="tk-tpl" onClick={() => dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: req.id })}><RotateCw size={13} /> 依分類重新產生 wireframe</button>
