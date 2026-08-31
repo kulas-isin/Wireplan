@@ -280,7 +280,7 @@ export default function RequirementsEditor() {
         {[['all', `全部 ${stCounts.all}`], ['draft', `待確認 ${stCounts.draft}`], ['confirmed', `已確認 ${stCounts.confirmed}`], ['pending', `異動中 ${stCounts.pending}`]]
           .filter(([k]) => k === 'all' || stCounts[k] > 0)
           .map(([k, label]) => (
-            <button key={k} className={'rw-tab' + (status === k ? ' on' : '')} onClick={() => setStatus(status === k ? 'all' : k)}>{label}</button>
+            <button key={k} className={'rw-tab' + (status === k ? ' on' : '') + (k === 'draft' ? ' rw-blue' : '')} onClick={() => setStatus(status === k ? 'all' : k)}>{label}</button>
           ))}
         <span className="rw-div" />
         {cats.map(([key, n]) => {
@@ -296,7 +296,7 @@ export default function RequirementsEditor() {
         <ReqCarousel list={list} filterKey={filterKey} />
       ) : isMobile ? (
         <div className="rq-list">
-          {list.map((r) => <MobileReqCard key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} />)}
+          {list.map((r) => <MobileReqCard key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} list={list} />)}
         </div>
       ) : (
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>

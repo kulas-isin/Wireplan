@@ -44,6 +44,13 @@ export function findPageByName(name, wireframes = []) {
   return wireframes.find((w) => { const n = normPage(w.name); return n && (n.includes(k) || k.includes(n)) }) || null
 }
 
+// 需求對應的頁：requirementId 連結優先，名稱模糊比對補（去編號前綴/括號/「頁」尾綴）
+const coreName = (l) => normPage(String(l || '').replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, ''))
+export function linkedPages(req, wireframes = []) {
+  const k = coreName(req.screen || req.name)
+  return (wireframes || []).filter((w) => w.requirementId === req.id || (k && coreName(w.name) && (coreName(w.name).includes(k) || k.includes(coreName(w.name)))))
+}
+
 // —— 畫面地圖（頁卡+磚）——
 
 // req.pages 舊資料是字串陣列，新資料是 { name, bricks:[{type,label}] }；讀取端一律先正規化

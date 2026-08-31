@@ -23,10 +23,10 @@ export default function LauncherMenu({ onGo }) {
   const tiles = [
     { key: 'interview', name: '訪談記卡', desc: '客戶面前快速記需求（語音 / chips）', Icon: Mic, stat: `${s.reqs} 卡`, primary: true },
     { key: 'requirements', name: '需求整理', desc: '清單、分類、覆蓋檢查', Icon: ListChecks, stat: `${s.reqs} 項`, warn: s.missingPages ? `${s.missingPages} 需求無頁` : '' },
-    { key: 'wireframe', name: 'Wireframe', desc: '畫面設計與匯入', Icon: LayoutTemplate, stat: `${s.wfs} 頁` },
-    { key: 'fields', name: '欄位規格', desc: '欄位、規則、字典', Icon: Table2, stat: `${s.fields} 欄`, warn: (s.fieldWarns + s.unregistered) > 0 ? `${s.fieldWarns + s.unregistered} 待處理` : '' },
-    { key: 'flow', name: '流程設計', desc: '業務流程圖', Icon: Workflow, stat: `${s.flowNodes} 節點` },
-    { key: 'spec', name: '規格文件', desc: '交付給 RD 的文件', Icon: FileText, stat: '' },
+    { key: 'wireframe', name: 'Wireframe', desc: '畫面設計與匯入', Icon: LayoutTemplate, stat: `${s.wfs} 頁`, tone: 'blue' },
+    { key: 'fields', name: '欄位規格', desc: '欄位、規則、字典', Icon: Table2, stat: `${s.fields} 欄`, warn: (s.fieldWarns + s.unregistered) > 0 ? `${s.fieldWarns + s.unregistered} 待處理` : '', tone: 'blue' },
+    { key: 'flow', name: '流程設計', desc: '業務流程圖', Icon: Workflow, stat: `${s.flowNodes} 節點`, tone: 'blue' },
+    { key: 'spec', name: '規格文件', desc: '交付給 RD 的文件', Icon: FileText, stat: '', tone: 'blue' },
     { key: 'import', name: '匯入報價單', desc: '從報價單起一個專案', Icon: FileInput, stat: '' },
   ]
 
@@ -51,7 +51,7 @@ export default function LauncherMenu({ onGo }) {
       )}
       <div className="lm-grid">
         {tiles.map((t) => (
-          <button key={t.key} className={'lm-tile' + (t.primary ? ' primary' : '')} onClick={() => onGo(t.key)}>
+          <button key={t.key} className={'lm-tile' + (t.primary ? ' primary' : '') + (t.tone === 'blue' ? ' tone-blue' : '')} onClick={() => onGo(t.key)}>
             <span className="lm-ic"><t.Icon size={t.primary ? 24 : 19} /></span>
             <span className="lm-name">{t.name}</span>
             <span className="lm-desc">{t.desc}</span>
