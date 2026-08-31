@@ -109,10 +109,10 @@ function AcceptList({ value, disabled, onChange }) {
   )
 }
 
-// 對話串（LINE 式氣泡；預設只顯示最近 2 則）
+// 對話串（LINE 式氣泡；有內容時預設收合，展開才看全部與輸入框）
 function TalkThread({ talks = [], disabled, onChange }) {
   const [txt, setTxt] = useState('')
-  const [expand, setExpand] = useState(false)
+  const [open, setOpen] = useState(false)
   const add = (who) => {
     const t = txt.trim()
     if (!t) return
@@ -120,18 +120,20 @@ function TalkThread({ talks = [], disabled, onChange }) {
     setTxt('')
   }
   const del = (i) => onChange(talks.filter((_, j) => j !== i))
-  const indexed = talks.map((t, i) => ({ t, i }))
-  const shown = expand || talks.length <= 3 ? indexed : indexed.slice(-2)
+  if (talks.length > 0 && !open) {
+    return (
+      <div className="tk-wrap">
+        <button className="tk-more" onClick={() => setOpen(true)}>展開 {talks.length} 則對話</button>
+      </div>
+    )
+  }
   return (
     <div className="tk-wrap">
       {talks.length === 0 && <div className="al-empty">還沒有對話 — 客戶說了什麼、你確認了什麼，逐則記在這裡</div>}
-      {talks.length > 3 && !expand && (
-        <button className="tk-more" onClick={() => setExpand(true)}>查看全部 {talks.length} 則對話</button>
+      {talks.length > 0 && (
+        <button className="tk-more" onClick={() => setOpen(false)}>收合對話串</button>
       )}
-      {talks.length > 3 && expand && (
-        <button className="tk-more" onClick={() => setExpand(false)}>收合，只看最近 2 則</button>
-      )}
-      {shown.map(({ t, i }) => (
+      {talks.map((t, i) => (
         <div key={i} className={'tk-row ' + (t.who === 'client' ? 'tk-client' : 'tk-us')}>
           <div className="tk-bubble">
             <div className="tk-meta">{t.who === 'client' ? '客戶' : '我方'} · {new Date(t.at).toLocaleDateString('zh-TW')}</div>
