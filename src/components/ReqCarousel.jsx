@@ -67,7 +67,7 @@ export default function ReqCarousel({ list = [], filterKey = '' }) {
           </div>
           {active && (
             <div className="rw-dock">
-              <MobileReqCard key={active.id} req={active} index={reqs.findIndex((r) => r.id === active.id)} total={reqs.length} />
+              <MobileReqCard key={active.id} req={active} index={reqs.findIndex((r) => r.id === active.id)} total={reqs.length} list={list} />
             </div>
           )}
         </>

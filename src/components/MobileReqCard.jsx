@@ -4,9 +4,9 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
-import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages } from '../lib/elements.js'
+import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages, linkedPages } from '../lib/elements.js'
 import PageMap from './PageMap.jsx'
-import { ChevronUp, ChevronDown, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
@@ -192,18 +192,49 @@ function ElemList({ req, pages, onChange }) {
   )
 }
 
-// 全螢幕故事頁：核心三件（故事/對話/驗收）大空間，行政欄位收進「更多資訊」
-function ReqDetailSheet({ req, pages, locked, lockTip, patch, dispatch, onClose }) {
+// 全螢幕故事頁：核心三件（故事/對話/驗收）大空間，行政欄位收進「更多資訊」。
+// 帶入目前的過濾清單 — 左右滑動或頁頭箭頭直接換上一張/下一張卡，不用退回列表。
+function ReqDetailSheet({ startId, list, onClose }) {
+  const { current, dispatch } = useStore()
   const [more, setMore] = useState(false)
+  const [id, setId] = useState(startId)
+  const idx = Math.max(0, list.findIndex((r) => r.id === id))
+  const req = list[idx] || list[0]
+  const locked = isLocked(req)
+  const lockTip = locked ? '已確認 — 要修改請先按 ✂ 拆封' : undefined
+  const patch = (p) => dispatch({ type: 'UPDATE_REQUIREMENT', id: req.id, patch: p })
+  const pages = linkedPages(req, current.wireframes || [])
+  const go = (d) => { const n = idx + d; if (n < 0 || n >= list.length) return; setId(list[n].id); setMore(false) }
+  const touch = useRef(null)
+  const onTS = (e) => {
+    // 畫面地圖本身橫向捲動，滑它不換卡
+    if (e.target.closest && e.target.closest('.pm-strip, .rw-tabs')) { touch.current = null; return }
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  const onTE = (e) => {
+    const t = touch.current
+    touch.current = null
+    if (!t) return
+    const dx = e.changedTouches[0].clientX - t.x
+    const dy = e.changedTouches[0].clientY - t.y
+    if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 2) go(dx < 0 ? 1 : -1)
+  }
   return createPortal(
-    <div className="rd-wrap">
+    <div className="rd-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
       <div className="rd-head">
         <button className="rd-back" onClick={onClose}><ArrowLeft size={18} /></button>
         <strong className="rd-title">{req.name || '需求詳情'}</strong>
         <div className="spacer" />
         <ChangeControl req={req} />
       </div>
-      <div className="rd-body">
+      {list.length > 1 && (
+        <div className="rd-nav">
+          <button disabled={idx === 0} onClick={() => go(-1)}><ChevronLeft size={16} /></button>
+          <span>{idx + 1} / {list.length}</span>
+          <button disabled={idx === list.length - 1} onClick={() => go(1)}><ChevronRight size={16} /></button>
+        </div>
+      )}
+      <div className="rd-body" key={req.id}>
         <div className="rd-sec"><BookOpen size={14} /> 故事句（一句話說清楚）</div>
         <GrowInput multiline className="rd-input" value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿"
           disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
@@ -258,7 +289,7 @@ function ReqDetailSheet({ req, pages, locked, lockTip, patch, dispatch, onClose 
 }
 
 // 手機專屬卡片：精簡清單卡 + 摘要 chips；詳細 → 全螢幕故事頁
-export default function MobileReqCard({ req, index, total }) {
+export default function MobileReqCard({ req, index, total, list }) {
   const { current, dispatch } = useStore()
   const [open, setOpen] = useState(false)
   const cat = categoryMeta(req.category)
@@ -268,9 +299,7 @@ export default function MobileReqCard({ req, index, total }) {
   const talksN = (req.talks || []).length
   const accN = req.acceptance ? req.acceptance.split('\n').filter((s) => s.trim()).length : 0
   // 對應畫面：requirementId 連結優先，名稱模糊比對補
-  const coreN = (l) => String(l || '').replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').replace(/\s+/g, '').trim()
-  const k = coreN(req.screen || req.name)
-  const pages = (current.wireframes || []).filter((w) => w.requirementId === req.id || (k && coreN(w.name) && (coreN(w.name).includes(k) || k.includes(coreN(w.name)))))
+  const pages = linkedPages(req, current.wireframes || [])
   const openWf = (e) => {
     e.stopPropagation()
     if (!pages.length) return
@@ -319,7 +348,7 @@ export default function MobileReqCard({ req, index, total }) {
         <button disabled={index === total - 1} title="下移" onClick={() => dispatch({ type: 'MOVE_REQUIREMENT', id: req.id, dir: 1 })}><ChevronDown size={16} /></button>
         <button className="danger" onClick={() => { if (locked) { alert('這條需求已確認（蓋章）。要刪除請先按 ✂ 拆封。'); return } if (confirm('刪除此需求？')) dispatch({ type: 'DELETE_REQUIREMENT', id: req.id }) }}><Trash2 size={14} /></button>
       </div>
-      {open && <ReqDetailSheet req={req} pages={pages} locked={locked} lockTip={lockTip} patch={patch} dispatch={dispatch} onClose={() => setOpen(false)} />}
+      {open && <ReqDetailSheet startId={req.id} list={list && list.length ? list : [req]} onClose={() => setOpen(false)} />}
     </div>
   )
 }

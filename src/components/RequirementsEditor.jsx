@@ -296,7 +296,7 @@ export default function RequirementsEditor() {
         <ReqCarousel list={list} filterKey={filterKey} />
       ) : isMobile ? (
         <div className="rq-list">
-          {list.map((r) => <MobileReqCard key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} />)}
+          {list.map((r) => <MobileReqCard key={r.id} req={r} index={reqs.findIndex((x) => x.id === r.id)} total={reqs.length} list={list} />)}
         </div>
       ) : (
       <div className="panel" style={{ padding: 0, overflow: 'hidden' }}>
