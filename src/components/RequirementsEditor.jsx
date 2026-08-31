@@ -7,11 +7,12 @@ import ChangeControl from './ChangeControl.jsx'
 import MobileReqCard from './MobileReqCard.jsx'
 import ReqCarousel from './ReqCarousel.jsx'
 import ConfirmDoc from './ConfirmDoc.jsx'
+import AssessDoc from './AssessDoc.jsx'
 import { requirementCoverage } from '../lib/sop.js'
 import { isLocked } from '../lib/change.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
 import { applyRequirementPatches, parsePatches } from '../lib/reqPatches.js'
-import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal, MessageSquareText, Search } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCw, Trash2, Wand2, Plus, ClipboardList, Mic, TriangleAlert, LayoutTemplate, Layers, Orbit, List, FileSignature, ClipboardPaste, X, MoreHorizontal, MessageSquareText, Search, Scale } from 'lucide-react'
 
 
 function useIsMobile() {
@@ -118,6 +119,7 @@ export default function RequirementsEditor() {
   const [interview, setInterview] = useState(false)
   const [wheel, setWheel] = useState(false)
   const [doc, setDoc] = useState(false)
+  const [assess, setAssess] = useState(false)
   const [paste, setPaste] = useState(null) // null=關閉, ''=開啟輸入中, 其他=結果訊息
   const [sheet, setSheet] = useState(false)
   const [pasteText, setPasteText] = useState('')
@@ -212,6 +214,7 @@ export default function RequirementsEditor() {
   return (
     <div>
       {doc && <ConfirmDoc onClose={() => setDoc(false)} />}
+      {assess && <AssessDoc onClose={() => setAssess(false)} />}
       {paste !== null && (
         <div className="cr-backdrop" onClick={() => setPaste(null)}>
           <div className="cr-panel ip-panel" onClick={(e) => e.stopPropagation()}>
@@ -246,6 +249,10 @@ export default function RequirementsEditor() {
             <button className="as-row" onClick={() => { setSheet(false); setDoc(true) }}>
               <span className="as-ic"><FileSignature size={18} /></span>
               <span><b>需求確認書</b><small>給客戶回簽的正式文件（列印 / 存 PDF）</small></span>
+            </button>
+            <button className="as-row" onClick={() => { setSheet(false); setAssess(true) }}>
+              <span className="as-ic"><Scale size={18} /></span>
+              <span><b>需求評估單</b><small>新需求／異動評估：可吸收或需報價，給客戶勾選確認</small></span>
             </button>
             <button className="as-row" onClick={copyLinePrompt}>
               <span className="as-ic"><MessageSquareText size={18} /></span>
