@@ -242,12 +242,22 @@ export function GalaxyView() {
           const sway = Math.sin(t * bellSpeed + d.ph * 1.4) * 0.025 * vit * (depth >= 3 ? 1 : 0.4)
           return R[depth] * (1 + bell * 0.03 * vit * depth + sway)
         })
-        for (const n of nodes) {
-          n.vx += Math.cos(t * n.sp + n.ph) * n.amp * vit
-          n.vy += Math.sin(t * n.sp * 0.83 + n.ph * 1.7) * n.amp * vit
+        if (!pausedRef.current) {
+          for (const n of nodes) {
+            n.vx += Math.cos(t * n.sp + n.ph) * n.amp * vit
+            n.vy += Math.sin(t * n.sp * 0.83 + n.ph * 1.7) * n.amp * vit
+          }
         }
       })
       .on('tick', () => {
+        // 泳池邊界：游到框邊就柔性折返，永遠留在可閱覽範圍內
+        const bx = W / 2 - 14, by = H / 2 - 14
+        for (const n of nodes) {
+          if (n.x < -bx) { n.x = -bx; n.vx = Math.abs(n.vx) * 0.5 }
+          else if (n.x > bx) { n.x = bx; n.vx = -Math.abs(n.vx) * 0.5 }
+          if (n.y < -by) { n.y = -by; n.vy = Math.abs(n.vy) * 0.5 }
+          else if (n.y > by) { n.y = by; n.vy = -Math.abs(n.vy) * 0.5 }
+        }
         links.forEach((l, i) => {
           const e = lineEls[i]; if (!e) return
           e.setAttribute('x1', l.source.x); e.setAttribute('y1', l.source.y)
@@ -299,6 +309,16 @@ export function GalaxyView() {
     const iv = setInterval(pulse, Math.round(7000 - vitality * 2600))
     return () => { sim.stop(); simRef.current = null; clearTimeout(first); clearInterval(iv) }
   }, [world])
+  // 查看即暫停：打開需求卡或聚焦星座時，星系緩緩停下讓你細看；放開（點空白）恢復流動
+  const pausedRef = useRef(false)
+  useEffect(() => {
+    const s = simRef.current
+    const paused = !!(card || focusUnit)
+    pausedRef.current = paused
+    if (!s) return
+    if (paused) s.alphaTarget(0)
+    else if (s.__warm) s.alphaTarget(s.__warm).restart()
+  }, [card, focusUnit])
   // 拖曳：把手＝星球本身；只有星球鎖手勢
   const dragRef = useRef(null)
   const toSvg = (e) => {
@@ -357,7 +377,7 @@ export function GalaxyView() {
                 const d = dragRef.current
                 dragRef.current = null
                 n.fx = null; n.fy = null
-                simRef.current?.alphaTarget(simRef.current.__warm ?? 0.03)
+                simRef.current?.alphaTarget(pausedRef.current ? 0 : (simRef.current.__warm ?? 0.03))
                 if (d && !d.moved) {
                   e.stopPropagation()
                   if (n.req) {
@@ -370,7 +390,7 @@ export function GalaxyView() {
                   } else setFocusUnit(null)
                 }
               }}
-              onPointerCancel={() => { dragRef.current = null; n.fx = null; n.fy = null; simRef.current?.alphaTarget(simRef.current.__warm ?? 0.03) }} />
+              onPointerCancel={() => { dragRef.current = null; n.fx = null; n.fy = null; simRef.current?.alphaTarget(pausedRef.current ? 0 : (simRef.current.__warm ?? 0.03)) }} />
           ))}
         </g>
         <g style={{ pointerEvents: 'none' }}>
