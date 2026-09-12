@@ -211,8 +211,8 @@ export function GalaxyView() {
     const svg = svgRef.current
     if (!svg) return
     const { nodes, links, R, vitality } = world
-    const vit = 0.35 + vitality * 0.95 // 活力係數：全未定案≈慵懶 0.35，全蓋章≈1.3 生龍活虎
-    const warm = 0.02 + vitality * 0.03
+    const vit = 0.35 + vitality * 2.8 // 活力係數：全未定案≈慵懶 0.35，全蓋章≈3.15 三倍速游動
+    const warm = 0.02 + vitality * 0.08
     const lineEls = [...svg.querySelectorAll('[data-link]')]
     const nodeEls = [...svg.querySelectorAll('[data-node]')]
     const haloEls = [...svg.querySelectorAll('[data-halo]')]
@@ -221,7 +221,7 @@ export function GalaxyView() {
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     nodes.forEach((n) => {
       n.ph = Math.random() * Math.PI * 2
-      n.sp = 0.00025 + Math.random() * 0.0004
+      n.sp = (0.00025 + Math.random() * 0.0004) * (1 + vitality * 2)
       n.amp = n.depth === 0 ? 0 : n.req ? 0.022 : 0.013
     })
     // 水母鐘形搏動：整個軌道半徑隨呼吸收縮-舒張，外環起伏比內環大
@@ -235,7 +235,7 @@ export function GalaxyView() {
       .force('wander', reduced ? null : () => {
         const t = performance.now()
         // 鐘形呼吸：慢週期整體收放（外圈幅度大），傘緣再帶相位差的蕩漾；幅度與節奏隨活力縮放
-        const bellSpeed = 0.0006 + vitality * 0.0005
+        const bellSpeed = 0.0006 + vitality * 0.0016
         const bell = Math.sin(t * bellSpeed)
         radial.radius((d) => {
           const depth = Math.min(d.depth, 4)
