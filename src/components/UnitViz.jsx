@@ -347,7 +347,9 @@ export function GalaxyView() {
   const inSub = (d) => !focusUnit || d.depth === 0 || (d.rootUnit && d.rootUnit.name === focusUnit)
   return (
     <div ref={wrapRef} className="uv-wrap">
-      <svg ref={svgRef} viewBox={[-W / 2, -H / 2, W, H].join(' ')} style={{ width: '100%', display: 'block' }}
+      <svg ref={svgRef} viewBox={[-W / 2, -H / 2, W, H].join(' ')}
+        style={{ width: '100%', display: 'block', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
+        onContextMenu={(e) => e.preventDefault()}
         onClick={() => { setFocusUnit(null); setCard(null) }}>
         <defs>
           <radialGradient id="gvCore"><stop offset="0%" stopColor="#5C8A38" /><stop offset="65%" stopColor="#3A5D25" /><stop offset="100%" stopColor="#2A4519" /></radialGradient>
@@ -381,11 +383,12 @@ export function GalaxyView() {
               onPointerDown={(e) => {
                 e.stopPropagation()
                 e.currentTarget.setPointerCapture(e.pointerId)
-                dragRef.current = { n, moved: false }
+                dragRef.current = { n, moved: false, sx: e.clientX, sy: e.clientY }
               }}
               onPointerMove={(e) => {
                 const d = dragRef.current
                 if (!d || d.n !== n) return
+                if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) return // iOS 輕點會回報微小位移
                 d.moved = true
                 const p = toSvg(e)
                 n.fx = p.x; n.fy = p.y
