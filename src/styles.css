@@ -1920,3 +1920,41 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   background: linear-gradient(135deg, #ECF5A6, #C6DC6A 55%, #9CBD48); color: #22301F; padding: 0 14px;
 }
 .uw-tree.editing .uw-reqs { display: none; }
+
+/* 單元進階檢視（圓圈嵌套/星系）共用 */
+.uw-modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.uw-modes button {
+  border: none; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  background: rgba(255,255,255,0.6); color: #56684C; border-radius: 999px; padding: 7px 14px;
+  box-shadow: 0 2px 8px rgba(60,80,40,0.07);
+}
+.uw-modes button.on { background: #3A5D25; color: #EDF7CF; }
+.uv-wrap { display: flex; flex-direction: column; gap: 10px; }
+.uv-crumb {
+  display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap;
+  width: fit-content; max-width: 100%; margin: 0 auto;
+  background: rgba(255,255,255,0.7); border-radius: 999px; padding: 6px 12px;
+  box-shadow: 0 2px 8px rgba(60,80,40,0.08);
+}
+.uv-seg {
+  border: none; background: none; cursor: pointer; font: inherit;
+  font-size: 12.5px; font-weight: 700; color: #3A5D25; padding: 2px 4px; border-radius: 8px;
+  text-decoration: underline dotted rgba(58,93,37,0.4); text-underline-offset: 3px;
+}
+.uv-seg.now { color: #22301F; cursor: default; text-decoration: none; }
+.uv-sep { font-size: 11px; color: #56684C; }
+.uv-card {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  margin: 0 auto; width: fit-content; max-width: 100%;
+  background: rgba(255,255,255,0.92); border-radius: 14px; padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(60,80,40,0.18);
+  transform-origin: top center; animation: uvCardIn .42s cubic-bezier(.34,1.45,.5,1);
+}
+@keyframes uvCardIn { from { opacity: 0; transform: translateY(-8px) scaleY(0.4) scaleX(0.85); } to { opacity: 1; transform: none; } }
+.uv-card b { font-size: 13.5px; color: #22301F; }
+.uv-card small { width: 100%; font-size: 11px; color: #56684C; }
+.uv-focring { animation: uvSpin 16s linear infinite; transform-origin: 0 0; }
+@keyframes uvSpin { to { rotate: 360deg; } }
+.uv-halopulse { animation: uvHalo 2.6s ease-in-out infinite; }
+@keyframes uvHalo { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .uv-focring, .uv-halopulse { animation: none; } }
