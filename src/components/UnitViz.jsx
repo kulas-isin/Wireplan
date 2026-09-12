@@ -92,27 +92,6 @@ export function PackView() {
     }
     animRef.current = requestAnimationFrame(tick)
   }
-  // 生物感：每顆泡泡緩慢漂浮＋微呼吸；點開需求卡靜止約 10 秒後恢復
-  const leaves = root.leaves().filter((d) => d.data.req)
-  const vitality = leaves.length ? leaves.filter((d) => d.data.st === 1).length / leaves.length : 0.5
-  const [stillness, setStillness] = useState(false)
-  useEffect(() => {
-    if (!card) { setStillness(false); return }
-    setStillness(true)
-    const t = setTimeout(() => setStillness(false), 10000)
-    return () => clearTimeout(t)
-  }, [card])
-  const hash = (str) => { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h }
-  const floatStyle = (d) => {
-    const h = hash(d.data.name + d.depth)
-    const amp = (1.5 + 4.5 * vitality) * (d.data.req ? 1.5 : 1)
-    return {
-      '--fx': ((h % 100) / 100 - 0.5) * 2 * amp + 'px',
-      '--fy': (((h >> 3) % 100) / 100 - 0.5) * 2 * amp + 'px',
-      '--dur': (3.2 + ((h >> 6) % 100) / 100 * 3.5) / (0.6 + vitality) + 's',
-      '--del': -(((h >> 9) % 100) / 100 * 6) + 's',
-    }
-  }
   const k = size / view[2]
   const pos = (d) => `translate(${(d.x - view[0]) * k},${(d.y - view[1]) * k})`
   const nodes = root.descendants().slice(1)
@@ -128,7 +107,6 @@ export function PackView() {
         ))}
       </div>
       <svg viewBox={[-size / 2, -size / 2, size, size].join(' ')} style={{ width: '100%', display: 'block', cursor: 'pointer' }}
-        className={stillness ? 'uv-still' : ''}
         onClick={() => { setCard(null); if (focus.parent) zoomTo(focus.parent) }}>
         <defs>
           <radialGradient id="uvUnit" cx="35%" cy="30%"><stop offset="0%" stopColor="#FFFFFF" /><stop offset="100%" stopColor="#EDF4DC" /></radialGradient>
@@ -137,22 +115,20 @@ export function PackView() {
         {nodes.map((d, i) => {
           const vis = d.parent === focus ? 1 : (d.parent && d.parent.parent === focus) ? 0.2 : 0
           return (
-            <g key={i} transform={pos(d)}>
-              <circle r={d.r * k} className="uv-float"
-                fill={d.data.req ? REQC[d.data.st] : d.depth === 1 ? (d.data.hot ? 'url(#uvHot)' : 'url(#uvUnit)') : 'rgba(255,255,255,0.5)'}
-                fillOpacity={d.data.req ? 0.92 : 1}
-                stroke={d.data.req ? '#fff' : d.depth === 1 ? (d.data.hot ? 'rgba(224,134,60,0.6)' : 'rgba(58,93,37,0.32)') : 'rgba(58,93,37,0.2)'}
-                strokeWidth={d.data.req ? 1.4 : 1.2}
-                style={{ ...floatStyle(d), opacity: vis, transition: 'opacity .4s', pointerEvents: d.parent === focus ? 'auto' : 'none' }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (d.data.req) {
-                    setCard({ key: Math.random(), name: d.data.name, st: d.data.st, path: d.ancestors().reverse().slice(1, -1).map((a) => a.data.name).join(' › ') })
-                    return
-                  }
-                  if (d.children) zoomTo(d)
-                }} />
-            </g>
+            <circle key={i} transform={pos(d)} r={d.r * k}
+              fill={d.data.req ? REQC[d.data.st] : d.depth === 1 ? (d.data.hot ? 'url(#uvHot)' : 'url(#uvUnit)') : 'rgba(255,255,255,0.5)'}
+              fillOpacity={d.data.req ? 0.92 : 1}
+              stroke={d.data.req ? '#fff' : d.depth === 1 ? (d.data.hot ? 'rgba(224,134,60,0.6)' : 'rgba(58,93,37,0.32)') : 'rgba(58,93,37,0.2)'}
+              strokeWidth={d.data.req ? 1.4 : 1.2}
+              style={{ opacity: vis, transition: 'opacity .4s', pointerEvents: d.parent === focus ? 'auto' : 'none' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (d.data.req) {
+                  setCard({ key: Math.random(), name: d.data.name, st: d.data.st, path: d.ancestors().reverse().slice(1, -1).map((a) => a.data.name).join(' › ') })
+                  return
+                }
+                if (d.children) zoomTo(d)
+              }} />
           )
         })}
         {focus.parent && <circle className="uv-focring" r={size / 2.15 + 9} fill="none" stroke="rgba(156,189,72,0.75)" strokeWidth="1.6" strokeDasharray="2 9" strokeLinecap="round" />}
@@ -162,24 +138,24 @@ export function PackView() {
           if (d.data.unit) {
             const small = rk < 34
             return (
-              <g key={'t' + i} transform={pos(d)}><text className="uv-float" textAnchor="middle" fill="#22301F" style={{ ...floatStyle(d), fontWeight: 900, pointerEvents: 'none' }}>
+              <text key={'t' + i} transform={pos(d)} textAnchor="middle" fill="#22301F" style={{ fontWeight: 900, pointerEvents: 'none' }}>
                 <tspan x="0" dy={small ? 3 : -2} style={{ fontSize: small ? 9.5 : 12.5 }}>{small && nm.length > 5 ? nm.slice(0, 4) + '…' : nm.slice(0, 6)}</tspan>
                 {!small && <tspan x="0" dy="13" style={{ fontSize: 9.5, fontWeight: 600 }} fill="#56684C">{d.value} 需求</tspan>}
-              </text></g>
+              </text>
             )
           }
           const per = rk < 42 ? 5 : 7
           const lines = (nm.match(new RegExp(`.{1,${per}}`, 'g')) || ['']).slice(0, 2)
           const fs = d.data.req ? Math.max(8.5, Math.min(10.5, rk * 0.24)) : Math.max(9, Math.min(11.5, rk * 0.2))
           return (
-            <g key={'t' + i} transform={pos(d)}><text className="uv-float" textAnchor="middle" fill="#22301F"
-              style={{ ...floatStyle(d), fontSize: fs, fontWeight: d.data.req ? 600 : 700, pointerEvents: 'none' }}>
+            <text key={'t' + i} transform={pos(d)} textAnchor="middle" fill="#22301F"
+              style={{ fontSize: fs, fontWeight: d.data.req ? 600 : 700, pointerEvents: 'none' }}>
               {lines.map((ln, j) => (
                 <tspan key={j} x="0" dy={j === 0 ? (lines.length > 1 ? -2.5 : 3.5) : 11}>
                   {j === 1 && nm.length > per * 2 ? ln.slice(0, per - 1) + '…' : ln}
                 </tspan>
               ))}
-            </text></g>
+            </text>
           )
         })}
       </svg>

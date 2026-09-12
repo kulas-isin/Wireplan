@@ -1958,12 +1958,3 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uv-halopulse { animation: uvHalo 2.6s ease-in-out infinite; }
 @keyframes uvHalo { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .uv-focring, .uv-halopulse { animation: none; } }
-
-/* 圓圈嵌套生物感：泡泡緩慢漂浮＋微呼吸（點開需求卡整片靜止） */
-.uv-float { animation: uvDrift var(--dur, 5s) ease-in-out var(--del, 0s) infinite alternate; }
-@keyframes uvDrift {
-  from { transform: translate(calc(var(--fx, 3px) * -1), calc(var(--fy, 3px) * -1)) scale(1); }
-  to { transform: translate(var(--fx, 3px), var(--fy, 3px)) scale(1.018); }
-}
-.uv-still .uv-float { animation-play-state: paused; }
-@media (prefers-reduced-motion: reduce) { .uv-float { animation: none; } }
