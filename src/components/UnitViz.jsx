@@ -280,7 +280,7 @@ export function GalaxyView() {
         })
         textEls.forEach((e) => {
           const n = nodes[+e.dataset.label]
-          e.setAttribute('x', n.x); e.setAttribute('y', n.y - n.r - 5)
+          e.setAttribute('x', n.x); e.setAttribute('y', n.y - n.r - (n.req ? 3 : 5))
         })
       })
     // 能量脈波：核心漣漪外擴，星體與連線依距離微微亮起
@@ -290,6 +290,7 @@ export function GalaxyView() {
       requestAnimationFrame(step)
     }, delay)
     const pulse = () => {
+      if (pausedRef.current) return
       const maxR = Math.hypot(W, H) / 2
       const dur = 1500, speed = maxR / dur
       const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
@@ -328,7 +329,10 @@ export function GalaxyView() {
     clearTimeout(pauseTimerRef.current)
     if (card || focusUnit) {
       pausedRef.current = true
-      s?.alphaTarget(0)
+      if (s) {
+        s.nodes().forEach((n) => { n.vx = 0; n.vy = 0 }) // 清動量 — 立刻靜止，不再滑行
+        s.stop()
+      }
       pauseTimerRef.current = setTimeout(resume, 10000) // 靜止約 10 秒後自動繼續游
     } else resume()
     return () => clearTimeout(pauseTimerRef.current)
@@ -408,14 +412,14 @@ export function GalaxyView() {
           ))}
         </g>
         <g style={{ pointerEvents: 'none' }}>
-          {world.nodes.map((n, i) => (n.depth >= 1 && n.depth <= 2 && !n.req) && (
-            <text key={i} data-label={i} textAnchor="middle" fill="#22301F"
+          {world.nodes.map((n, i) => (n.depth >= 1) && (
+            <text key={i} data-label={i} textAnchor="middle" fill={n.req ? '#3E4A38' : '#22301F'}
               style={{
-                fontSize: n.depth === 1 ? 11 : 9.5,
-                fontWeight: n.depth === 1 ? 900 : 700,
+                fontSize: n.req ? 8.5 : n.depth === 1 ? 11 : 9.5,
+                fontWeight: n.req ? 600 : n.depth === 1 ? 900 : 700,
                 opacity: n.depth === 1 ? (inSub(n) ? 1 : 0.15) : (focusUnit && n.rootUnit && n.rootUnit.name === focusUnit ? 1 : 0),
                 transition: 'opacity .25s',
-              }}>{n.name}</text>
+              }}>{n.req && n.name.length > 8 ? n.name.slice(0, 7) + '…' : n.name}</text>
           ))}
         </g>
       </svg>
