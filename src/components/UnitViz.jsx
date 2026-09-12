@@ -176,6 +176,8 @@ export function GalaxyView() {
   const svgRef = useRef(null)
   const [card, setCard] = useState(null)
   const [focusUnit, setFocusUnit] = useState(null)
+  const [inspect, setInspect] = useState(false) // 檢視模式：手動凍結全部動畫，直到再按一次
+  const inspectRef = useRef(false)
   const world = useMemo(() => {
     const nodes = [], links = []
     let nid = 0
@@ -327,16 +329,18 @@ export function GalaxyView() {
       if (simRef.current?.__warm) simRef.current.alphaTarget(simRef.current.__warm).restart()
     }
     clearTimeout(pauseTimerRef.current)
-    if (card || focusUnit) {
+    inspectRef.current = inspect
+    if (inspect || card || focusUnit) {
       pausedRef.current = true
       if (s) {
         s.nodes().forEach((n) => { n.vx = 0; n.vy = 0 }) // 清動量 — 立刻靜止，不再滑行
         s.stop()
       }
-      pauseTimerRef.current = setTimeout(resume, 10000) // 靜止約 10 秒後自動繼續游
+      // 檢視模式不自動恢復；點單元/需求的暫停 10 秒後續游（除非檢視模式開著）
+      if (!inspect) pauseTimerRef.current = setTimeout(() => { if (!inspectRef.current) resume() }, 10000)
     } else resume()
     return () => clearTimeout(pauseTimerRef.current)
-  }, [card, focusUnit])
+  }, [card, focusUnit, inspect])
   // 拖曳：把手＝星球本身；只有星球鎖手勢
   const dragRef = useRef(null)
   const toSvg = (e) => {
@@ -347,6 +351,11 @@ export function GalaxyView() {
   const inSub = (d) => !focusUnit || d.depth === 0 || (d.rootUnit && d.rootUnit.name === focusUnit)
   return (
     <div ref={wrapRef} className="uv-wrap">
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button className={'uw-editbtn' + (inspect ? ' on' : '')} onClick={() => setInspect((v) => !v)}>
+          {inspect ? '恢復游動' : '檢視模式'}
+        </button>
+      </div>
       <svg ref={svgRef} viewBox={[-W / 2, -H / 2, W, H].join(' ')}
         style={{ width: '100%', display: 'block', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
         onContextMenu={(e) => e.preventDefault()}
