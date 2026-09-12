@@ -409,6 +409,7 @@ export function GalaxyView() {
             <circle key={i} data-hit={i} r={n.depth === 0 ? 26 : n.req ? 14 : n.depth === 1 ? 24 : 18}
               fill="transparent"
               style={{ cursor: 'grab', touchAction: 'none' }}
+              onClick={(e) => e.stopPropagation()} /* pointerup 後瀏覽器補發的 click 別冒泡到「點空白清除聚焦」 */
               onPointerDown={(e) => {
                 e.stopPropagation()
                 e.currentTarget.setPointerCapture(e.pointerId)
