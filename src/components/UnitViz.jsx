@@ -221,13 +221,13 @@ export function GalaxyView() {
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
     nodes.forEach((n) => {
       n.ph = Math.random() * Math.PI * 2
-      n.sp = (0.00025 + Math.random() * 0.0004) * (1 + vitality * 2)
-      n.amp = n.depth === 0 ? 0 : n.req ? 0.022 : 0.013
+      n.sp = (0.0005 + Math.random() * 0.0008) * (1 + vitality * 2)
+      n.amp = n.depth === 0 ? 0 : n.req ? 0.034 : 0.02
     })
     // 水母鐘形搏動：整個軌道半徑隨呼吸收縮-舒張，外環起伏比內環大
     const radial = forceRadial((d) => R[Math.min(d.depth, 4)]).strength((d) => d.depth === 1 ? 0.5 : 0.16)
     const sim = forceSimulation(nodes)
-      .velocityDecay(0.5)
+      .velocityDecay(0.42)
       .force('link', forceLink(links).id((d) => d.id).distance((l) => l.target.req ? 15 : 38).strength(0.55))
       .force('charge', forceManyBody().strength(-52))
       .force('radial', radial)
@@ -246,6 +246,13 @@ export function GalaxyView() {
           for (const n of nodes) {
             n.vx += Math.cos(t * n.sp + n.ph) * n.amp * vit
             n.vy += Math.sin(t * n.sp * 0.83 + n.ph * 1.7) * n.amp * vit
+            // 魚的甩尾：偶發一記小衝刺，之後靠水的黏滯自然滑行減速
+            if (n.depth > 0 && Math.random() < 0.0012 * vit) {
+              const a = Math.random() * Math.PI * 2
+              const kick = (n.req ? 2.4 : 1.4) * (0.6 + Math.random() * 0.8)
+              n.vx += Math.cos(a) * kick
+              n.vy += Math.sin(a) * kick
+            }
           }
         }
       })
@@ -311,13 +318,20 @@ export function GalaxyView() {
   }, [world])
   // 查看即暫停：打開需求卡或聚焦星座時，星系緩緩停下讓你細看；放開（點空白）恢復流動
   const pausedRef = useRef(false)
+  const pauseTimerRef = useRef(0)
   useEffect(() => {
     const s = simRef.current
-    const paused = !!(card || focusUnit)
-    pausedRef.current = paused
-    if (!s) return
-    if (paused) s.alphaTarget(0)
-    else if (s.__warm) s.alphaTarget(s.__warm).restart()
+    const resume = () => {
+      pausedRef.current = false
+      if (simRef.current?.__warm) simRef.current.alphaTarget(simRef.current.__warm).restart()
+    }
+    clearTimeout(pauseTimerRef.current)
+    if (card || focusUnit) {
+      pausedRef.current = true
+      s?.alphaTarget(0)
+      pauseTimerRef.current = setTimeout(resume, 10000) // 靜止約 10 秒後自動繼續游
+    } else resume()
+    return () => clearTimeout(pauseTimerRef.current)
   }, [card, focusUnit])
   // 拖曳：把手＝星球本身；只有星球鎖手勢
   const dragRef = useRef(null)
