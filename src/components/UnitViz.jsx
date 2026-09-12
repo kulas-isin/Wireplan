@@ -217,6 +217,7 @@ export function GalaxyView() {
     const warm = 0.02 + vitality * 0.08
     const lineEls = [...svg.querySelectorAll('[data-link]')]
     const nodeEls = [...svg.querySelectorAll('[data-node]')]
+    const hitEls = [...svg.querySelectorAll('[data-hit]')]
     const haloEls = [...svg.querySelectorAll('[data-halo]')]
     const textEls = [...svg.querySelectorAll('[data-label]')]
     // 生物感：模擬永不冷卻（alphaTarget 保溫）＋ 每顆星各自的緩慢游動（隨機相位微擾）
@@ -275,6 +276,7 @@ export function GalaxyView() {
         nodes.forEach((n, i) => {
           const e = nodeEls[i]; if (!e) return
           e.setAttribute('cx', n.x); e.setAttribute('cy', n.y)
+          const h = hitEls[i]; if (h) { h.setAttribute('cx', n.x); h.setAttribute('cy', n.y) }
         })
         haloEls.forEach((e) => {
           const n = nodes[+e.dataset.halo]
@@ -388,7 +390,25 @@ export function GalaxyView() {
             <circle key={i} data-node={i} r={n.r}
               fill={n.req ? REQC[n.st] : n.depth === 0 ? 'url(#gvCore)' : n.depth === 1 ? (n.hot ? 'url(#gvHot)' : 'url(#gvStar)') : 'rgba(255,255,255,0.96)'}
               stroke={n.req ? '#fff' : 'rgba(58,93,37,0.35)'} strokeWidth="1"
-              style={{ cursor: 'grab', touchAction: 'none', opacity: inSub(n) ? 1 : 0.13, transition: 'opacity .25s' }}
+              style={{ pointerEvents: 'none', opacity: inSub(n) ? 1 : 0.13, transition: 'opacity .25s' }} />
+          ))}
+        </g>
+        <g style={{ pointerEvents: 'none' }}>
+          {world.nodes.map((n, i) => (n.depth >= 1) && (
+            <text key={i} data-label={i} textAnchor="middle" fill={n.req ? '#3E4A38' : '#22301F'}
+              style={{
+                fontSize: n.req ? 8.5 : n.depth === 1 ? 11 : 9.5,
+                fontWeight: n.req ? 600 : n.depth === 1 ? 900 : 700,
+                opacity: n.depth === 1 ? (inSub(n) ? 1 : 0.15) : (focusUnit && n.rootUnit && n.rootUnit.name === focusUnit ? 1 : 0),
+                transition: 'opacity .25s',
+              }}>{n.req && n.name.length > 8 ? n.name.slice(0, 7) + '…' : n.name}</text>
+          ))}
+        </g>
+        <g>
+          {world.nodes.map((n, i) => (
+            <circle key={i} data-hit={i} r={n.depth === 0 ? 26 : n.req ? 14 : n.depth === 1 ? 24 : 18}
+              fill="transparent"
+              style={{ cursor: 'grab', touchAction: 'none' }}
               onPointerDown={(e) => {
                 e.stopPropagation()
                 e.currentTarget.setPointerCapture(e.pointerId)
@@ -421,17 +441,6 @@ export function GalaxyView() {
                 }
               }}
               onPointerCancel={() => { dragRef.current = null; n.fx = null; n.fy = null; simRef.current?.alphaTarget(pausedRef.current ? 0 : (simRef.current.__warm ?? 0.03)) }} />
-          ))}
-        </g>
-        <g style={{ pointerEvents: 'none' }}>
-          {world.nodes.map((n, i) => (n.depth >= 1) && (
-            <text key={i} data-label={i} textAnchor="middle" fill={n.req ? '#3E4A38' : '#22301F'}
-              style={{
-                fontSize: n.req ? 8.5 : n.depth === 1 ? 11 : 9.5,
-                fontWeight: n.req ? 600 : n.depth === 1 ? 900 : 700,
-                opacity: n.depth === 1 ? (inSub(n) ? 1 : 0.15) : (focusUnit && n.rootUnit && n.rootUnit.name === focusUnit ? 1 : 0),
-                transition: 'opacity .25s',
-              }}>{n.req && n.name.length > 8 ? n.name.slice(0, 7) + '…' : n.name}</text>
           ))}
         </g>
       </svg>
