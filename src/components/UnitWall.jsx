@@ -3,43 +3,158 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { unitsOf, unitStats, pageTree, reqsOfPage, looseReqs, unassignedReqs, statusOfReq } from '../lib/units.js'
 import { linkedPages } from '../lib/elements.js'
-import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
 
-// 頁面樹節點：頁名 + 需求膠囊；點列展開/收合、點跳轉圖示進 Wireframe
-function TreeNode({ node, project, depth }) {
+// 拖曳改層（編輯模式）：≡把手拖起幽靈列，放到目標頁列＝成為其子頁、放到樹頭列＝單元最上層
+let uwDrag = null
+function uwMoveGhost(e) {
+  uwDrag.ghost.style.left = (e.clientX + 12) + 'px'
+  uwDrag.ghost.style.top = (e.clientY - 16) + 'px'
+  document.querySelectorAll('.uw-drophint').forEach((x) => x.classList.remove('uw-drophint'))
+  uwDrag.target = null
+  const el = document.elementFromPoint(e.clientX, e.clientY)
+  const rowT = el?.closest?.('.uw-nrow')
+  if (rowT && rowT.dataset.wfid && !uwDrag.banned.has(rowT.dataset.wfid)) {
+    rowT.classList.add('uw-drophint')
+    uwDrag.target = { id: rowT.dataset.wfid }
+    return
+  }
+  const headT = el?.closest?.('.uw-treehead')
+  if (headT) { headT.classList.add('uw-drophint'); uwDrag.target = { root: true } }
+}
+function uwEndDrag() {
+  if (!uwDrag) return
+  const { ghost, target, wf, dispatch } = uwDrag
+  ghost.remove()
+  document.querySelectorAll('.uw-drophint').forEach((x) => x.classList.remove('uw-drophint'))
+  uwDrag = null
+  if (!target) return
+  dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: target.root ? null : target.id } })
+}
+
+// 頁面樹節點：頁名 + 需求膠囊；編輯模式浮出 ＋ / ≡ / ⋯
+function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds }) {
   const [open, setOpen] = useState(depth === 0)
+  const [adding, setAdding] = useState(false)
+  const [newName, setNewName] = useState('')
   const reqs = reqsOfPage(project, node.wf)
   const jump = (e) => {
     e.stopPropagation()
     sessionStorage.setItem('wp-open-wf', node.wf.id)
     window.location.hash = 'wf'
   }
+  const addChild = () => {
+    const v = newName.trim()
+    if (!v) return
+    dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ id: 'wf_' + Math.random().toString(36).slice(2, 10), unit: node.wf.unit, parentId: node.wf.id, name: v, device: 'desktop', layout: 'stack', components: [] }] })
+    setNewName(''); setAdding(false); setOpen(true)
+  }
+  const startDrag = (e) => {
+    e.stopPropagation(); e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    const g = document.createElement('div')
+    g.className = 'uw-ghost'; g.textContent = node.wf.name
+    document.body.appendChild(g)
+    uwDrag = { wf: node.wf, dispatch, ghost: g, target: null, banned: subtreeIds(node) }
+    uwMoveGhost(e)
+  }
   const hasBody = reqs.length > 0 || node.kids.length > 0
   return (
     <div className="uw-node">
-      <div className="uw-nrow" role="button" onClick={() => hasBody && setOpen((o) => !o)}>
+      <div className="uw-nrow" role="button" data-wfid={node.wf.id}
+        onClick={(e) => { if (e.target.closest && e.target.closest('.uw-drag')) return; if (hasBody) setOpen((o) => !o) }}>
+        {edit && (
+          <span className="uw-drag" title="按住拖到別的頁面底下" onPointerDown={startDrag}
+            onPointerMove={(e) => { if (uwDrag) uwMoveGhost(e) }} onPointerUp={uwEndDrag} onPointerCancel={uwEndDrag}>
+            <GripVertical size={14} />
+          </span>
+        )}
         <span className="uw-caret">{hasBody ? (open ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <i className="uw-leaf" />}</span>
         <span className="uw-nname">{node.wf.name}</span>
         {reqs.length > 0 && <span className="uw-ncnt">{reqs.length} 需求</span>}
-        <button className="uw-jump" title="到 Wireframe 開這頁" onClick={jump}><ArrowUpRight size={13} /></button>
+        {edit ? (
+          <>
+            <button className="uw-mini" title="在此頁底下新增子頁" onClick={(e) => { e.stopPropagation(); setAdding(true); setOpen(true) }}><Plus size={13} /></button>
+            <button className="uw-mini" title="更多" onClick={(e) => { e.stopPropagation(); onMore(node.wf) }}><MoreHorizontal size={13} /></button>
+          </>
+        ) : (
+          <button className="uw-jump" title="到 Wireframe 開這頁" onClick={jump}><ArrowUpRight size={13} /></button>
+        )}
       </div>
       {open && (
         <div className="uw-nbody">
-          {reqs.length > 0 && (
+          {adding && (
+            <div className="uw-newrow">
+              <input autoFocus value={newName} placeholder="子頁名稱…" onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') addChild() }} />
+              <button onClick={addChild}>加入</button>
+            </div>
+          )}
+          {reqs.length > 0 && !edit && (
             <div className="uw-reqs">
               {reqs.map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}>{r.name}</span>)}
             </div>
           )}
           {node.kids.length > 0 && (
             <div className="uw-kids">
-              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} />)}
+              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} />)}
             </div>
           )}
         </div>
       )}
     </div>
+  )
+}
+
+// ⋯ 節點選單：改名 / 移到… / 自單元移除（底部抽屜，沿用 as-sheet 語彙）
+function NodeSheet({ wf, project, onClose, dispatch }) {
+  const [moving, setMoving] = useState(false)
+  const unit = wf.unit || ''
+  const flat = []
+  const walk = (nodes, lv, banned) => nodes.forEach((n) => {
+    const isBanned = banned || n.wf.id === wf.id
+    if (!isBanned) flat.push({ wf: n.wf, lv })
+    walk(n.kids, lv + 1, isBanned)
+  })
+  walk(pageTree(project, unit), 0, false)
+  return createPortal(
+    <div className="as-backdrop" onClick={onClose}>
+      <div className="as-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="as-grab" />
+        {!moving ? (
+          <>
+            <button className="as-row" onClick={() => { const v = prompt('頁面名稱', wf.name); if (v && v.trim()) dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { name: v.trim() } }); onClose() }}>
+              <span className="as-ic"><Pencil size={18} /></span>
+              <span><b>改名</b><small>{wf.name}</small></span>
+            </button>
+            <button className="as-row" onClick={() => setMoving(true)}>
+              <span className="as-ic"><GripVertical size={18} /></span>
+              <span><b>移到…</b><small>掛到單元最上層或其他頁面底下</small></span>
+            </button>
+            <button className="as-row" onClick={() => { if (confirm(`把「${wf.name}」移出「${unit}」？（頁面保留，只解掛單元）`)) dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { unit: '', parentId: null } }); onClose() }}>
+              <span className="as-ic" style={{ background: '#FBE9D6', color: '#B3402A' }}><X size={18} /></span>
+              <span><b style={{ color: '#B3402A' }}>自單元移除</b><small>頁面與內容都保留，只離開這個單元</small></span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="as-row" onClick={() => { dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: null } }); onClose() }}>
+              <span className="as-ic"><ArrowUpRight size={18} /></span>
+              <span><b>{unit}（單元最上層）</b></span>
+            </button>
+            {flat.map(({ wf: t, lv }) => (
+              <button key={t.id} className="as-row" onClick={() => { dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: t.id } }); onClose() }}>
+                <span className="as-ic"><ChevronRight size={18} /></span>
+                <span><b>{'　'.repeat(lv)}└ {t.name}</b></span>
+              </button>
+            ))}
+          </>
+        )}
+      </div>
+    </div>,
+    document.body
   )
 }
 
@@ -118,6 +233,11 @@ export default function UnitWall() {
   const units = unitsOf(current)
   const [openUnit, setOpenUnit] = useState(null)
   const [deal, setDeal] = useState(false)
+  const [editStruct, setEditStruct] = useState(false)
+  const [moreWf, setMoreWf] = useState(null)
+  const [addingRoot, setAddingRoot] = useState(false)
+  const [rootName, setRootName] = useState('')
+  const subtreeIds = (node, s = new Set()) => { s.add(node.wf.id); node.kids.forEach((k) => subtreeIds(k, s)); return s }
   const stats = useMemo(() => Object.fromEntries(units.map((u) => [u, unitStats(current, u)])), [current, units])
   const loose = unassignedReqs(current)
   const addUnit = () => {
@@ -143,7 +263,7 @@ export default function UnitWall() {
           return (
             <div key={u} role="button" tabIndex={0}
               className={'uw-tile' + (s.total >= 10 ? ' big' : '') + (hot ? ' hot' : '') + (open ? ' open' : '')}
-              onClick={() => setOpenUnit(open ? null : u)}>
+              onClick={() => { setOpenUnit(open ? null : u); setEditStruct(false); setAddingRoot(false) }}>
               <span className="uw-sheen" />
               <div className="uw-tname">{u}</div>
               <div className="uw-tcount"><b>{s.total}</b> 張需求卡</div>
@@ -155,9 +275,32 @@ export default function UnitWall() {
                 {s.draft > 0 && !hot && <span className="uw-flag blue">待確認 {s.draft}</span>}
               </div>
               {open && (
-                <div className="uw-tree" onClick={(e) => e.stopPropagation()}>
-                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} />)}
-                  {pageTree(current, u).length === 0 && <div className="uw-empty">這個單元還沒有頁面 — 到卡片的畫面地圖「建立此頁」，或在 Wireframe 把頁面的單元設成「{u}」</div>}
+                <div className={'uw-tree' + (editStruct ? ' editing' : '')} onClick={(e) => e.stopPropagation()}>
+                  <div className="uw-treehead">
+                    {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
+                    {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
+                    <button className={'uw-editbtn' + (editStruct ? ' on' : '')} onClick={() => { setEditStruct((v) => !v); setAddingRoot(false) }}>
+                      {editStruct ? '完成' : '編輯結構'}
+                    </button>
+                  </div>
+                  {addingRoot && (
+                    <div className="uw-newrow">
+                      <input autoFocus value={rootName} placeholder="頁面名稱…" onChange={(e) => setRootName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && rootName.trim()) {
+                            dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ id: 'wf_' + Math.random().toString(36).slice(2, 10), unit: u, parentId: null, name: rootName.trim(), device: 'desktop', layout: 'stack', components: [] }] })
+                            setRootName(''); setAddingRoot(false)
+                          }
+                        }} />
+                      <button onClick={() => {
+                        if (!rootName.trim()) return
+                        dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ id: 'wf_' + Math.random().toString(36).slice(2, 10), unit: u, parentId: null, name: rootName.trim(), device: 'desktop', layout: 'stack', components: [] }] })
+                        setRootName(''); setAddingRoot(false)
+                      }}>加入</button>
+                    </div>
+                  )}
+                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} />)}
+                  {pageTree(current, u).length === 0 && <div className="uw-empty">這個單元還沒有頁面 — 按「編輯結構 → ＋」直接新增，或到卡片的畫面地圖「建立此頁」</div>}
                   {looseReqs(current, u).length > 0 && (
                     <div className="uw-loose">
                       <span className="uw-loose-t">還沒掛到頁面：</span>
@@ -178,6 +321,7 @@ export default function UnitWall() {
         <span><i className="uw-lg-hot" />暖色＝有事</span>
       </div>
       {deal && <DealMode onClose={() => setDeal(false)} />}
+      {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
     </div>
   )
 }
