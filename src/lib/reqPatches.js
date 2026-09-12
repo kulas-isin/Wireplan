@@ -1,13 +1,19 @@
 // AI 展開結果（requirementPatches）套用：只補空欄；未蓋章才改名且原名留痕
 import { isLocked } from './change.js'
-import { brickFromLabel } from './elements.js'
+import { brickFromLabel, linkedPages } from './elements.js'
 
-export function applyRequirementPatches(requirements, patches, dispatch) {
+export function applyRequirementPatches(requirements, patches, dispatch, wireframes = []) {
   let applied = 0, renamed = 0, skippedLocked = 0, notFound = 0, talksAdded = 0, elementsAdded = 0, pagesAdded = 0
   for (const p of patches || []) {
     const r = (requirements || []).find((x) => x.id === p.id || (p.name && x.name === p.name))
     if (!r) { notFound++; continue }
     const patch = {}
+    if (!(r.unit || '').trim() && p.unit) {
+      patch.unit = String(p.unit).trim() // 單元只補空的，不蓋手動歸檔
+      for (const w of linkedPages(r, wireframes)) { // 連結頁面跟著歸進同一單元
+        if (!(w.unit || '').trim()) dispatch({ type: 'UPDATE_WIREFRAME', id: w.id, patch: { unit: patch.unit } })
+      }
+    }
     if (!r.description && p.description) patch.description = p.description
     if (!r.acceptance && p.acceptance) patch.acceptance = p.acceptance
     // 對話串：追加（去重同文字）；對話是紀錄不是規格變更，鎖定卡也可追加

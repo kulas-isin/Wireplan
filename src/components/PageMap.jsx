@@ -64,7 +64,7 @@ export default function PageMap({ req, pages, patch }) {
         ? { id: uid('cmp'), type: 'buttonRow', label: '', width: 'full', buttons: [b.label.replace(/(按鈕|鈕)$/, '')] }
         : { id: uid('cmp'), type: b.type, label: b.label, width: 'full' }))
       : generateWireframe(req).components
-    dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ id: uid('wf'), requirementId: req.id, name: entry.name, device: 'desktop', layout: 'stack', template: req.category, components: comps }] })
+    dispatch({ type: 'ADD_WIREFRAME', wireframes: [{ id: uid('wf'), requirementId: req.id, unit: req.unit || '', name: entry.name, device: 'desktop', layout: 'stack', template: req.category, components: comps }] })
   }
 
   return (

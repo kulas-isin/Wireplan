@@ -1731,3 +1731,153 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .ad-cost { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #445; }
 .ad-cost input { width: 74px; border: 1px solid #c8d2cc; border-radius: 6px; padding: 4px 7px; font-size: 12px; }
 .ad-x { border: none; background: none; color: #b91c1c; cursor: pointer; padding: 2px 4px; }
+
+/* ═══ 單元牆（Bento 磁磚＋磨砂頁面樹）與歸檔快手 ═══ */
+.uw-wrap { display: flex; flex-direction: column; gap: 12px; }
+.uw-banner {
+  display: flex; align-items: center; gap: 8px; border: none; font: inherit; cursor: pointer;
+  background: linear-gradient(135deg, #ECF5A6, #C6DC6A 55%, #9CBD48); color: #22301F;
+  border-radius: 16px; padding: 13px 16px; font-size: 13.5px; font-weight: 700;
+  box-shadow: 0 6px 18px rgba(120,150,60,0.3); text-align: left;
+}
+.uw-wall { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; grid-auto-flow: dense; }
+.uw-tile {
+  position: relative; overflow: hidden; text-align: left; cursor: pointer;
+  background: rgba(255,255,255,0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 22px; padding: 14px 14px 12px; color: #22301F;
+  box-shadow: 0 6px 22px rgba(60,80,40,0.10);
+  -webkit-tap-highlight-color: transparent;
+}
+.uw-tile.big { grid-column: span 2; }
+.uw-tile.big .uw-tname { font-size: 17px; }
+.uw-tile.open { grid-column: 1 / -1; }
+.uw-tile.hot {
+  background: linear-gradient(155deg, rgba(255,252,244,0.88), rgba(251,240,220,0.82));
+  box-shadow: inset 0 0 0 1.5px rgba(224,134,60,0.4), 0 6px 22px rgba(60,80,40,0.10);
+}
+.uw-sheen { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.uw-sheen::before {
+  content: ''; position: absolute; top: -60%; bottom: -60%; left: 0; width: 52%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.02) 32%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.02) 68%, transparent);
+  transform: skewX(-16deg) translateX(-160%);
+  animation: uwSheen 9s ease-in-out infinite;
+}
+.uw-tile:nth-child(2n) .uw-sheen::before { animation-delay: 1.6s; }
+.uw-tile:nth-child(3n) .uw-sheen::before { animation-delay: 3.1s; }
+@keyframes uwSheen { 0% { transform: skewX(-16deg) translateX(-160%); } 30%, 100% { transform: skewX(-16deg) translateX(400%); } }
+.uw-tile.open .uw-sheen { display: none; }
+.uw-tname { font-size: 15px; font-weight: 900; line-height: 1.3; }
+.uw-tcount { font-size: 12px; color: #56684C; margin: 3px 0 10px; font-variant-numeric: tabular-nums; }
+.uw-tcount b { font-size: 17px; color: #22301F; font-weight: 900; }
+.uw-bar { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: rgba(58,93,37,0.1); }
+.uw-b0 { background: #7BA7D4; } .uw-b1 { background: #9CBD48; } .uw-b2 { background: #E0A55C; }
+.uw-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 9px; min-height: 20px; }
+.uw-flag { font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2.5px 8px; }
+.uw-flag.warn { background: #FBF0DC; color: #B0691F; }
+.uw-flag.ok { background: #E1F0D8; color: #4E7A2E; }
+.uw-flag.blue { background: #E1EDF9; color: #2E5F96; }
+.uw-add {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border: 1.5px dashed rgba(58,93,37,0.35); background: none; box-shadow: none;
+  color: #3A5D25; font: inherit; font-size: 13px; font-weight: 700; min-height: 110px; cursor: pointer;
+}
+.uw-legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 2px 2px 0; font-size: 11.5px; color: #56684C; }
+.uw-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.uw-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.uw-lg-hot { background: linear-gradient(155deg, #FFFCF4, #FBF0DC); box-shadow: inset 0 0 0 1.5px rgba(224,134,60,0.5); }
+
+/* 展開的頁面樹：磨砂層板 + 摺紙攤開 */
+.uw-tree {
+  margin-top: 12px; padding: 8px 12px 6px; border-radius: 16px; cursor: default;
+  background: rgba(255,255,255,0.52);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 2px 10px rgba(60,80,40,0.06);
+  transform-origin: top center; animation: uwUnfold .5s cubic-bezier(.22,1,.36,1);
+}
+@keyframes uwUnfold { from { transform: rotateX(-62deg); opacity: 0; } 55% { opacity: 1; } to { transform: rotateX(0); opacity: 1; } }
+.uw-tree > .uw-node + .uw-node { border-top: 1px solid rgba(58,93,37,0.09); margin-top: 3px; padding-top: 3px; }
+.uw-tree .uw-node { transform-origin: top center; animation: uwFold .42s cubic-bezier(.22,1,.36,1) backwards; }
+.uw-tree .uw-node:nth-child(2) { animation-delay: .1s; } .uw-tree .uw-node:nth-child(3) { animation-delay: .17s; }
+.uw-tree .uw-node:nth-child(4) { animation-delay: .24s; } .uw-tree .uw-node:nth-child(n+5) { animation-delay: .3s; }
+@keyframes uwFold { from { transform: rotateX(-55deg) translateY(-4px); opacity: 0; } to { transform: none; opacity: 1; } }
+.uw-nrow { display: flex; align-items: center; gap: 7px; padding: 7px 2px; cursor: pointer; border-radius: 10px; }
+.uw-nrow:active { background: rgba(255,255,255,0.5); }
+.uw-caret { flex-shrink: 0; color: #56684C; display: inline-flex; width: 14px; justify-content: center; }
+.uw-leaf { width: 6px; height: 6px; border-radius: 50%; background: rgba(58,93,37,0.35); display: inline-block; }
+.uw-nname { font-size: 13.5px; font-weight: 700; color: #22301F; }
+.uw-ncnt { margin-left: auto; flex-shrink: 0; font-size: 10.5px; font-weight: 700; color: #56684C; background: rgba(58,93,37,0.1); border-radius: 999px; padding: 2px 8px; font-variant-numeric: tabular-nums; }
+.uw-jump {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; border: none; padding: 0; cursor: pointer;
+  background: #E1EDF9; color: #2E5F96; display: inline-flex; align-items: center; justify-content: center;
+}
+.uw-nrow .uw-ncnt:last-of-type { margin-left: auto; }
+.uw-nbody { }
+.uw-kids { position: relative; margin-left: 9px; padding-left: 9px; }
+.uw-kids::before {
+  content: ''; position: absolute; left: 0; top: 2px; bottom: 8px; width: 1.5px;
+  background: linear-gradient(180deg, #9CBD48, rgba(58,93,37,0.25));
+}
+.uw-reqs { display: flex; flex-wrap: wrap; gap: 5px; padding: 1px 2px 9px 21px; }
+.uw-rq { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3.5px 10px; line-height: 1.3; }
+.uw-st0 { background: #E1EDF9; color: #2E5F96; }
+.uw-st1 { background: #E1F0D8; color: #4E7A2E; }
+.uw-st2 { background: #FBF0DC; color: #B0691F; animation: uwWarn 2.8s 1s ease-in-out infinite; }
+@keyframes uwWarn { 0%, 100% { box-shadow: 0 0 0 0 rgba(224,134,60,0); } 45% { box-shadow: 0 0 0 4px rgba(224,134,60,0.18); } }
+.uw-empty { font-size: 12px; color: #7A8A70; padding: 6px 4px 10px; line-height: 1.6; }
+.uw-loose { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 6px 2px 8px; border-top: 1px dashed rgba(58,93,37,0.18); margin-top: 4px; }
+.uw-loose-t { font-size: 11.5px; font-weight: 700; color: #B0691F; }
+
+/* 歸檔快手（蓋印） */
+.uw-deal {
+  position: fixed; inset: 0; z-index: 95; overflow-y: auto;
+  background: linear-gradient(165deg, #F7FAEC 0%, #EAF2D8 42%, #DCEBC7 100%);
+  padding: 0 16px calc(30px + env(safe-area-inset-bottom));
+}
+.uw-deal-head { max-width: 480px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 18px 0 8px; font-size: 17px; color: #22301F; }
+.uw-stage { position: relative; max-width: 480px; margin: 0 auto; min-height: 230px; display: flex; align-items: center; justify-content: center; }
+.uw-dealcard {
+  position: relative; width: min(330px, 92%); min-height: 190px;
+  background: rgba(255,255,255,0.94); border-radius: 24px; padding: 20px 20px 16px;
+  box-shadow: 0 16px 40px -14px rgba(60,80,40,0.45), 0 0 0 3px rgba(198,220,106,0.5);
+  display: flex; flex-direction: column; animation: uwDealIn .42s cubic-bezier(.22,1,.36,1);
+}
+@keyframes uwDealIn { from { opacity: 0; transform: translateY(30px) rotate(2.5deg) scale(0.94); } }
+.uw-dc-cat { font-size: 11px; color: #2E5F96; font-weight: 700; }
+.uw-dc-name { font-size: 17.5px; font-weight: 900; margin: 6px 0 8px; line-height: 1.35; color: #22301F; }
+.uw-dc-desc { font-size: 12.5px; color: #4A5A40; line-height: 1.55; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.uw-stampfx {
+  position: absolute; z-index: 5; width: 92px; height: 92px; border-radius: 50%;
+  left: 50%; top: 50%; margin: -46px 0 0 -46px; pointer-events: none;
+  border: 4px solid #3A5D25; color: #3A5D25; background: rgba(247,250,236,0.55);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-weight: 900; font-size: 15px; line-height: 1.25; letter-spacing: 1px;
+  box-shadow: inset 0 0 0 2px rgba(58,93,37,0.25);
+  animation: uwStamp .38s cubic-bezier(.5,1.6,.6,1) forwards;
+}
+@keyframes uwStamp {
+  from { opacity: 0; transform: scale(2.4) rotate(-20deg); filter: blur(2px); }
+  60% { opacity: 1; filter: none; }
+  to { opacity: 1; transform: scale(1) rotate(-8deg); }
+}
+.uw-ripplefx {
+  position: absolute; z-index: 4; left: 50%; top: 50%; width: 20px; height: 20px;
+  margin: -10px 0 0 -10px; border-radius: 50%; pointer-events: none;
+  border: 3px solid rgba(156,189,72,0.8);
+  animation: uwRipple .55s .22s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes uwRipple { to { transform: scale(11); opacity: 0; border-width: 1px; } }
+.uw-hint { max-width: 480px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 12px; color: #56684C; }
+.uw-chips { max-width: 480px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+.uw-uchip {
+  border: none; font: inherit; cursor: pointer;
+  background: rgba(255,255,255,0.8); color: #3A5D25; font-size: 12.5px; font-weight: 700;
+  border-radius: 999px; padding: 9px 14px; box-shadow: 0 2px 8px rgba(60,80,40,0.08);
+  transition: transform .15s;
+}
+.uw-uchip:active { transform: scale(0.88) translateY(2px); }
+.uw-undo { display: block; margin: 14px auto 0; border: 1px dashed rgba(58,93,37,0.35); background: none; color: #3A5D25; font: inherit; font-size: 12.5px; border-radius: 999px; padding: 7px 16px; cursor: pointer; }
+.uw-dealdone { text-align: center; padding: 30px 10px; }
+.uw-dealdone div { font-size: 21px; font-weight: 900; color: #3A5D25; }
+.uw-dealdone p { font-size: 13px; color: #56684C; margin: 8px 0 14px; }
+@media (prefers-reduced-motion: reduce) {
+  .uw-sheen::before, .uw-st2 { animation: none; }
+}

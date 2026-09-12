@@ -246,6 +246,7 @@ export function generateWireframe(requirement) {
   return {
     id: uid('wf'),
     requirementId: requirement.id,
+    unit: requirement.unit || '', // 頁面繼承需求的單元，單元牆自動歸位
     name: requirement.screen || requirement.name || '未命名畫面',
     device: 'desktop', // desktop | mobile
     layout, // stack | sidebar
