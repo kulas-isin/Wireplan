@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { unitsOf, unitStats, pageTree, reqsOfPage, looseReqs, unassignedReqs, statusOfReq } from '../lib/units.js'
 import { linkedPages } from '../lib/elements.js'
+import { PackView, GalaxyView } from './UnitViz.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -234,6 +235,7 @@ export default function UnitWall() {
   const [openUnit, setOpenUnit] = useState(null)
   const [deal, setDeal] = useState(false)
   const [editStruct, setEditStruct] = useState(false)
+  const [viz, setViz] = useState('wall') // wall | pack | force
   const [moreWf, setMoreWf] = useState(null)
   const [addingRoot, setAddingRoot] = useState(false)
   const [rootName, setRootName] = useState('')
@@ -249,6 +251,14 @@ export default function UnitWall() {
   }
   return (
     <div className="uw-wrap">
+      <div className="uw-modes">
+        {[['wall', '磁磚'], ['pack', '圓圈嵌套'], ['force', '星系']].map(([k, label]) => (
+          <button key={k} className={viz === k ? 'on' : ''} onClick={() => setViz(k)}>{label}</button>
+        ))}
+      </div>
+      {viz === 'pack' && <PackView />}
+      {viz === 'force' && <GalaxyView />}
+      {viz === 'wall' && <>
       {loose.length > 0 && units.length > 0 && (
         <button className="uw-banner" onClick={() => setDeal(true)}>
           <Stamp size={15} /> {loose.length} 張卡還沒分單元 — 進歸檔快手，一秒一張
@@ -320,6 +330,7 @@ export default function UnitWall() {
         <span><i style={{ background: '#E0A55C' }} />異動中</span>
         <span><i className="uw-lg-hot" />暖色＝有事</span>
       </div>
+      </>}
       {deal && <DealMode onClose={() => setDeal(false)} />}
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
     </div>
