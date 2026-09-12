@@ -212,11 +212,25 @@ export function GalaxyView() {
     const nodeEls = [...svg.querySelectorAll('[data-node]')]
     const haloEls = [...svg.querySelectorAll('[data-halo]')]
     const textEls = [...svg.querySelectorAll('[data-label]')]
+    // 生物感：模擬永不冷卻（alphaTarget 保溫）＋ 每顆星各自的緩慢游動（隨機相位微擾）
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    nodes.forEach((n) => {
+      n.ph = Math.random() * Math.PI * 2
+      n.sp = 0.00035 + Math.random() * 0.00045
+      n.amp = n.depth === 0 ? 0 : n.req ? 0.016 : 0.01
+    })
     const sim = forceSimulation(nodes)
       .force('link', forceLink(links).id((d) => d.id).distance((l) => l.target.req ? 15 : 38).strength(0.55))
       .force('charge', forceManyBody().strength(-52))
       .force('radial', forceRadial((d) => R[Math.min(d.depth, 4)]).strength((d) => d.depth === 1 ? 0.5 : 0.16))
       .force('collide', forceCollide((d) => d.r + 2.5))
+      .force('wander', reduced ? null : () => {
+        const t = performance.now()
+        for (const n of nodes) {
+          n.vx += Math.cos(t * n.sp + n.ph) * n.amp
+          n.vy += Math.sin(t * n.sp * 0.83 + n.ph * 1.7) * n.amp
+        }
+      })
       .on('tick', () => {
         links.forEach((l, i) => {
           const e = lineEls[i]; if (!e) return
@@ -262,6 +276,7 @@ export function GalaxyView() {
         }, 700, delay)
       })
     }
+    if (!reduced) sim.alphaTarget(0.035) // 保持微溫，星系持續微妙地游動
     simRef.current = sim
     const first = setTimeout(pulse, 900)
     const iv = setInterval(pulse, 5600)
@@ -325,7 +340,7 @@ export function GalaxyView() {
                 const d = dragRef.current
                 dragRef.current = null
                 n.fx = null; n.fy = null
-                simRef.current?.alphaTarget(0)
+                simRef.current?.alphaTarget(0.035)
                 if (d && !d.moved) {
                   e.stopPropagation()
                   if (n.req) {
@@ -338,7 +353,7 @@ export function GalaxyView() {
                   } else setFocusUnit(null)
                 }
               }}
-              onPointerCancel={() => { dragRef.current = null; n.fx = null; n.fy = null }} />
+              onPointerCancel={() => { dragRef.current = null; n.fx = null; n.fy = null; simRef.current?.alphaTarget(0.035) }} />
           ))}
         </g>
         <g style={{ pointerEvents: 'none' }}>
