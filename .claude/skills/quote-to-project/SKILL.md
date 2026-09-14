@@ -30,6 +30,11 @@ description: 從報價單/需求描述展開成「單元 → 頁面 → 需求�
 
 ## 產出二：Wireplan 專案 JSON（匯入 schema）
 
+**預設是「初步開案」模式：只給 單元清單＋需求卡，不產頁面。**
+- `wireframes` 給空陣列 `[]`；需求卡的 `pages`、`elements` 一律省略
+- 頁面之後由使用者在 app 內用畫面地圖/單元牆長出來，開案階段不要幫他決定頁怎麼切
+- 只有使用者明確說「要含頁面樹/完整展開」時，才照下方 schema 補 `wireframes`（unit＋parentId）與需求的 `pages`
+
 單一 JSON 物件，欄位如下（省略的欄位給空陣列/空字串即可）：
 
 ```jsonc
@@ -68,8 +73,9 @@ description: 從報價單/需求描述展開成「單元 → 頁面 → 需求�
 ```
 
 要點：
-- **狀態語意**：`versions` 有內容＝已蓋章（綠）；`pending` 有值＝異動中（橙）；兩者皆無＝待確認（藍）。開案初期通常全部待確認。
-- 每條需求都要有 `unit`；頁面樹用 `wireframes` 的 `unit`＋`parentId` 組出來，關鍵頁掛 `requirementId`。
+- **狀態語意**：`versions` 有內容＝已蓋章（綠）；`pending` 有值＝異動中（橙）；兩者皆無＝待確認（藍）。**初步開案一律全部待確認**（versions: []、pending: null）。
+- 每條需求都要有 `unit`；`screen` 可先填主要對應頁名（純文字提示，不會建頁）。
+- 完整展開時：頁面樹用 `wireframes` 的 `unit`＋`parentId` 組出來，關鍵頁掛 `requirementId`。
 - id 用固定可讀的字串（如 `req_sc1`、`wf_sc1`），之後增量更新才對得上。
 
 ## 怎麼匯入
