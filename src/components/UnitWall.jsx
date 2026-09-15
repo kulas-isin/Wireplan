@@ -4,6 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { unitsOf, unitStats, pageTree, reqsOfPage, looseReqs, unassignedReqs, statusOfReq } from '../lib/units.js'
 import { linkedPages } from '../lib/elements.js'
 import { PackView, GalaxyView } from './UnitViz.jsx'
+import UnitFlows from './UnitFlows.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -235,6 +236,7 @@ export default function UnitWall() {
   const [openUnit, setOpenUnit] = useState(null)
   const [deal, setDeal] = useState(false)
   const [editStruct, setEditStruct] = useState(false)
+  const [flowUnit, setFlowUnit] = useState(null)
   const [viz, setViz] = useState('wall') // wall | pack | force
   const [moreWf, setMoreWf] = useState(null)
   const [addingRoot, setAddingRoot] = useState(false)
@@ -288,6 +290,7 @@ export default function UnitWall() {
                 <div className={'uw-tree' + (editStruct ? ' editing' : '')} onClick={(e) => e.stopPropagation()}>
                   <div className="uw-treehead">
                     {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
+                    <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>流程圖 {(current.unitFlows || []).filter((f) => f.unit === u).length}</button>
                     {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
                     <button className={'uw-editbtn' + (editStruct ? ' on' : '')} onClick={() => { setEditStruct((v) => !v); setAddingRoot(false) }}>
                       {editStruct ? '完成' : '編輯結構'}
@@ -333,6 +336,7 @@ export default function UnitWall() {
       </>}
       {deal && <DealMode onClose={() => setDeal(false)} />}
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
+      {flowUnit && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
     </div>
   )
 }
