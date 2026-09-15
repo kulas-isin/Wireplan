@@ -1958,3 +1958,52 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uv-halopulse { animation: uvHalo 2.6s ease-in-out infinite; }
 @keyframes uvHalo { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .uv-focring, .uv-halopulse { animation: none; } }
+
+/* ═══ 單元流程圖（mermaid 版本追蹤） ═══ */
+.uf-wrap {
+  position: fixed; inset: 0; z-index: 96; overflow-y: auto;
+  background: linear-gradient(165deg, #F7FAEC 0%, #EAF2D8 42%, #DCEBC7 100%);
+  padding: 0 16px calc(30px + env(safe-area-inset-bottom));
+}
+.uf-head { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 9px; padding: 18px 0 10px; font-size: 16px; color: #22301F; }
+.uf-head svg { color: #3A5D25; }
+.uf-new {
+  display: inline-flex; align-items: center; gap: 5px; border: none; font: inherit; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; color: #22301F; border-radius: 999px; padding: 8px 14px;
+  background: linear-gradient(135deg, #ECF5A6, #C6DC6A 55%, #9CBD48);
+}
+.uf-body { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.uf-empty { background: rgba(255,255,255,0.6); border-radius: 18px; padding: 22px 18px; font-size: 13px; color: #56684C; line-height: 1.8; text-align: center; }
+.uf-card {
+  background: rgba(255,255,255,0.72); backdrop-filter: blur(10px); border-radius: 20px; padding: 14px;
+  box-shadow: 0 6px 22px rgba(60,80,40,0.1); display: flex; flex-direction: column; gap: 10px;
+}
+.uf-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; color: #22301F; }
+.uf-vchips { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.uf-vchip {
+  border: none; font: inherit; cursor: pointer; font-size: 11px; font-weight: 700;
+  background: rgba(58,93,37,0.08); color: #3A5D25; border-radius: 999px; padding: 3px 9px;
+}
+.uf-vchip.on { background: #3A5D25; color: #EDF7CF; }
+.uf-oldnote { font-size: 11.5px; color: #B0691F; background: #FBF0DC; border-radius: 10px; padding: 6px 10px; }
+.uf-del { color: #B3402A; }
+.mermaid-box { background: #fff; border-radius: 14px; padding: 10px; overflow-x: auto; }
+.mermaid-box svg { max-width: 100%; height: auto; }
+.uf-editor {
+  position: fixed; inset: 0; z-index: 97; overflow-y: auto;
+  background: linear-gradient(165deg, #F7FAEC 0%, #EAF2D8 42%, #DCEBC7 100%);
+  padding: 0 16px calc(30px + env(safe-area-inset-bottom));
+}
+.uf-editor-body { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+.uf-input {
+  border: 1px solid rgba(58,93,37,0.2); border-radius: 12px; padding: 11px 12px;
+  font: inherit; font-size: 14px; background: #fff; color: #22301F;
+}
+.uf-input:focus { outline: none; border-color: #9CBD48; box-shadow: 0 0 0 3px rgba(198,220,106,0.35); }
+.uf-code {
+  border: 1px solid rgba(58,93,37,0.2); border-radius: 12px; padding: 11px 12px;
+  font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12.5px; line-height: 1.6;
+  background: #fff; color: #22301F; resize: vertical;
+}
+.uf-code:focus { outline: none; border-color: #9CBD48; box-shadow: 0 0 0 3px rgba(198,220,106,0.35); }
+.uf-tips { font-size: 11.5px; color: #56684C; background: rgba(255,255,255,0.6); border-radius: 12px; padding: 9px 12px; line-height: 1.7; }
