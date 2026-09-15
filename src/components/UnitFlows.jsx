@@ -22,6 +22,23 @@ export default function UnitFlows({ unit, onClose }) {
   const save = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'unitFlows', value: next })
   const all = current.unitFlows || []
   const [viewVer, setViewVer] = useState({}) // { flowId: 版本索引 }，預設最新
+  const [idx, setIdx] = useState(0) // 目前顯示第幾張圖（左右滑切換）
+  const cur = Math.min(idx, Math.max(0, flows.length - 1))
+  const go = (d) => { const n = cur + d; if (n < 0 || n >= flows.length) return; setIdx(n) }
+  const touchRef = { current: null }
+  const onTS = (e) => {
+    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, input, textarea, button')) { touchRef.current = null; return }
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    window.__ufTouch = touchRef.current
+  }
+  const onTE = (e) => {
+    const t = window.__ufTouch
+    window.__ufTouch = null
+    if (!t || editing) return
+    const dx = e.changedTouches[0].clientX - t.x
+    const dy = e.changedTouches[0].clientY - t.y
+    if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 2) go(dx < 0 ? 1 : -1)
+  }
   const [editing, setEditing] = useState(null) // { flowId|null(新增), name, code, note }
   const [preview, setPreview] = useState('')
   useEffect(() => {
@@ -51,7 +68,7 @@ export default function UnitFlows({ unit, onClose }) {
   }
 
   return createPortal(
-    <div className="uf-wrap">
+    <div className="uf-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
       <div className="uf-head">
         <GitBranch size={18} />
         <strong>{unit} · 粗流（{flows.length}）</strong>
@@ -60,6 +77,13 @@ export default function UnitFlows({ unit, onClose }) {
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
+        {flows.length > 1 && (
+          <div className="rd-nav">
+            <button disabled={cur === 0} onClick={() => go(-1)}>‹</button>
+            <span>{cur + 1} / {flows.length}</span>
+            <button disabled={cur === flows.length - 1} onClick={() => go(1)}>›</button>
+          </div>
+        )}
         {flows.length === 0 && (
           <div className="uf-empty">
             這個單元還沒有粗流（初步規劃流程圖）。<br />
@@ -67,7 +91,7 @@ export default function UnitFlows({ unit, onClose }) {
             粗流「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。
           </div>
         )}
-        {flows.map((f) => {
+        {flows.filter((_, i) => i === cur).map((f) => {
           const idx = viewVer[f.id] ?? f.versions.length - 1
           const ver = f.versions[idx]
           return (
