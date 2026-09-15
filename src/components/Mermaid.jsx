@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 
 // 即時把 Mermaid 文字渲染成 SVG（mermaid 動態載入，不進主包）。
-// 手勢：雙指捏合縮放 0.5x~3x（縮放採版面寬度而非 transform，放大後靠容器捲動平移）；
-// 雙擊在 1x ↔ 1.8x 之間切換；縮放非 1x 時顯示百分比chip，點它歸位。
+// 手勢（原生 touch 實作，雙指時 preventDefault 防瀏覽器搶手勢）：
+// 雙指捏合 0.5x~3x（版面縮放，放大後單指捲動平移）；雙擊 1x↔1.8x；百分比 chip 點擊歸位。
 export default function Mermaid({ code }) {
   const [svg, setSvg] = useState('')
   const [err, setErr] = useState('')
-  const [nat, setNat] = useState(0) // 圖的自然寬度：寬圖以原尺寸呈現＋橫向捲動，不再縮小到不能讀
+  const [nat, setNat] = useState(0)
   const [scale, setScale] = useState(1)
-  const ptrs = useRef(new Map())
-  const pinch = useRef(null)
-  const lastTap = useRef(0)
+  const boxRef = useRef(null)
+  const scaleRef = useRef(1)
+  scaleRef.current = scale
 
   useEffect(() => {
     let alive = true
@@ -44,38 +44,49 @@ export default function Mermaid({ code }) {
     return () => { alive = false }
   }, [code])
 
-  const clamp = (v) => Math.min(3, Math.max(0.5, v))
-  const dist = () => {
-    const [a, b] = [...ptrs.current.values()]
-    return Math.hypot(a.x - b.x, a.y - b.y)
-  }
-  const onDown = (e) => {
-    ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (ptrs.current.size === 2) pinch.current = { d: dist(), s: scale }
-    else if (ptrs.current.size === 1) {
-      const t = Date.now()
-      if (t - lastTap.current < 300) setScale((s) => (s === 1 ? 1.8 : 1)) // 雙擊切換
-      lastTap.current = t
+  // 原生 touch 手勢：React 的 touch 監聽是 passive，preventDefault 無效，
+  // 瀏覽器會把雙指判成捲動/系統縮放並 cancel 掉 — 這裡用非 passive 監聽自己接手。
+  useEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    let pinch = null
+    let lastTap = 0
+    const clamp = (v) => Math.min(3, Math.max(0.5, v))
+    const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
+    const ts = (e) => {
+      if (e.touches.length === 2) {
+        pinch = { d: dist(e.touches), s: scaleRef.current }
+        e.preventDefault() // 從第一刻就接管，不給瀏覽器搶
+      } else if (e.touches.length === 1) {
+        const t = Date.now()
+        if (t - lastTap < 300) setScale((s) => (s === 1 ? 1.8 : 1))
+        lastTap = t
+      }
     }
-  }
-  const onMove = (e) => {
-    if (!ptrs.current.has(e.pointerId)) return
-    ptrs.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    if (pinch.current && ptrs.current.size === 2) {
-      e.preventDefault()
-      setScale(clamp(pinch.current.s * dist() / pinch.current.d))
+    const tm = (e) => {
+      if (e.touches.length === 2) {
+        if (!pinch) pinch = { d: dist(e.touches), s: scaleRef.current } // 第二指較晚落下也接得住
+        e.preventDefault()
+        setScale(clamp(pinch.s * dist(e.touches) / pinch.d))
+      }
     }
-  }
-  const onUp = (e) => {
-    ptrs.current.delete(e.pointerId)
-    if (ptrs.current.size < 2) pinch.current = null
-  }
+    const te = (e) => { if (e.touches.length < 2) pinch = null }
+    el.addEventListener('touchstart', ts, { passive: false })
+    el.addEventListener('touchmove', tm, { passive: false })
+    el.addEventListener('touchend', te)
+    el.addEventListener('touchcancel', te)
+    return () => {
+      el.removeEventListener('touchstart', ts)
+      el.removeEventListener('touchmove', tm)
+      el.removeEventListener('touchend', te)
+      el.removeEventListener('touchcancel', te)
+    }
+  }, [svg])
 
   if (err) return <div className="mermaid-box muted">圖表渲染失敗：{err}</div>
   if (!svg) return <div className="mermaid-box muted">渲染中…</div>
   return (
-    <div className="mermaid-box" style={{ position: 'relative', touchAction: 'pan-x pan-y' }}
-      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onPointerLeave={onUp}>
+    <div ref={boxRef} className="mermaid-box" style={{ position: 'relative' }}>
       {scale !== 1 && (
         <button className="mmd-zoom" onClick={() => setScale(1)}>{Math.round(scale * 100)}% ✕</button>
       )}
