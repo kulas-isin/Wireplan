@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 export default function Mermaid({ code }) {
   const [svg, setSvg] = useState('')
   const [err, setErr] = useState('')
+  const [nat, setNat] = useState(0) // 圖的自然寬度：寬圖以原尺寸呈現＋橫向捲動，不再縮小到不能讀
 
   useEffect(() => {
     let alive = true
@@ -24,7 +25,11 @@ export default function Mermaid({ code }) {
         })
         const id = 'mmd-' + Math.random().toString(36).slice(2)
         const { svg } = await mermaid.render(id, code)
-        if (alive) { setSvg(svg); setErr('') }
+        if (alive) {
+          const m = svg.match(/max-width:\s*([\d.]+)px/)
+          setNat(m ? Math.ceil(parseFloat(m[1])) : 0)
+          setSvg(svg); setErr('')
+        }
       } catch (e) {
         if (alive) setErr(String(e?.message || e))
       }
@@ -34,5 +39,9 @@ export default function Mermaid({ code }) {
 
   if (err) return <div className="mermaid-box muted">圖表渲染失敗：{err}</div>
   if (!svg) return <div className="mermaid-box muted">渲染中…</div>
-  return <div className="mermaid-box" dangerouslySetInnerHTML={{ __html: svg }} />
+  return (
+    <div className="mermaid-box">
+      <div style={nat ? { width: nat, minWidth: nat } : undefined} dangerouslySetInnerHTML={{ __html: svg }} />
+    </div>
+  )
 }
