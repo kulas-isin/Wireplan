@@ -2007,3 +2007,5 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 }
 .uf-code:focus { outline: none; border-color: #9CBD48; box-shadow: 0 0 0 3px rgba(198,220,106,0.35); }
 .uf-tips { font-size: 11.5px; color: #56684C; background: rgba(255,255,255,0.6); border-radius: 12px; padding: 9px 12px; line-height: 1.7; }
+.uf-sealed { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #4E7A2E; background: #E1F0D8; border-radius: 999px; padding: 4px 10px; }
+.uf-sealbtn { display: inline-flex; align-items: center; gap: 4px; border: 1px dashed rgba(58,93,37,0.4); background: none; font: inherit; font-size: 11px; font-weight: 700; color: #3A5D25; border-radius: 999px; padding: 4px 10px; cursor: pointer; }

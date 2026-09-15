@@ -290,7 +290,10 @@ export default function UnitWall() {
                 <div className={'uw-tree' + (editStruct ? ' editing' : '')} onClick={(e) => e.stopPropagation()}>
                   <div className="uw-treehead">
                     {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
-                    <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>流程圖 {(current.unitFlows || []).filter((f) => f.unit === u).length}</button>
+                    <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>
+                      粗流 {(current.unitFlows || []).filter((f) => f.unit === u).length}
+                      {(current.unitFlows || []).some((f) => f.unit === u && f.sealed) ? ' ✓' : ''}
+                    </button>
                     {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
                     <button className={'uw-editbtn' + (editStruct ? ' on' : '')} onClick={() => { setEditStruct((v) => !v); setAddingRoot(false) }}>
                       {editStruct ? '完成' : '編輯結構'}
