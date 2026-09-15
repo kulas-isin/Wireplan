@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import Mermaid from './Mermaid.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp } from 'lucide-react'
 
 // 新流程圖起手式：照 mermaid 整潔畫法（方向明確、短標籤、引號包字、標示失敗路徑）
 const TEMPLATE = (unit) => `flowchart TD
@@ -40,7 +40,7 @@ export default function UnitFlows({ unit, onClose }) {
       save([...all, { id: 'uf_' + Math.random().toString(36).slice(2, 10), unit, name: name.trim(), versions: [{ v: 1, at: Date.now(), note: '初版', code }] }])
     } else {
       if (!note.trim()) { alert('寫一句變更原因 — 之後回看才知道為什麼改'); return }
-      save(all.map((f) => f.id === flowId ? { ...f, versions: [...f.versions, { v: f.versions.length + 1, at: Date.now(), note: note.trim(), code }] } : f))
+      save(all.map((f) => f.id === flowId ? { ...f, sealed: null, versions: [...f.versions, { v: f.versions.length + 1, at: Date.now(), note: note.trim(), code }] } : f))
       setViewVer((m) => ({ ...m, [flowId]: undefined }))
     }
     setEditing(null)
@@ -54,7 +54,7 @@ export default function UnitFlows({ unit, onClose }) {
     <div className="uf-wrap">
       <div className="uf-head">
         <GitBranch size={18} />
-        <strong>{unit} · 流程圖（{flows.length}）</strong>
+        <strong>{unit} · 粗流（{flows.length}）</strong>
         <div className="spacer" />
         <button className="uf-new" onClick={openNew}><Plus size={14} /> 新增流程圖</button>
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
@@ -62,9 +62,9 @@ export default function UnitFlows({ unit, onClose }) {
       <div className="uf-body">
         {flows.length === 0 && (
           <div className="uf-empty">
-            這個單元還沒有流程圖。<br />
-            建議每個單元 1~3 張：一張主流程、必要時加分支情境（退貨、失敗路徑）。<br />
-            可以自己畫，也可以把需求丟給 AI 說「畫成 mermaid flowchart」再貼進來。
+            這個單元還沒有粗流（初步規劃流程圖）。<br />
+            建議每單元 1~3 張：一張主流程、必要時加分支情境（退貨、失敗路徑）。<br />
+            粗流「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。
           </div>
         )}
         {flows.map((f) => {
@@ -77,11 +77,16 @@ export default function UnitFlows({ unit, onClose }) {
                 <span className="uf-vchips">
                   {f.versions.map((v, i) => (
                     <button key={v.v} className={'uf-vchip' + (i === idx ? ' on' : '')}
-                      onClick={() => setViewVer((m) => ({ ...m, [f.id]: i }))}>v{v.v}</button>
+                      onClick={() => setViewVer((m) => ({ ...m, [f.id]: i }))}>v{v.v}{f.sealed?.v === v.v ? ' ✓' : ''}</button>
                   ))}
                 </span>
+                {f.sealed
+                  ? <span className="uf-sealed"><Stamp size={11} /> v{f.sealed.v} 已定稿</span>
+                  : <button className="uf-sealbtn" title="主流程定下來了 — 之後可以開始長頁面"
+                      onClick={() => save(all.map((x) => x.id === f.id ? { ...x, sealed: { v: x.versions.length, at: Date.now() } } : x))}>
+                      <Stamp size={11} /> 定稿此版</button>}
                 <div className="spacer" />
-                <button className="uw-mini" title="改一版（保留舊版）" onClick={() => openEdit(f)}><Pencil size={13} /></button>
+                <button className="uw-mini" title="改一版（保留舊版；已定稿的圖改版後回到未定稿）" onClick={() => openEdit(f)}><Pencil size={13} /></button>
                 <button className="uw-mini uf-del" title="刪除" onClick={() => remove(f)}><Trash2 size={13} /></button>
               </div>
               {idx !== f.versions.length - 1 && <div className="uf-oldnote">正在看 v{ver.v}（舊版）— 點最後一顆版本 chip 回到現行版</div>}
@@ -91,7 +96,7 @@ export default function UnitFlows({ unit, onClose }) {
                 {f.versions.map((v) => (
                   <div key={v.v} className="ht-row ht-seal">
                     <span className="ht-dot" style={{ fontSize: 10, fontWeight: 800 }}>v{v.v}</span>
-                    <span className="ht-txt">{v.note}</span>
+                    <span className="ht-txt">{v.note}{f.sealed?.v === v.v ? '（定稿）' : ''}</span>
                     <span className="ht-date">{new Date(v.at).toLocaleDateString('zh-TW')}</span>
                   </div>
                 ))}
