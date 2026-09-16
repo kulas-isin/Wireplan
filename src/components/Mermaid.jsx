@@ -17,11 +17,17 @@ export default function Mermaid({ code }) {
     setScale(1)
     ;(async () => {
       try {
-        const mermaid = (await import('mermaid')).default
+        const [{ default: mermaid }, { default: elkLayouts }] = await Promise.all([
+          import('mermaid'),
+          import('@mermaid-js/layout-elk'),
+        ])
+        mermaid.registerLayoutLoaders(elkLayouts)
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'loose',
-          flowchart: { curve: 'step' }, // 全域直角折線：不再歪歪曲曲（單張圖可用 %%{init}%% 覆寫）
+          layout: 'elk', // ELK 排版引擎：正交走線由演算法規劃，轉角最少（draw.io 同款）
+          elk: { mergeEdges: true, nodePlacementStrategy: 'BRANDES_KOEPF' },
+          flowchart: { curve: 'linear' }, // 沿 ELK 算好的轉折點直線連接，不再自己加彎
           theme: 'base',
           themeVariables: { // Nuviq 檸檬橄欖：與 app 同語彙
             primaryColor: '#F4F9E8',
