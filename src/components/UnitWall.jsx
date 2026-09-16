@@ -5,6 +5,7 @@ import { unitsOf, unitStats, pageTree, reqsOfPage, looseReqs, unassignedReqs, st
 import { linkedPages } from '../lib/elements.js'
 import { PackView, GalaxyView } from './UnitViz.jsx'
 import UnitFlows from './UnitFlows.jsx'
+import QuoteMap from './QuoteMap.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -237,6 +238,10 @@ export default function UnitWall() {
   const [deal, setDeal] = useState(false)
   const [editStruct, setEditStruct] = useState(false)
   const [flowUnit, setFlowUnit] = useState(null)
+  const [showQuote, setShowQuote] = useState(false)
+  const quoteItems = current.quote?.items || []
+  const quoteReqIds = new Set((current.requirements || []).map((r) => r.id))
+  const quoteGaps = quoteItems.filter((it) => !(it.reqIds || []).some((id) => quoteReqIds.has(id))).length
   const [viz, setViz] = useState('wall') // wall | pack | force
   const [moreWf, setMoreWf] = useState(null)
   const [addingRoot, setAddingRoot] = useState(false)
@@ -258,6 +263,11 @@ export default function UnitWall() {
           <button key={k} className={viz === k ? 'on' : ''} onClick={() => setViz(k)}>{label}</button>
         ))}
         <div className="spacer" />
+        {quoteItems.length > 0 && (
+          <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
+            報價對照{quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
+          </button>
+        )}
         <button className="uw-editbtn" onClick={() => setFlowUnit('')}>
           專案流程 {(current.unitFlows || []).filter((f) => !(f.unit || '')).length}
           {(current.unitFlows || []).some((f) => !(f.unit || '') && f.sealed) ? ' ✓' : ''}
@@ -345,6 +355,7 @@ export default function UnitWall() {
       {deal && <DealMode onClose={() => setDeal(false)} />}
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
       {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
+      {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
     </div>
   )
 }
