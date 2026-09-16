@@ -21,6 +21,7 @@ export default function Mermaid({ code }) {
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'loose',
+          flowchart: { curve: 'step' }, // 全域直角折線：不再歪歪曲曲（單張圖可用 %%{init}%% 覆寫）
           theme: 'base',
           themeVariables: { // Nuviq 檸檬橄欖：與 app 同語彙
             primaryColor: '#F4F9E8',
