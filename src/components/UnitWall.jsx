@@ -263,11 +263,9 @@ export default function UnitWall() {
           <button key={k} className={viz === k ? 'on' : ''} onClick={() => setViz(k)}>{label}</button>
         ))}
         <div className="spacer" />
-        {quoteItems.length > 0 && (
-          <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
-            報價對照{quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
-          </button>
-        )}
+        <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
+          報價對照{quoteItems.length === 0 ? '' : quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
+        </button>
         <button className="uw-editbtn" onClick={() => setFlowUnit('')}>
           專案流程 {(current.unitFlows || []).filter((f) => !(f.unit || '')).length}
           {(current.unitFlows || []).some((f) => !(f.unit || '') && f.sealed) ? ' ✓' : ''}

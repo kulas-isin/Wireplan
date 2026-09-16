@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
-import { X, ScrollText, Link2, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, ScrollText, Link2, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react'
 
 // 報價對照：報價單原始條目 ↔ 需求卡 的雙向追溯。
 // project.quote = { source: '來源說明', items: [{ id, section, text, reqIds: [] }] }
@@ -16,6 +16,22 @@ export default function QuoteMap({ onClose }) {
   const save = (nextItems) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: { ...quote, items: nextItems } })
   const [linking, setLinking] = useState(null) // 展開對應選單的條目 id
   const ST_COLOR = ['#2E5F96', '#4E7A2E', '#B0691F'] // 待確認/已蓋章/異動中
+
+  // 只匯入 quote 欄位：不整包覆蓋專案，app 內的流程圖/定稿/勾選都不會動
+  const fileRef = useRef(null)
+  const importQuote = (file) => {
+    if (!file) return
+    const rd = new FileReader()
+    rd.onload = () => {
+      try {
+        const parsed = JSON.parse(rd.result)
+        const q = parsed.quote || (Array.isArray(parsed.items) ? parsed : null)
+        if (!q || !Array.isArray(q.items)) { alert('檔案裡找不到 quote.items — 需要 {"quote":{"items":[…]}} 或 {"items":[…]}'); return }
+        dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: q })
+      } catch { alert('不是有效的 JSON 檔') }
+    }
+    rd.readAsText(file)
+  }
 
   const liveIds = (it) => (it.reqIds || []).filter((id) => reqById[id])
   const mapped = new Set(items.flatMap(liveIds))
@@ -51,14 +67,21 @@ export default function QuoteMap({ onClose }) {
         <ScrollText size={18} />
         <strong>報價對照（{items.length} 條）</strong>
         <div className="spacer" />
+        {items.length > 0 && (
+          <button className="uw-mini" title="重新匯入報價對照檔（只更新對照，不動其他資料）"
+            onClick={() => fileRef.current?.click()}><UploadCloud size={14} /></button>
+        )}
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
+        <input ref={fileRef} type="file" accept=".json" style={{ display: 'none' }}
+          onChange={(e) => { importQuote(e.target.files?.[0]); e.target.value = '' }} />
         {items.length === 0 ? (
           <div className="uf-empty">
             這個專案還沒有報價單條目。<br />
-            用 quote-to-project 重新產出含 <b>quote.items</b>（報價原文逐條）的專案 JSON，
-            同 id 再匯入即可同步補上，需求資料不會動。
+            請 Claude 從報價單產出 <b>報價對照 JSON</b>（quote.items：原文逐條＋需求對應），
+            在這裡匯入 — 只會補上對照資料，專案其他內容完全不動。<br /><br />
+            <button className="uf-new" onClick={() => fileRef.current?.click()}><UploadCloud size={14} /> 匯入報價對照檔</button>
           </div>
         ) : (<>
           <div className="qm-sum">
