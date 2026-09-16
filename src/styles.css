@@ -2058,7 +2058,9 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .qm-sec-name { font-size: 12px; font-weight: 800; color: #3A5D25; padding: 2px 2px 8px; }
 .qm-item { border-top: 1px solid rgba(58,93,37,0.1); padding: 10px 2px; display: flex; flex-direction: column; gap: 7px; }
 .qm-item.gap { background: #FFFBF3; margin: 0 -14px; padding: 10px 16px; }
-.qm-text { font-size: 13.5px; color: #22301F; line-height: 1.6; }
+.qm-name { font-size: 13.5px; font-weight: 800; color: #22301F; }
+.qm-text { font-size: 13px; color: #38452F; line-height: 1.65; white-space: pre-wrap; cursor: pointer; }
+.qm-text.clamp { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .qm-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .qm-req { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #3A5D25; background: rgba(58,93,37,0.07); border-radius: 999px; padding: 3px 10px; }
 .qm-unit { font-size: 10.5px; font-weight: 700; color: #2E5F96; background: #E1EDF9; border-radius: 999px; padding: 3px 9px; }

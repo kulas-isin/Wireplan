@@ -15,6 +15,7 @@ export default function QuoteMap({ onClose }) {
   const reqById = Object.fromEntries(reqs.map((r) => [r.id, r]))
   const save = (nextItems) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: { ...quote, items: nextItems } })
   const [linking, setLinking] = useState(null) // 展開對應選單的條目 id
+  const [expanded, setExpanded] = useState({}) // 條目原文展開（預設夾六行）
   const ST_COLOR = ['#2E5F96', '#4E7A2E', '#B0691F'] // 待確認/已蓋章/異動中
 
   // 只匯入 quote 欄位：不整包覆蓋專案，app 內的流程圖/定稿/勾選都不會動
@@ -96,7 +97,9 @@ export default function QuoteMap({ onClose }) {
                 const linked = liveIds(it)
                 return (
                   <div key={it.id} className={'qm-item' + (linked.length ? '' : ' gap')}>
-                    <div className="qm-text">{it.text}</div>
+                    {it.name && <div className="qm-name">{it.name}</div>}
+                    <div className={'qm-text' + (expanded[it.id] ? '' : ' clamp')}
+                      onClick={() => setExpanded((m) => ({ ...m, [it.id]: !m[it.id] }))}>{it.text}</div>
                     <div className="qm-links">
                       {linked.map((id) => {
                         const r = reqById[id]
