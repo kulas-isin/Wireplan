@@ -1975,7 +1975,7 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-body { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .uf-empty { background: rgba(255,255,255,0.6); border-radius: 18px; padding: 22px 18px; font-size: 13px; color: #56684C; line-height: 1.8; text-align: center; }
 .uf-card {
-  background: rgba(255,255,255,0.72); backdrop-filter: blur(10px); border-radius: 20px; padding: 14px;
+  background: #fff; margin: 0 -16px; border-radius: 0; padding: 14px;
   box-shadow: 0 6px 22px rgba(60,80,40,0.1); display: flex; flex-direction: column; gap: 10px;
 }
 .uf-card-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; color: #22301F; }
