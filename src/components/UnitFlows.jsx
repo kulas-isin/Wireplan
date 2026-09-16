@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText } from 'lucide-react'
 
 // 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
 const SEAL_CHECKS = [
@@ -147,6 +147,9 @@ export default function UnitFlows({ unit, onClose }) {
   const coveredAnywhere = new Set(scoped.flatMap((f) => f.covers || []))
   const orphans = unitReqs.filter((r) => !coveredAnywhere.has(r.id))
   const [covOpen, setCovOpen] = useState(null) // 展開盤點區的流程圖 id
+  const [quoteOpen, setQuoteOpen] = useState(null) // 展開報價原文的需求 id
+  const quoteItems = current.quote?.items || []
+  const quotesOfReq = (reqId) => quoteItems.filter((it) => (it.reqIds || []).includes(reqId))
   const toggleCover = (f, reqId) => {
     const cov = new Set(f.covers || [])
     cov.has(reqId) ? cov.delete(reqId) : cov.add(reqId)
@@ -243,13 +246,30 @@ export default function UnitFlows({ unit, onClose }) {
                   </button>
                   {covOpen === f.id && (
                     <div className="uf-cov-body">
-                      {unitReqs.map((r) => (
-                        <label key={r.id} className="uf-check">
-                          <input type="checkbox" checked={(f.covers || []).includes(r.id)} onChange={() => toggleCover(f, r.id)} />
-                          <i className="uf-cov-dot" style={{ background: ST_COLOR[statusOfReq(r)] }} />
-                          <span>{r.name}</span>
-                        </label>
-                      ))}
+                      {unitReqs.map((r) => {
+                        const qts = quotesOfReq(r.id)
+                        return (
+                          <div key={r.id}>
+                            <div className="uf-covrow">
+                              <label className="uf-check">
+                                <input type="checkbox" checked={(f.covers || []).includes(r.id)} onChange={() => toggleCover(f, r.id)} />
+                                <i className="uf-cov-dot" style={{ background: ST_COLOR[statusOfReq(r)] }} />
+                                <span>{r.name}</span>
+                              </label>
+                              {qts.length > 0 && (
+                                <button className={'uf-quotebtn' + (quoteOpen === r.id ? ' on' : '')} title="報價原文"
+                                  onClick={() => setQuoteOpen(quoteOpen === r.id ? null : r.id)}><ScrollText size={12} /></button>
+                              )}
+                            </div>
+                            {quoteOpen === r.id && qts.map((it) => (
+                              <div key={it.id} className="uf-quote">
+                                <div className="uf-quote-name"><ScrollText size={11} /> {it.name}｜報價原文</div>
+                                <div className="qm-text">{it.text}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
                       {orphans.length > 0
                         ? <div className="uf-cov-note">還有 {orphans.length} 條需求未被任何粗流涵蓋：{orphans.map((r) => r.name).join('、')} — 是漏畫流程，還是需求本身多餘？</div>
                         : <div className="uf-cov-note ok">此單元所有需求都已被粗流涵蓋 — 可以開始長頁面。</div>}
