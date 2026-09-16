@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
+import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch, Stamp } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp } from 'lucide-react'
+
+// 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
+const SEAL_CHECKS = [
+  '每個分支、每個箭頭都有去處，沒有沒下文的節點',
+  '失敗／例外路徑已畫出，或已另開一張「例外」圖',
+  '每個關鍵轉換都知道由誰觸發（人員／系統／排程）',
+  '圖上沒有還沒跟客戶對完的懸念',
+]
 
 // 圖型分類（分頁籤）＋各自的整潔起手範本
 export const FLOW_KINDS = [
@@ -74,7 +83,7 @@ export default function UnitFlows({ unit, onClose }) {
   const cur = Math.min(idx, Math.max(0, flows.length - 1))
   const go = (d) => { const n = cur + d; if (n < 0 || n >= flows.length) return; setIdx(n) }
   const onTS = (e) => {
-    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, input, textarea, button')) { window.__ufTouch = null; return }
+    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, input, textarea, button')) { window.__ufTouch = null; return }
     window.__ufTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
   }
   const onTE = (e) => {
@@ -124,6 +133,26 @@ export default function UnitFlows({ unit, onClose }) {
     if (!confirm(`刪除流程圖「${f.name}」與其全部 ${f.versions.length} 個版本？`)) return
     save(all.filter((x) => x.id !== f.id))
   }
+
+  // 定稿檢查清單：sealAsk = 流程圖 id，checks = 已勾的索引
+  const [sealAsk, setSealAsk] = useState(null)
+  const [sealChecks, setSealChecks] = useState([])
+  const doSeal = (f) => {
+    save(all.map((x) => x.id === f.id ? { ...x, sealed: { v: x.versions.length, at: Date.now() } } : x))
+    setSealAsk(null)
+  }
+
+  // 需求涵蓋盤點（單元級才有）：flow.covers = 需求 id 陣列；盤點是記錄不是規格，定稿後仍可勾
+  const unitReqs = isProject ? [] : (current.requirements || []).filter((r) => (r.unit || '').trim() === unit)
+  const coveredAnywhere = new Set(scoped.flatMap((f) => f.covers || []))
+  const orphans = unitReqs.filter((r) => !coveredAnywhere.has(r.id))
+  const [covOpen, setCovOpen] = useState(null) // 展開盤點區的流程圖 id
+  const toggleCover = (f, reqId) => {
+    const cov = new Set(f.covers || [])
+    cov.has(reqId) ? cov.delete(reqId) : cov.add(reqId)
+    save(all.map((x) => x.id === f.id ? { ...x, covers: [...cov] } : x))
+  }
+  const ST_COLOR = ['#2E5F96', '#4E7A2E', '#B0691F'] // 待確認/已蓋章/異動中
 
   return createPortal(
     <div className="uf-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
@@ -178,14 +207,56 @@ export default function UnitFlows({ unit, onClose }) {
                 {f.sealed
                   ? <span className="uf-sealed"><Stamp size={11} /> v{f.sealed.v} 已定稿</span>
                   : <button className="uf-sealbtn" title="流程定下來了 — 之後可以進下一階段"
-                      onClick={() => save(all.map((x) => x.id === f.id ? { ...x, sealed: { v: x.versions.length, at: Date.now() } } : x))}>
+                      onClick={() => { setSealChecks([]); setSealAsk(sealAsk === f.id ? null : f.id) }}>
                       <Stamp size={11} /> 定稿此版</button>}
                 <div className="spacer" />
                 <button className="uw-mini" title="改一版（保留舊版；已定稿改版後回到未定稿）" onClick={() => openEdit(f)}><Pencil size={13} /></button>
                 <button className="uw-mini uf-del" title="刪除" onClick={() => remove(f)}><Trash2 size={13} /></button>
               </div>
               {vIdx !== f.versions.length - 1 && <div className="uf-oldnote">正在看 v{ver.v}（舊版）— 點最後一顆版本 chip 回到現行版</div>}
+              {sealAsk === f.id && !f.sealed && (
+                <div className="uf-sealask">
+                  <div className="uf-sealask-title">定稿前過一遍（全勾才能蓋章）</div>
+                  {SEAL_CHECKS.map((txt, i) => (
+                    <label key={i} className="uf-check">
+                      <input type="checkbox" checked={sealChecks.includes(i)}
+                        onChange={() => setSealChecks((s) => s.includes(i) ? s.filter((x) => x !== i) : [...s, i])} />
+                      <span>{txt}</span>
+                    </label>
+                  ))}
+                  <div className="uf-sealask-btns">
+                    <button className="uf-sealbtn" onClick={() => setSealAsk(null)}>先不定稿</button>
+                    <button className="uf-sealgo" disabled={sealChecks.length < SEAL_CHECKS.length}
+                      onClick={() => doSeal(f)}><Stamp size={12} /> 蓋章定稿 v{f.versions.length}</button>
+                  </div>
+                </div>
+              )}
               <Mermaid code={ver.code} />
+              {!isProject && unitReqs.length > 0 && (
+                <div className="uf-cov">
+                  <button className="uf-cov-head" onClick={() => setCovOpen(covOpen === f.id ? null : f.id)}>
+                    <ListChecks size={13} />
+                    <span>需求涵蓋 {(f.covers || []).filter((id) => unitReqs.some((r) => r.id === id)).length}/{unitReqs.length}</span>
+                    {orphans.length > 0 && <span className="uf-cov-gap">單元缺口 {orphans.length}</span>}
+                    <div className="spacer" />
+                    {covOpen === f.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+                  {covOpen === f.id && (
+                    <div className="uf-cov-body">
+                      {unitReqs.map((r) => (
+                        <label key={r.id} className="uf-check">
+                          <input type="checkbox" checked={(f.covers || []).includes(r.id)} onChange={() => toggleCover(f, r.id)} />
+                          <i className="uf-cov-dot" style={{ background: ST_COLOR[statusOfReq(r)] }} />
+                          <span>{r.name}</span>
+                        </label>
+                      ))}
+                      {orphans.length > 0
+                        ? <div className="uf-cov-note">還有 {orphans.length} 條需求未被任何粗流涵蓋：{orphans.map((r) => r.name).join('、')} — 是漏畫流程，還是需求本身多餘？</div>
+                        : <div className="uf-cov-note ok">此單元所有需求都已被粗流涵蓋 — 可以開始長頁面。</div>}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="ht-wrap">
                 <span className="ht-title">版本履歷</span>
                 {f.versions.map((v) => (
