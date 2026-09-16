@@ -257,6 +257,11 @@ export default function UnitWall() {
         {[['wall', '磁磚'], ['pack', '圓圈嵌套'], ['force', '星系']].map(([k, label]) => (
           <button key={k} className={viz === k ? 'on' : ''} onClick={() => setViz(k)}>{label}</button>
         ))}
+        <div className="spacer" />
+        <button className="uw-editbtn" onClick={() => setFlowUnit('')}>
+          專案流程 {(current.unitFlows || []).filter((f) => !(f.unit || '')).length}
+          {(current.unitFlows || []).some((f) => !(f.unit || '') && f.sealed) ? ' ✓' : ''}
+        </button>
       </div>
       {viz === 'pack' && <PackView />}
       {viz === 'force' && <GalaxyView />}
@@ -339,7 +344,7 @@ export default function UnitWall() {
       </>}
       {deal && <DealMode onClose={() => setDeal(false)} />}
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
-      {flowUnit && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
+      {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
     </div>
   )
 }
