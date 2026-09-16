@@ -135,21 +135,23 @@ export default function UnitFlows({ unit, onClose }) {
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
-        {kindsPresent.length > 1 && (
-          <div className="uw-modes" style={{ justifyContent: 'center' }}>
-            <button className={kindTab === 'all' ? 'on' : ''} onClick={() => { setKindTab('all'); setIdx(0) }}>全部 {scoped.length}</button>
-            {FLOW_KINDS.filter(([k]) => kindsPresent.includes(k)).map(([k, label]) => (
-              <button key={k} className={kindTab === k ? 'on' : ''} onClick={() => { setKindTab(k); setIdx(0) }}>
-                {label} {scoped.filter((f) => (f.kind || 'main') === k).length}
-              </button>
-            ))}
-          </div>
-        )}
-        {flows.length > 1 && (
-          <div className="rd-nav">
-            <button disabled={cur === 0} onClick={() => go(-1)}>‹</button>
-            <span>{cur + 1} / {flows.length}</span>
-            <button disabled={cur === flows.length - 1} onClick={() => go(1)}>›</button>
+        {(kindsPresent.length > 1 || flows.length > 1) && (
+          <div className="uw-modes uf-tabs">
+            {kindsPresent.length > 1 && (<>
+              <button className={kindTab === 'all' ? 'on' : ''} onClick={() => { setKindTab('all'); setIdx(0) }}>全部 {scoped.length}</button>
+              {FLOW_KINDS.filter(([k]) => kindsPresent.includes(k)).map(([k, label]) => (
+                <button key={k} className={kindTab === k ? 'on' : ''} onClick={() => { setKindTab(k); setIdx(0) }}>
+                  {label} {scoped.filter((f) => (f.kind || 'main') === k).length}
+                </button>
+              ))}
+            </>)}
+            {flows.length > 1 && (
+              <span className="uf-pager">
+                <button disabled={cur === 0} onClick={() => go(-1)}>‹</button>
+                <span>{cur + 1}/{flows.length}</span>
+                <button disabled={cur === flows.length - 1} onClick={() => go(1)}>›</button>
+              </span>
+            )}
           </div>
         )}
         {flows.length === 0 && (
