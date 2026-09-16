@@ -30,10 +30,13 @@ description: 從報價單/需求描述展開成「單元 → 頁面 → 需求�
 
 ## 產出二：Wireplan 專案 JSON（匯入 schema）
 
-**預設是「初步開案」模式：只給 單元清單＋需求卡，不產頁面。**
+**預設是「初步開案」模式：只給 單元清單＋需求卡＋報價對照，不產頁面。**
 - `wireframes` 給空陣列 `[]`；需求卡的 `pages`、`elements` 一律省略
 - 頁面之後由使用者在 app 內用畫面地圖/單元牆長出來，開案階段不要幫他決定頁怎麼切
 - 只有使用者明確說「要含頁面樹/完整展開」時，才照下方 schema 補 `wireframes`（unit＋parentId）與需求的 `pages`
+- **`quote.items` 必給**（有原始報價單時）：報價單條目**逐字原文**照抄進 `text`（這是合約基準，不准改寫、不准濃縮），
+  `section` 填報價單原始章節，`reqIds` 填該條目展開出的需求 id（一條目常對多需求）。
+  每條需求都應能從某條目追溯到；報價單沒有但你合理補上的需求，**不要**硬塞 reqIds — 留白讓 app 的「報價對照」把它列成「報價外需求」提醒使用者評估。
 
 單一 JSON 物件，欄位如下（省略的欄位給空陣列/空字串即可）：
 
@@ -43,6 +46,10 @@ description: 從報價單/需求描述展開成「單元 → 頁面 → 需求�
   "name": "專案名稱",
   "units": ["託運單管理", "帳務管理"],   // 單元排序清單（單元牆順序）
   "parties": { "vendor": "", "client": "客戶名" },
+  "quote": {                       // 報價對照（app 單元牆「報價對照」用）
+    "source": "2026-09 報價單 v2.docx",
+    "items": [{ "id": "q1", "section": "託運單管理", "text": "報價單條目逐字原文", "reqIds": ["req_sc1"] }]
+  },
   "requirements": [{
     "id": "req_唯一碼", "name": "需求名", "unit": "所屬單元",
     "category": "list|form|detail|dashboard|report|workflow|setting|auth|payment|generic",
