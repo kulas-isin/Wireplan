@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
+import QuoteText from './QuoteText.jsx'
 import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText } from 'lucide-react'
 
 // 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
@@ -264,7 +265,7 @@ export default function UnitFlows({ unit, onClose }) {
                             {quoteOpen === r.id && qts.map((it) => (
                               <div key={it.id} className="uf-quote">
                                 <div className="uf-quote-name"><ScrollText size={11} /> {it.name}｜報價原文</div>
-                                <div className="qm-text">{it.text}</div>
+                                <QuoteText text={it.text} />
                               </div>
                             ))}
                           </div>

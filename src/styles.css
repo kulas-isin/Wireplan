@@ -2066,8 +2066,19 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .qm-item { border-top: 1px solid rgba(58,93,37,0.1); padding: 10px 2px; display: flex; flex-direction: column; gap: 7px; }
 .qm-item.gap { background: #FFFBF3; margin: 0 -14px; padding: 10px 16px; }
 .qm-name { font-size: 13.5px; font-weight: 800; color: #22301F; }
-.qm-text { font-size: 13px; color: #38452F; line-height: 1.65; white-space: pre-wrap; cursor: pointer; }
-.qm-text.clamp { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+/* 報價原文排版器 */
+.qt { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #38452F; line-height: 1.7; }
+.qt-h { display: inline-block; font-size: 11px; font-weight: 800; color: #B0691F; background: #FBF0DC; border-radius: 999px; padding: 2px 10px; margin: 2px 0 4px; }
+.qt-p { margin: 0; }
+.qt-p b, .qt-li b { color: #22301F; }
+.qt-ul { margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 3px; }
+.qt-li::marker { color: #9CBD48; }
+.qt-sub { margin: 2px 0 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 2px; color: #56684C; font-size: 12.5px; }
+/* 長原文收合：漸層淡出提示還有更多，點擊展開 */
+.qm-textwrap { cursor: pointer; }
+.qm-textwrap.clamp { max-height: 175px; overflow: hidden; position: relative; }
+.qm-textwrap.clamp::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 46px; background: linear-gradient(rgba(255,255,255,0), #fff); }
+.qm-item.gap .qm-textwrap.clamp::after { background: linear-gradient(rgba(255,251,243,0), #FFFBF3); }
 .qm-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .qm-req { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; color: #3A5D25; background: rgba(58,93,37,0.07); border-radius: 999px; padding: 3px 10px; }
 .qm-unit { font-size: 10.5px; font-weight: 700; color: #2E5F96; background: #E1EDF9; border-radius: 999px; padding: 3px 9px; }

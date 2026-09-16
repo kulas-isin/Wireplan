@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
+import QuoteText from './QuoteText.jsx'
 import { X, ScrollText, Link2, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react'
 
 // 報價對照：報價單原始條目 ↔ 需求卡 的雙向追溯。
@@ -98,8 +99,10 @@ export default function QuoteMap({ onClose }) {
                 return (
                   <div key={it.id} className={'qm-item' + (linked.length ? '' : ' gap')}>
                     {it.name && <div className="qm-name">{it.name}</div>}
-                    <div className={'qm-text' + (expanded[it.id] ? '' : ' clamp')}
-                      onClick={() => setExpanded((m) => ({ ...m, [it.id]: !m[it.id] }))}>{it.text}</div>
+                    <div className={'qm-textwrap' + (it.text.length > 220 && !expanded[it.id] ? ' clamp' : '')}
+                      onClick={() => it.text.length > 220 && setExpanded((m) => ({ ...m, [it.id]: !m[it.id] }))}>
+                      <QuoteText text={it.text} />
+                    </div>
                     <div className="qm-links">
                       {linked.map((id) => {
                         const r = reqById[id]
