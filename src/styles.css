@@ -1988,7 +1988,10 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-oldnote { font-size: 11.5px; color: #B0691F; background: #FBF0DC; border-radius: 10px; padding: 6px 10px; }
 .uf-del { color: #B3402A; }
 .mermaid-box { background: #fff; border-radius: 14px; padding: 10px; overflow-x: auto; }
-.mermaid-box svg { height: auto; }
+/* 蓋掉 mermaid 行內 max-width：SVG 跟隨版面寬度，放大（自動填滿／雙指）才不會被原尺寸卡住 */
+.mermaid-box svg { height: auto; max-width: none !important; width: 100%; }
+/* 流程圖卡內滿版出血：吃掉卡片左右留白、拿掉邊框與高度上限，呈現面積最大化 */
+.uf-card .mermaid-box { margin: 0 -14px; border: none; border-radius: 0; padding: 6px 2px; height: auto; max-height: none; }
 .uf-editor {
   position: fixed; inset: 0; z-index: 97; overflow-y: auto;
   background: linear-gradient(165deg, #F7FAEC 0%, #EAF2D8 42%, #DCEBC7 100%);

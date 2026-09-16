@@ -7,6 +7,7 @@ export default function Mermaid({ code }) {
   const [svg, setSvg] = useState('')
   const [err, setErr] = useState('')
   const [nat, setNat] = useState(0)
+  const [fit, setFit] = useState(1)
   const [scale, setScale] = useState(1)
   const boxRef = useRef(null)
   const scaleRef = useRef(1)
@@ -59,6 +60,15 @@ export default function Mermaid({ code }) {
     return () => { alive = false }
   }, [code])
 
+  // 自動填滿：比容器窄的圖放大到滿版（上限 2x），呈現面積最大化；比容器寬的維持原尺寸橫向捲
+  useEffect(() => {
+    const el = boxRef.current
+    if (!el || !nat) { setFit(1); return }
+    const cs = getComputedStyle(el)
+    const cw = el.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0)
+    setFit(cw > nat ? Math.min(2, cw / nat) : 1)
+  }, [svg, nat])
+
   // 原生 touch 手勢：React 的 touch 監聽是 passive，preventDefault 無效，
   // 瀏覽器會把雙指判成捲動/系統縮放並 cancel 掉 — 這裡用非 passive 監聽自己接手。
   useEffect(() => {
@@ -105,7 +115,7 @@ export default function Mermaid({ code }) {
       {scale !== 1 && (
         <button className="mmd-zoom" onClick={() => setScale(1)}>{Math.round(scale * 100)}% ✕</button>
       )}
-      <div style={nat ? { width: Math.round(nat * scale), minWidth: Math.round(nat * scale) } : undefined}
+      <div style={nat ? { width: Math.round(nat * fit * scale), minWidth: Math.round(nat * fit * scale) } : undefined}
         dangerouslySetInnerHTML={{ __html: svg }} />
     </div>
   )
