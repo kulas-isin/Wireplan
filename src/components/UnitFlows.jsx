@@ -136,7 +136,7 @@ export default function UnitFlows({ unit, onClose }) {
       </div>
       <div className="uf-body">
         {kindsPresent.length > 1 && (
-          <div className="uw-modes" style={{ justifyContent: 'center' }}>
+          <div className="uw-modes uf-tabs">
             <button className={kindTab === 'all' ? 'on' : ''} onClick={() => { setKindTab('all'); setIdx(0) }}>全部 {scoped.length}</button>
             {FLOW_KINDS.filter(([k]) => kindsPresent.includes(k)).map(([k, label]) => (
               <button key={k} className={kindTab === k ? 'on' : ''} onClick={() => { setKindTab(k); setIdx(0) }}>

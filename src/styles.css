@@ -2020,3 +2020,9 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 }
 .uf-kind { font-size: 10.5px; font-weight: 700; color: #2E5F96; background: #E1EDF9; border-radius: 999px; padding: 3px 9px; flex-shrink: 0; }
 .uw-modes .spacer { flex: 1; }
+/* 分類籤單行滾軸：不換行、橫向滑動、藏捲軸；少籤時靠 margin auto 置中 */
+.uf-tabs { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.uf-tabs::-webkit-scrollbar { display: none; }
+.uf-tabs button { flex-shrink: 0; white-space: nowrap; }
+.uf-tabs > :first-child { margin-left: auto; }
+.uf-tabs > :last-child { margin-right: auto; }
