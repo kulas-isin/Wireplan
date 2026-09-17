@@ -108,6 +108,39 @@ export default function Mermaid({ code }) {
     }
   }, [svg])
 
+  // 桌機滑鼠：Ctrl/⌘＋滾輪縮放（觸控板雙指捏合瀏覽器會帶 ctrlKey，同樣生效）；按住左鍵拖曳平移
+  useEffect(() => {
+    const el = boxRef.current
+    if (!el) return
+    const onWheel = (e) => {
+      if (!e.ctrlKey && !e.metaKey) return
+      e.preventDefault()
+      setScale((s) => Math.min(3, Math.max(0.5, s * (e.deltaY < 0 ? 1.1 : 0.9))))
+    }
+    let drag = null
+    const down = (e) => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return
+      drag = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop }
+      el.style.userSelect = 'none'; el.style.cursor = 'grabbing'
+    }
+    const move = (e) => {
+      if (!drag) return
+      el.scrollLeft = drag.sl - (e.clientX - drag.x)
+      el.scrollTop = drag.st - (e.clientY - drag.y)
+    }
+    const up = () => { if (!drag) return; drag = null; el.style.userSelect = ''; el.style.cursor = '' }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    el.addEventListener('pointerdown', down)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => {
+      el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('pointerdown', down)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+    }
+  }, [svg])
+
   if (err) return <div className="mermaid-box muted">圖表渲染失敗：{err}</div>
   if (!svg) return <div className="mermaid-box muted">渲染中…</div>
   return (

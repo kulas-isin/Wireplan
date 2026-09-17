@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
@@ -83,6 +83,19 @@ export default function UnitFlows({ unit, onClose }) {
   const [idx, setIdx] = useState(0)
   const cur = Math.min(idx, Math.max(0, flows.length - 1))
   const go = (d) => { const n = cur + d; if (n < 0 || n >= flows.length) return; setIdx(n) }
+  // 桌機鍵盤：←→ 換流程圖（輸入中不搶）、Esc 逐層關（編輯器 → 整頁）
+  const keyRef = useRef({})
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return
+      const k = keyRef.current
+      if (e.key === 'Escape') { k.editing ? k.setEditing(null) : onClose() }
+      else if (!k.editing && e.key === 'ArrowLeft') k.go(-1)
+      else if (!k.editing && e.key === 'ArrowRight') k.go(1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, []) // eslint-disable-line
   const onTS = (e) => {
     if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, input, textarea, button')) { window.__ufTouch = null; return }
     window.__ufTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
@@ -96,6 +109,7 @@ export default function UnitFlows({ unit, onClose }) {
     if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 2) go(dx < 0 ? 1 : -1)
   }
   const [editing, setEditing] = useState(null) // { flowId|null, name, code, note, kind, pristine }
+  keyRef.current = { go, editing, setEditing }
   const [preview, setPreview] = useState('')
   useEffect(() => {
     if (!editing) return

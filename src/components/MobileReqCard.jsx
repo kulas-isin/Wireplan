@@ -212,6 +212,18 @@ function ReqDetailSheet({ startId, list, onClose }) {
     ...(req.changeLog || []).map((c) => ({ kind: 'cut', at: c.at, note: c.note })),
   ].sort((a, b) => (a.at || 0) - (b.at || 0))
   const go = (d) => { const n = idx + d; if (n < 0 || n >= list.length) return; setId(list[n].id); setMore(false) }
+  // 桌機鍵盤：←→ 換卡（輸入中不搶）、Esc 關閉
+  const goRef = useRef(go); goRef.current = go
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return
+      if (e.key === 'ArrowLeft') goRef.current(-1)
+      else if (e.key === 'ArrowRight') goRef.current(1)
+      else if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, []) // eslint-disable-line
   const touch = useRef(null)
   const onTS = (e) => {
     // 畫面地圖本身橫向捲動，滑它不換卡
