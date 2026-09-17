@@ -2078,13 +2078,13 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 /* 磁磚內報價原文區＋逐行點擊聚焦 */
 .uw-quote { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.12); border-radius: 12px; padding: 10px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-height: 46vh; overflow-y: auto; }
 .uw-quote-item + .uw-quote-item { border-top: 1px dashed rgba(58,93,37,0.18); padding-top: 10px; }
-/* 逐行聚焦（iA Writer Focus Mode 式）：點到的行保持全對比，其餘行淡出讓路 */
-.qt-tap .qt-p, .qt-tap .qt-li, .qt-tap .qt-sub li { cursor: pointer; transition: color .3s ease, opacity .3s ease; -webkit-tap-highlight-color: transparent; }
+/* 逐行聚焦（iA Writer Focus Mode 式）：點到的行保持全對比＋柔和藍底，其餘行淡出讓路 */
+.qt-tap .qt-p, .qt-tap .qt-li, .qt-tap .qt-sub li { cursor: pointer; border-radius: 8px; padding: 2px 6px; margin-left: -6px; transition: color .3s ease, opacity .3s ease, background .3s ease; -webkit-tap-highlight-color: transparent; }
 .qt-tap.has-act .qt-p, .qt-tap.has-act .qt-li, .qt-tap.has-act .qt-sub li { color: rgba(56,69,47,0.32); }
 .qt-tap.has-act .qt-p b, .qt-tap.has-act .qt-li b { color: inherit; }
 .qt-tap.has-act .qt-li::marker { color: rgba(156,189,72,0.35); }
 .qt-tap.has-act .qt-h { opacity: 0.35; transition: opacity .3s ease; }
-.qt-tap.has-act .act, .qt-tap.has-act .act b, .qt-tap.has-act .qt-sub li.act { color: #1C2717; }
+.qt-tap.has-act .act, .qt-tap.has-act .act b, .qt-tap.has-act .qt-sub li.act { color: #1C2717; background: rgba(225,237,249,0.8); }
 .qt-tap.has-act .qt-li.act .qt-sub li { color: inherit; } /* 整條 bullet 聚焦時子條列一起亮 */
 .qt-tap.has-act .qt-li.act::marker { color: #9CBD48; }
 /* 長原文收合：漸層淡出提示還有更多，點擊展開 */
