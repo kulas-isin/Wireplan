@@ -4,7 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
 import QuoteText from './QuoteText.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText, PanelRightClose, PanelRightOpen } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText, PanelRightClose, PanelRightOpen, Upload } from 'lucide-react'
 
 // 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
 const SEAL_CHECKS = [
@@ -149,6 +149,26 @@ export default function UnitFlows({ unit, onClose }) {
     save(all.filter((x) => x.id !== f.id))
   }
 
+  // 匯入粗流檔：只新增（id 已存在的略過），既有圖與定稿完全不動
+  const flowFileRef = useRef(null)
+  const importFlows = (file) => {
+    if (!file) return
+    const rd = new FileReader()
+    rd.onload = () => {
+      try {
+        const parsed = JSON.parse(rd.result)
+        const inc = Array.isArray(parsed) ? parsed : parsed.unitFlows
+        if (!Array.isArray(inc)) { alert('檔案裡找不到 unitFlows 陣列') ; return }
+        const have = new Set(all.map((f) => f.id))
+        const add = inc.filter((f) => f && f.id && f.name && Array.isArray(f.versions) && f.versions.length && !have.has(f.id))
+        if (!add.length) { alert('沒有可新增的粗流（全部已存在或格式不符）'); return }
+        save([...all, ...add])
+        alert(`已新增 ${add.length} 張粗流草稿${inc.length - add.length ? `（略過已存在 ${inc.length - add.length} 張）` : ''}，既有圖與定稿不受影響`)
+      } catch { alert('不是有效的 JSON 檔') }
+    }
+    rd.readAsText(file)
+  }
+
   // 定稿檢查清單：sealAsk = 流程圖 id，checks = 已勾的索引
   const [sealAsk, setSealAsk] = useState(null)
   const [sealChecks, setSealChecks] = useState([])
@@ -182,6 +202,9 @@ export default function UnitFlows({ unit, onClose }) {
         <GitBranch size={18} />
         <strong>{isProject ? '專案級流程圖' : scopeName + ' · 單元粗流'}（{scoped.length}）</strong>
         <div className="spacer" />
+        <input ref={flowFileRef} type="file" accept=".json" style={{ display: 'none' }}
+          onChange={(e) => { importFlows(e.target.files?.[0]); e.target.value = '' }} />
+        <button className="uw-mini" title="匯入粗流檔（只新增草稿，不動既有圖與定稿）" onClick={() => flowFileRef.current?.click()}><Upload size={14} /></button>
         <button className="uf-new" onClick={openNew}><Plus size={14} /> 新增</button>
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
