@@ -2101,3 +2101,6 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   .uf-card { margin: 0; border-radius: 20px; }
   .uf-tabs { margin: 0; padding: 2px 0; }
 }
+@media (hover: hover) and (pointer: fine) {
+  .mermaid-box { cursor: grab; } /* 提示可拖曳平移；Ctrl/⌘+滾輪縮放 */
+}

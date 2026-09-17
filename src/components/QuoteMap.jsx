@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
@@ -16,7 +16,12 @@ export default function QuoteMap({ onClose }) {
   const reqById = Object.fromEntries(reqs.map((r) => [r.id, r]))
   const save = (nextItems) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: { ...quote, items: nextItems } })
   const [linking, setLinking] = useState(null) // 展開對應選單的條目 id
-  const [expanded, setExpanded] = useState({}) // 條目原文展開（預設夾六行）
+  const [expanded, setExpanded] = useState({}) // 條目原文展開（預設收合）
+  useEffect(() => { // 桌機鍵盤：Esc 關閉
+    const onKey = (e) => { if (e.key === 'Escape' && !e.target.closest?.('input, textarea')) onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, []) // eslint-disable-line
   const ST_COLOR = ['#2E5F96', '#4E7A2E', '#B0691F'] // 待確認/已蓋章/異動中
 
   // 只匯入 quote 欄位：不整包覆蓋專案，app 內的流程圖/定稿/勾選都不會動
