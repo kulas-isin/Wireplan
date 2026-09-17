@@ -2106,18 +2106,21 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 }
 
 /* ═══ 桌機版型（第三階段：雙欄，≥1280px） ═══ */
+.uf-sidebtn { display: none; } /* 側欄切換鈕僅桌機 */
 .uf-cols { display: flex; flex-direction: column; gap: 10px; }
 .uf-main { min-width: 0; }
 .uf-side { display: flex; flex-direction: column; gap: 10px; }
 .uf-side:empty { display: none; }
 .rd-rail { display: none; }
 @media (min-width: 1280px) {
-  /* 粗流頁：左大圖、右側欄（涵蓋盤點＋版本履歷） */
-  .uf-head, .uf-body, .uf-editor-body { max-width: 1200px; }
-  .uf-cols { flex-direction: row; align-items: flex-start; gap: 18px; }
+  /* 粗流頁：左大圖、右側欄（涵蓋盤點＋版本履歷）；側欄可收合還寬度給圖 */
+  .uf-head, .uf-body, .uf-editor-body { max-width: 1280px; }
+  .uf-cols { flex-direction: row; align-items: flex-start; gap: 16px; }
   .uf-main { flex: 1; }
   .uf-main .mermaid-box { min-height: 320px; }
-  .uf-side { width: 340px; flex-shrink: 0; }
+  .uf-side { width: 300px; flex-shrink: 0; }
+  .uf-cols.side-off .uf-side { display: none; }
+  .uf-sidebtn { display: inline-flex; }
   /* 需求整理：左清單欄＋右詳情 */
   .rd-wrap { display: grid; grid-template-columns: 300px 1fr; grid-template-rows: auto 1fr; }
   .rd-head { grid-column: 1 / -1; max-width: none; }

@@ -4,7 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
 import QuoteText from './QuoteText.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText, PanelRightClose, PanelRightOpen } from 'lucide-react'
 
 // 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
 const SEAL_CHECKS = [
@@ -162,6 +162,9 @@ export default function UnitFlows({ unit, onClose }) {
   const coveredAnywhere = new Set(scoped.flatMap((f) => f.covers || []))
   const orphans = unitReqs.filter((r) => !coveredAnywhere.has(r.id))
   const isDesk = typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches
+  // 桌機側欄可收合（收起時圖吃滿整寬），偏好記在裝置
+  const [sideOpen, setSideOpen] = useState(() => { try { return localStorage.getItem('wp-uf-side') !== 'off' } catch { return true } })
+  const toggleSide = () => setSideOpen((o) => { try { localStorage.setItem('wp-uf-side', o ? 'off' : 'on') } catch {} return !o })
   const [covOpen, setCovOpen] = useState(null) // null=預設（桌機側欄展開/手機收合）、'closed'=收、id=展開
   const [quoteOpen, setQuoteOpen] = useState(null) // 展開報價原文的需求 id
   const quoteItems = current.quote?.items || []
@@ -229,6 +232,8 @@ export default function UnitFlows({ unit, onClose }) {
                       onClick={() => { setSealChecks([]); setSealAsk(sealAsk === f.id ? null : f.id) }}>
                       <Stamp size={11} /> 定稿此版</button>}
                 <div className="spacer" />
+                <button className="uw-mini uf-sidebtn" title={sideOpen ? '收起側欄，圖吃滿整寬' : '展開盤點側欄'} onClick={toggleSide}>
+                  {sideOpen ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}</button>
                 <button className="uw-mini" title="改一版（保留舊版；已定稿改版後回到未定稿）" onClick={() => openEdit(f)}><Pencil size={13} /></button>
                 <button className="uw-mini uf-del" title="刪除" onClick={() => remove(f)}><Trash2 size={13} /></button>
               </div>
@@ -250,7 +255,7 @@ export default function UnitFlows({ unit, onClose }) {
                   </div>
                 </div>
               )}
-              <div className="uf-cols">{/* 桌機雙欄：左圖、右盤點＋履歷；手機維持直排 */}
+              <div className={'uf-cols' + (sideOpen ? '' : ' side-off')}>{/* 桌機雙欄：左圖、右盤點＋履歷；手機維持直排 */}
               <div className="uf-main"><Mermaid code={ver.code} /></div>
               <div className="uf-side">
               {!isProject && unitReqs.length > 0 && (
