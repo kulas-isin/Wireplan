@@ -4,6 +4,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { CATEGORY_LIST, categoryMeta } from '../lib/categories.js'
 import ChangeControl from './ChangeControl.jsx'
 import { isLocked } from '../lib/change.js'
+import { statusOfReq } from '../lib/units.js'
 import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages, linkedPages } from '../lib/elements.js'
 import PageMap from './PageMap.jsx'
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes, Scissors } from 'lucide-react'
@@ -253,6 +254,26 @@ function ReqDetailSheet({ startId, list, onClose }) {
           <button disabled={idx === list.length - 1} onClick={() => go(1)}><ChevronRight size={16} /></button>
         </div>
       )}
+      {/* 桌機左側清單欄（手機 display:none）：依單元分組，點選即切換 */}
+      <aside className="rd-rail">
+        {list.reduce((gs, r) => {
+          const u = (r.unit || '').trim() || '未分單元'
+          const g = gs.find((x) => x.name === u)
+          g ? g.items.push(r) : gs.push({ name: u, items: [r] })
+          return gs
+        }, []).map((g) => (
+          <div key={g.name} className="rd-rail-grp">
+            <div className="rd-rail-unit">{g.name}</div>
+            {g.items.map((r) => (
+              <button key={r.id} className={'rd-rail-item' + (r.id === req.id ? ' on' : '')}
+                onClick={() => { setId(r.id); setMore(false) }}>
+                <i className="uf-cov-dot" style={{ background: ['#2E5F96', '#4E7A2E', '#B0691F'][statusOfReq(r)], marginTop: 5 }} />
+                <span>{r.name || '未命名'}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </aside>
       <div className="rd-body" key={req.id}>
         <div className="rd-sec"><BookOpen size={14} /> 故事句（一句話說清楚）</div>
         <GrowInput multiline className="rd-input" value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿"
