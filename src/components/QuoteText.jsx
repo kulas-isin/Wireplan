@@ -23,7 +23,7 @@ export default function QuoteText({ text, interactive }) {
   }).filter((s) => s.h || s.body)
 
   return (
-    <div className={'qt' + (interactive ? ' qt-tap' : '')}>
+    <div className={'qt' + (interactive ? ' qt-tap' : '') + (interactive && act !== null ? ' has-act' : '')}>
       {intro.map((s, i) => (
         <div key={i}>
           {s.h && <div className="qt-h">{s.h}</div>}
