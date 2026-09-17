@@ -6,6 +6,7 @@ import { linkedPages } from '../lib/elements.js'
 import { PackView, GalaxyView } from './UnitViz.jsx'
 import UnitFlows from './UnitFlows.jsx'
 import QuoteMap from './QuoteMap.jsx'
+import QuoteText from './QuoteText.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -239,6 +240,7 @@ export default function UnitWall() {
   const [editStruct, setEditStruct] = useState(false)
   const [flowUnit, setFlowUnit] = useState(null)
   const [showQuote, setShowQuote] = useState(false)
+  const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
   const quoteItems = current.quote?.items || []
   const quoteReqIds = new Set((current.requirements || []).map((r) => r.id))
   const quoteGaps = quoteItems.filter((it) => !(it.reqIds || []).some((id) => quoteReqIds.has(id))).length
@@ -288,7 +290,7 @@ export default function UnitWall() {
           return (
             <div key={u} role="button" tabIndex={0}
               className={'uw-tile' + (s.total >= 10 ? ' big' : '') + (hot ? ' hot' : '') + (open ? ' open' : '')}
-              onClick={() => { setOpenUnit(open ? null : u); setEditStruct(false); setAddingRoot(false) }}>
+              onClick={() => { setOpenUnit(open ? null : u); setEditStruct(false); setAddingRoot(false); setTileQuote(false) }}>
               <span className="uw-sheen" />
               <div className="uw-tname">{u}</div>
               <div className="uw-tcount"><b>{s.total}</b> 張需求卡</div>
@@ -301,6 +303,27 @@ export default function UnitWall() {
               </div>
               {open && (
                 <div className={'uw-tree' + (editStruct ? ' editing' : '')} onClick={(e) => e.stopPropagation()}>
+                  {(() => {
+                    const uReqIds = new Set((current.requirements || []).filter((r) => (r.unit || '').trim() === u).map((r) => r.id))
+                    const qItems = (current.quote?.items || []).filter((it) => (it.reqIds || []).some((id) => uReqIds.has(id)))
+                    return qItems.length > 0 && (<>
+                      <div className="uw-treehead" style={{ marginBottom: 0 }}>
+                        <button className={'uw-editbtn' + (tileQuote ? ' on' : '')} onClick={() => setTileQuote((v) => !v)}>
+                          報價原文 {qItems.length} 條
+                        </button>
+                      </div>
+                      {tileQuote && (
+                        <div className="uw-quote">
+                          {qItems.map((it) => (
+                            <div key={it.id} className="uw-quote-item">
+                              {it.name && <div className="qm-name">{it.name}</div>}
+                              <QuoteText text={it.text} interactive />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>)
+                  })()}
                   <div className="uw-treehead">
                     {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
                     <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>
