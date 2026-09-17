@@ -2075,6 +2075,15 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .qt-ul { margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 3px; }
 .qt-li::marker { color: #9CBD48; }
 .qt-sub { margin: 2px 0 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 2px; color: #56684C; font-size: 12.5px; }
+/* 磁磚內報價原文區＋逐行點擊聚焦 */
+.uw-quote { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.12); border-radius: 12px; padding: 10px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-height: 46vh; overflow-y: auto; }
+.uw-quote-item + .uw-quote-item { border-top: 1px dashed rgba(58,93,37,0.18); padding-top: 10px; }
+.qt-tap .qt-p, .qt-tap .qt-li, .qt-tap .qt-sub li { cursor: pointer; border-radius: 8px; padding: 2px 6px; margin-left: -6px; transition: background .15s ease; -webkit-tap-highlight-color: transparent; }
+.qt-tap .qt-p.act, .qt-tap .qt-li.act, .qt-tap .qt-sub li.act {
+  background: linear-gradient(90deg, rgba(236,245,166,0.85), rgba(236,245,166,0.25));
+  box-shadow: inset 3px 0 0 #9CBD48; color: #22301F;
+}
+.qt-tap .qt-li.act > .qt-sub { background: none; box-shadow: none; }
 /* 長原文收合：漸層淡出提示還有更多，點擊展開 */
 .qm-textwrap { cursor: pointer; }
 .qm-textwrap.clamp { max-height: 175px; overflow: hidden; position: relative; }
