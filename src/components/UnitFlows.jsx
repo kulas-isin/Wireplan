@@ -161,7 +161,8 @@ export default function UnitFlows({ unit, onClose }) {
   const unitReqs = isProject ? [] : (current.requirements || []).filter((r) => (r.unit || '').trim() === unit)
   const coveredAnywhere = new Set(scoped.flatMap((f) => f.covers || []))
   const orphans = unitReqs.filter((r) => !coveredAnywhere.has(r.id))
-  const [covOpen, setCovOpen] = useState(null) // 展開盤點區的流程圖 id
+  const isDesk = typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches
+  const [covOpen, setCovOpen] = useState(null) // null=預設（桌機側欄展開/手機收合）、'closed'=收、id=展開
   const [quoteOpen, setQuoteOpen] = useState(null) // 展開報價原文的需求 id
   const quoteItems = current.quote?.items || []
   const quotesOfReq = (reqId) => quoteItems.filter((it) => (it.reqIds || []).includes(reqId))
@@ -249,17 +250,19 @@ export default function UnitFlows({ unit, onClose }) {
                   </div>
                 </div>
               )}
-              <Mermaid code={ver.code} />
+              <div className="uf-cols">{/* 桌機雙欄：左圖、右盤點＋履歷；手機維持直排 */}
+              <div className="uf-main"><Mermaid code={ver.code} /></div>
+              <div className="uf-side">
               {!isProject && unitReqs.length > 0 && (
                 <div className="uf-cov">
-                  <button className="uf-cov-head" onClick={() => setCovOpen(covOpen === f.id ? null : f.id)}>
+                  <button className="uf-cov-head" onClick={() => setCovOpen((covOpen === null ? isDesk : covOpen === f.id) ? 'closed' : f.id)}>
                     <ListChecks size={13} />
                     <span>需求涵蓋 {(f.covers || []).filter((id) => unitReqs.some((r) => r.id === id)).length}/{unitReqs.length}</span>
                     {orphans.length > 0 && <span className="uf-cov-gap">單元缺口 {orphans.length}</span>}
                     <div className="spacer" />
-                    {covOpen === f.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    {(covOpen === null ? isDesk : covOpen === f.id) ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
-                  {covOpen === f.id && (
+                  {(covOpen === null ? isDesk : covOpen === f.id) && (
                     <div className="uf-cov-body">
                       {unitReqs.map((r) => {
                         const qts = quotesOfReq(r.id)
@@ -302,6 +305,8 @@ export default function UnitFlows({ unit, onClose }) {
                   </div>
                 ))}
               </div>
+              </div>{/* /uf-side */}
+              </div>{/* /uf-cols */}
             </div>
           )
         })}
