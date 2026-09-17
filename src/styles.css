@@ -1990,6 +1990,7 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .mermaid-box { background: #fff; border-radius: 14px; padding: 10px; overflow-x: auto; }
 /* 蓋掉 mermaid 行內 max-width：SVG 跟隨版面寬度，放大（自動填滿／雙指）才不會被原尺寸卡住 */
 .mermaid-box svg { height: auto; max-width: none !important; width: 100%; }
+.mermaid-box > div { margin: 0 auto; } /* 圖比框窄時（桌機常見）水平置中 */
 /* 流程圖卡內滿版出血：吃掉卡片左右留白、拿掉邊框與高度上限，呈現面積最大化 */
 .uf-card .mermaid-box { margin: 0 -14px; border: none; border-radius: 0; padding: 6px 2px; height: auto; max-height: none; }
 .uf-editor {
@@ -2086,3 +2087,17 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .qm-linkbtn { display: inline-flex; align-items: center; gap: 3px; border: 1px dashed rgba(58,93,37,0.35); background: none; font: inherit; font-size: 11px; font-weight: 700; color: #3A5D25; border-radius: 999px; padding: 3px 9px; cursor: pointer; }
 .qm-picker { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.14); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; max-height: 45vh; overflow-y: auto; }
 .qm-picker-unit { font-size: 11px; font-weight: 800; color: #2E5F96; padding-top: 4px; }
+
+/* ═══ 桌機版型（第一階段：純 CSS，≥1024px 才生效） ═══ */
+@media (min-width: 1024px) {
+  /* 單元牆：自動多欄（每欄至少 300px）、整體限寬置中 */
+  .uw-wrap { max-width: 1240px; margin: 0 auto; width: 100%; }
+  .uw-wall { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  /* 需求整理卡：內容限寬置中，欄位不再無限拉寬 */
+  .rd-head, .rd-body { max-width: 720px; margin-left: auto; margin-right: auto; width: 100%; }
+  /* 粗流／報價對照／流程編輯器：欄寬放大吃桌機空間，流程圖自動放大跟著受益 */
+  .uf-head, .uf-body, .uf-editor-body { max-width: 900px; }
+  /* 手機的滿版出血在桌機還原成圓角卡片 */
+  .uf-card { margin: 0; border-radius: 20px; }
+  .uf-tabs { margin: 0; padding: 2px 0; }
+}
