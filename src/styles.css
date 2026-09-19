@@ -2058,7 +2058,9 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-quote-name { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; color: #3A5D25; }
 /* 報價對照 */
 .qm-sum { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-.qm-chip { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 4px 11px; }
+.qm-chip { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 4px 11px; border: none; font-family: inherit; }
+button.qm-chip { cursor: pointer; }
+.qm-filter-on { box-shadow: 0 0 0 2px #E0A55C; }
 .qm-chip.ok { color: #4E7A2E; background: #E1F0D8; }
 .qm-chip.warn { color: #B0691F; background: #FBF0DC; }
 .qm-chip.info { color: #2E5F96; background: #E1EDF9; }
@@ -2075,6 +2077,26 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .qt-ul { margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 3px; }
 .qt-li::marker { color: #9CBD48; }
 .qt-sub { margin: 2px 0 0; padding-left: 4px; list-style: none; display: flex; flex-direction: column; gap: 2px; color: #56684C; font-size: 12.5px; }
+/* 報價閱讀輔助：標記 chips／行級筆記（僅筆記模式渲染，檢視模式即純原文） */
+.qr-marks { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.qr-chip { border: 1px solid rgba(58,93,37,0.18); background: none; font: inherit; font-size: 11px; font-weight: 700; color: #7A8A70; border-radius: 999px; padding: 3px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.qr-chip:disabled { opacity: 0.4; cursor: default; }
+.qr-chip.on-done { background: #E1F0D8; border-color: #9CBD48; color: #4E7A2E; }
+.qr-chip.on-q { background: #FBF0DC; border-color: #E0A55C; color: #B0691F; }
+.qr-chip.on-star { background: #FFF8EC; border-color: #E0A55C; color: #8A5A1F; }
+.qr-markdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: 2px; }
+.qr-linedot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #7BA7D4; margin-left: 5px; vertical-align: 2px; }
+.qr-note { background: #F3F7FC; border-left: 3px solid #7BA7D4; border-radius: 0 10px 10px 0; padding: 7px 10px; margin: 6px 0 4px 20px; font-size: 12.5px; color: #2E4A6B; line-height: 1.6; display: flex; gap: 6px; align-items: flex-start; }
+.qr-note-tag { font-size: 10px; font-weight: 800; color: #B0691F; background: #FBF0DC; border-radius: 999px; padding: 1px 7px; flex-shrink: 0; margin-top: 2px; }
+.qr-note-text { flex: 1; }
+.qr-note-del { border: none; background: none; color: rgba(46,74,107,0.4); font: inherit; font-size: 12px; cursor: pointer; padding: 0 2px; flex-shrink: 0; }
+.qr-notebtn { display: inline-flex; align-items: center; gap: 4px; border: 1px dashed rgba(123,167,212,0.6); background: rgba(243,247,252,0.7); font: inherit; font-size: 11px; font-weight: 700; color: #2E5F96; border-radius: 999px; padding: 3px 10px; cursor: pointer; margin: 4px 0 2px 20px; }
+.qr-editor { background: #F3F7FC; border: 1px solid rgba(123,167,212,0.4); border-radius: 12px; padding: 8px 10px; margin: 6px 0 4px 20px; display: flex; flex-direction: column; gap: 6px; }
+.qr-editor textarea { border: 1px solid rgba(123,167,212,0.4); border-radius: 8px; padding: 6px 8px; font: inherit; font-size: 12.5px; background: #fff; color: #22301F; resize: vertical; width: 100%; }
+.qr-editor textarea:focus { outline: none; border-color: #7BA7D4; }
+.qr-editor-row { display: flex; align-items: center; gap: 6px; }
+.qr-qtoggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: #2E4A6B; cursor: pointer; }
+.qr-qtoggle input { width: 14px; height: 14px; padding: 0; border: none; accent-color: #2E5F96; }
 /* 磁磚內報價原文區＋逐行點擊聚焦 */
 .uw-quote { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.12); border-radius: 12px; padding: 10px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-height: 46vh; overflow-y: auto; }
 .uw-quote-item + .uw-quote-item { border-top: 1px dashed rgba(58,93,37,0.18); padding-top: 10px; }
