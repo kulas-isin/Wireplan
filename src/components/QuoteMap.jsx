@@ -17,6 +17,7 @@ export default function QuoteMap({ onClose }) {
   const save = (nextItems) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: { ...quote, items: nextItems } })
   const [linking, setLinking] = useState(null) // 展開對應選單的條目 id
   const [expanded, setExpanded] = useState({}) // 條目原文展開（預設收合）
+  const [qOnly, setQOnly] = useState(false) // 只看疑問條目
   useEffect(() => { // 桌機鍵盤：Esc 關閉
     const onKey = (e) => { if (e.key === 'Escape' && !e.target.closest?.('input, textarea')) onClose() }
     window.addEventListener('keydown', onKey)
@@ -34,7 +35,10 @@ export default function QuoteMap({ onClose }) {
         const parsed = JSON.parse(rd.result)
         const q = parsed.quote || (Array.isArray(parsed.items) ? parsed : null)
         if (!q || !Array.isArray(q.items)) { alert('檔案裡找不到 quote.items — 需要 {"quote":{"items":[…]}} 或 {"items":[…]}'); return }
-        dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: q })
+        // 依條目 id 合併：保留既有的標記與筆記（marks/notes 是你的閱讀資產，不被重匯洗掉）
+        const prev = Object.fromEntries(items.map((it) => [it.id, it]))
+        const merged = { ...q, items: q.items.map((it) => ({ ...it, marks: prev[it.id]?.marks || it.marks || [], notes: prev[it.id]?.notes || it.notes || [] })) }
+        dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: merged })
       } catch { alert('不是有效的 JSON 檔') }
     }
     rd.readAsText(file)
@@ -51,9 +55,10 @@ export default function QuoteMap({ onClose }) {
     save(items.map((i) => (i.id === item.id ? { ...i, reqIds: [...s] } : i)))
   }
 
-  // 依報價單原始章節分組（保持原順序）
+  // 依報價單原始章節分組（保持原順序）；疑問過濾開啟時只留疑問條目
+  const isQ = (it) => (it.marks || []).includes('q') || (it.notes || []).some((n) => n.q)
   const sections = []
-  for (const it of items) {
+  for (const it of (qOnly ? items.filter(isQ) : items)) {
     const name = it.section || '報價條目'
     let g = sections.find((s) => s.name === name)
     if (!g) { g = { name, list: [] }; sections.push(g) }
@@ -95,6 +100,11 @@ export default function QuoteMap({ onClose }) {
             <span className="qm-chip ok">已對應 {items.length - unmappedCount}</span>
             {unmappedCount > 0 && <span className="qm-chip warn">未對應 {unmappedCount}</span>}
             {extraReqs.length > 0 && <span className="qm-chip info">報價外需求 {extraReqs.length}</span>}
+            {items.some((it) => (it.marks || []).length || (it.notes || []).length) && (<>
+              <span className="qm-chip ok">已讀 {items.filter((it) => (it.marks || []).includes('done')).length}/{items.length}</span>
+              {(() => { const k = items.filter((it) => (it.marks || []).includes('q') || (it.notes || []).some((n) => n.q)).length
+                return k > 0 && <button className={'qm-chip warn' + (qOnly ? ' qm-filter-on' : '')} onClick={() => setQOnly(!qOnly)}>疑問 {k}{qOnly ? ' ✕' : ''}</button> })()}
+            </>)}
           </div>
           {sections.map((sec) => (
             <div key={sec.name} className="uf-card qm-sec">

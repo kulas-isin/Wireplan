@@ -241,6 +241,19 @@ export default function UnitWall() {
   const [flowUnit, setFlowUnit] = useState(null)
   const [showQuote, setShowQuote] = useState(false)
   const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
+  const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
+  // 報價條目的標記/筆記更新（存回 quote.items）
+  const patchQuoteItem = (id, p) => {
+    const q = current.quote || {}
+    dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: { ...q, items: (q.items || []).map((it) => it.id === id ? { ...it, ...p } : it) } })
+  }
+  const toggleMark = (it, m) => {
+    const s = new Set(it.marks || [])
+    if (s.has(m)) s.delete(m)
+    else { s.add(m); if (m === 'done') s.delete('q'); if (m === 'q') s.delete('done') }
+    patchQuoteItem(it.id, { marks: [...s] })
+  }
+  const MARKS = [['done', '✓ 已讀懂'], ['q', '? 疑問'], ['star', '★ 重點']]
   const quoteItems = current.quote?.items || []
   const quoteReqIds = new Set((current.requirements || []).map((r) => r.id))
   const quoteGaps = quoteItems.filter((it) => !(it.reqIds || []).some((id) => quoteReqIds.has(id))).length
@@ -306,18 +319,40 @@ export default function UnitWall() {
                   {(() => {
                     const uReqIds = new Set((current.requirements || []).filter((r) => (r.unit || '').trim() === u).map((r) => r.id))
                     const qItems = (current.quote?.items || []).filter((it) => (it.reqIds || []).some((id) => uReqIds.has(id)))
+                    const readN = qItems.filter((it) => (it.marks || []).includes('done')).length
+                    const qN = qItems.filter((it) => (it.marks || []).includes('q') || (it.notes || []).some((n) => n.q)).length
                     return qItems.length > 0 && (<>
                       <div className="uw-treehead" style={{ marginBottom: 0 }}>
                         <button className={'uw-editbtn' + (tileQuote ? ' on' : '')} onClick={() => setTileQuote((v) => !v)}>
-                          報價原文 {qItems.length} 條
+                          報價原文 {readN > 0 ? `已讀 ${readN}/${qItems.length}` : `${qItems.length} 條`}{qN > 0 ? `・疑問 ${qN}` : ''}
                         </button>
+                        {tileQuote && (
+                          <button className={'uw-editbtn' + (noteMode ? ' on' : '')} onClick={() => setNoteMode((v) => !v)}>
+                            ✎ 筆記{noteMode ? '中' : ''}
+                          </button>
+                        )}
                       </div>
                       {tileQuote && (
                         <div className="uw-quote">
                           {qItems.map((it) => (
                             <div key={it.id} className="uw-quote-item">
-                              {it.name && <div className="qm-name">{it.name}</div>}
-                              <QuoteText text={it.text} interactive />
+                              {it.name && <div className="qm-name">{it.name}
+                                {!noteMode && (it.marks || []).length > 0 && <i className="qr-markdot" style={{ background: (it.marks || []).includes('q') ? '#E0A55C' : '#9CBD48' }} />}
+                              </div>}
+                              {noteMode && (
+                                <div className="qr-marks">
+                                  {MARKS.map(([m, label]) => (
+                                    <button key={m} className={'qr-chip' + ((it.marks || []).includes(m) ? ' on-' + m : '')}
+                                      onClick={() => toggleMark(it, m)}>{label}</button>
+                                  ))}
+                                </div>
+                              )}
+                              <QuoteText text={it.text} interactive
+                                annot={noteMode ? {
+                                  notes: it.notes || [],
+                                  onAdd: (line, text, q) => patchQuoteItem(it.id, { notes: [...(it.notes || []), { id: 'n' + Math.random().toString(36).slice(2, 9), line, text, q, at: Date.now() }] }),
+                                  onDel: (nid) => patchQuoteItem(it.id, { notes: (it.notes || []).filter((n) => n.id !== nid) }),
+                                } : undefined} />
                             </div>
                           ))}
                         </div>
