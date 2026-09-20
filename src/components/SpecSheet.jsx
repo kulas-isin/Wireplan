@@ -45,30 +45,35 @@ export function compileSpec(spec) {
   return comps
 }
 
-// 示意預覽：低保真、跟著規格即時長
+// 示意預覽：低保真但帶標籤——框裡直接寫欄位名，看得懂誰是誰
+const short = (s, n = 10) => { const t = String(s || '').replace(/（[^）]*）/g, '').trim(); return t.length > n ? t.slice(0, n) + '…' : t }
 function Sketch({ spec }) {
   return (
     <div className="ps-preview">
       {(spec.sections || []).map((s) => {
-        const n = (s.items || []).length
-        if (s.kind === 'searchbar') return <div key={s.id} className="pv-bar">{Array.from({ length: Math.min(n, 4) }).map((_, i) => <span key={i} className="pv-pill" />)}</div>
-        if (s.kind === 'filter' || s.kind === 'tabs') return <div key={s.id} className="pv-bar" style={{ border: 'none', padding: 0 }}>{Array.from({ length: Math.min(n || 3, 5) }).map((_, i) => <span key={i} className="pv-pill" style={{ background: '#E1EDF9' }} />)}</div>
-        if (s.kind === 'toolbar' || s.kind === 'actions') return <div key={s.id} className="pv-bar" style={{ borderStyle: 'dashed' }}>{Array.from({ length: Math.min(n || 2, 4) }).map((_, i) => <span key={i} className="pv-btn" style={{ marginLeft: i ? 4 : 0 }} />)}</div>
+        const ls = (s.items || []).map((i) => i.label)
+        const cap = <div className="pv-cap">{SECTION_KINDS[s.kind] || s.kind}</div>
+        if (s.kind === 'searchbar') return <div key={s.id}>{cap}<div className="pv-bar">{ls.slice(0, 6).map((l, i) => <span key={i} className="pv-pill">{short(l, 6)}</span>)}<span className="pv-go">搜</span></div></div>
+        if (s.kind === 'filter' || s.kind === 'tabs') return <div key={s.id}>{cap}<div className="pv-bar" style={{ border: 'none', padding: 0 }}>{ls.slice(0, 8).map((l, i) => <span key={i} className="pv-pill" style={{ background: '#E1EDF9', color: '#2E5F96' }}>{short(l, 6)}</span>)}</div></div>
+        if (s.kind === 'toolbar' || s.kind === 'actions') return <div key={s.id}>{cap}<div className="pv-bar" style={{ borderStyle: 'dashed', justifyContent: s.kind === 'actions' ? 'flex-end' : 'flex-start' }}>{ls.slice(0, 6).map((l, i) => <span key={i} className="pv-btn">{short(l, 7)}</span>)}</div></div>
         if (s.kind === 'table') {
-          const c = Math.min(Math.max(n, 2), 8)
+          const cols = ls.length ? ls.slice(0, 8) : ['欄', '欄']
           return (
-            <div key={s.id} className="pv-table">
-              <div className="pv-th">{Array.from({ length: c }).map((_, i) => <i key={i} style={i === c - 1 ? { borderRight: 'none' } : undefined} />)}</div>
-              {[0, 1].map((r) => <div key={r} className="pv-tr">{Array.from({ length: c }).map((_, i) => <i key={i} style={i === c - 1 ? { borderRight: 'none' } : undefined} />)}</div>)}
+            <div key={s.id}>{cap}
+              <div className="pv-table">
+                <div className="pv-th">{cols.map((l, i) => <i key={i} style={i === cols.length - 1 ? { borderRight: 'none' } : undefined}>{short(l, 4)}</i>)}</div>
+                {[0, 1].map((r) => <div key={r} className="pv-tr">{cols.map((_, i) => <i key={i} style={i === cols.length - 1 ? { borderRight: 'none' } : undefined} />)}</div>)}
+                {ls.length > 8 && <div className="pv-more">…共 {ls.length} 欄</div>}
+              </div>
             </div>
           )
         }
         if (s.kind === 'form' || s.kind === 'desc') return (
-          <div key={s.id} className="pv-form">{Array.from({ length: Math.min(n || 2, 8) }).map((_, i) => <span key={i} className="pv-field" />)}</div>
+          <div key={s.id}>{cap}<div className="pv-form">{ls.slice(0, 12).map((l, i) => <span key={i} className="pv-field">{short(l, 9)}</span>)}{ls.length > 12 && <span className="pv-field" style={{ borderStyle: 'dashed', color: '#9CBD48' }}>…共 {ls.length} 欄</span>}</div></div>
         )
-        if (s.kind === 'stats') return <div key={s.id} className="pv-bar" style={{ border: 'none', padding: 0 }}>{Array.from({ length: Math.min(n || 3, 4) }).map((_, i) => <span key={i} className="pv-stat" />)}</div>
+        if (s.kind === 'stats') return <div key={s.id}>{cap}<div className="pv-bar" style={{ border: 'none', padding: 0 }}>{(ls.length ? ls : ['—', '—', '—']).slice(0, 4).map((l, i) => <span key={i} className="pv-stat">{short(l, 6)}</span>)}</div></div>
         if (s.kind === 'pagination') return <div key={s.id} style={{ textAlign: 'right', fontSize: 10, color: '#9CBD48', letterSpacing: 2 }}>‹ 1 2 3 ›</div>
-        return <div key={s.id} className="pv-bar" style={{ borderStyle: 'dotted' }}><span className="pv-pill" style={{ width: '70%' }} /></div>
+        return <div key={s.id}>{cap}<div className="pv-note">{ls.map((l, i) => <div key={i}>· {l}</div>)}</div></div>
       })}
     </div>
   )

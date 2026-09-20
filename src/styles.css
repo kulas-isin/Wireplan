@@ -2119,18 +2119,23 @@ button.qm-chip { cursor: pointer; }
 .ps-paste { display: flex; flex-direction: column; gap: 6px; }
 .ps-paste textarea { border: 1px solid rgba(58,93,37,0.2); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 12.5px; background: #fff; resize: vertical; }
 /* 示意預覽 */
-.ps-preview { background: #fff; border: 1px solid rgba(58,93,37,0.14); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.ps-preview { background: #fff; border: 1px solid rgba(58,93,37,0.14); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.pv-cap { font-size: 9.5px; font-weight: 800; color: #9CBD48; letter-spacing: 1px; margin-bottom: 3px; }
 .pv-bar { min-height: 26px; border: 1.5px solid #C9D8AC; border-radius: 7px; display: flex; align-items: center; gap: 4px; padding: 4px 6px; flex-wrap: wrap; }
-.pv-pill { height: 13px; width: 52px; background: #EAF2D8; border-radius: 4px; }
-.pv-btn { height: 13px; width: 40px; background: #C6DC6A; border-radius: 4px; }
-.pv-stat { height: 30px; flex: 1; background: #F4F9E8; border: 1px solid #DCEBC7; border-radius: 6px; }
+.pv-pill { font-size: 10px; color: #56684C; background: #EAF2D8; border-radius: 4px; padding: 2px 7px; line-height: 1.4; }
+.pv-go { font-size: 10px; color: #3A5D25; background: #C6DC6A; border-radius: 4px; padding: 2px 7px; margin-left: auto; }
+.pv-btn { font-size: 10px; font-weight: 700; color: #2F4A1E; background: #C6DC6A; border-radius: 4px; padding: 2px 8px; line-height: 1.4; }
+.pv-stat { flex: 1; min-height: 30px; font-size: 10px; color: #56684C; background: #F4F9E8; border: 1px solid #DCEBC7; border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 2px 4px; text-align: center; }
 .pv-table { border: 1.5px solid #C9D8AC; border-radius: 7px; overflow: hidden; }
 .pv-th { display: flex; background: #F4F9E8; border-bottom: 1px solid #DCEBC7; }
-.pv-th i, .pv-tr i { flex: 1; height: 15px; border-right: 1px solid #EAF2D8; }
+.pv-th i { flex: 1; min-height: 17px; border-right: 1px solid #EAF2D8; font-style: normal; font-size: 9px; color: #56684C; display: flex; align-items: center; justify-content: center; padding: 1px 2px; text-align: center; }
 .pv-tr { display: flex; border-bottom: 1px solid #F0F5E4; }
+.pv-tr i { flex: 1; height: 13px; border-right: 1px solid #EAF2D8; }
 .pv-tr:last-child { border-bottom: none; }
+.pv-more { font-size: 9.5px; color: #9CBD48; text-align: right; padding: 2px 6px; background: #FDFEF7; }
 .pv-form { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.pv-field { height: 18px; border: 1.5px solid #C9D8AC; border-radius: 5px; background: #FDFEF7; }
+.pv-field { min-height: 20px; border: 1.5px solid #C9D8AC; border-radius: 5px; background: #FDFEF7; font-size: 10px; color: #56684C; display: flex; align-items: center; padding: 2px 7px; overflow: hidden; white-space: nowrap; }
+.pv-note { font-size: 10px; color: #8A9B80; line-height: 1.6; border-left: 2px solid #EAF2D8; padding-left: 7px; }
 /* 磁磚內報價原文區＋逐行點擊聚焦 */
 .uw-quote { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.12); border-radius: 12px; padding: 10px 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 10px; max-height: 46vh; overflow-y: auto; }
 .uw-quote-item + .uw-quote-item { border-top: 1px dashed rgba(58,93,37,0.18); padding-top: 10px; }
