@@ -48,14 +48,17 @@ function normNode(node) {
 export function normalizeWireframe(spec) {
   const w = spec || {}
   return {
-    id: uid('wf'),
-    requirementId: null,
+    id: w.id || uid('wf'),
+    requirementId: w.requirementId || null,
+    unit: w.unit || '',
+    parentId: w.parentId || null,
     name: w.name || '匯入畫面',
     device: w.device || 'desktop',
     template: w.template || 'imported',
     theme: w.theme === 'music' ? 'music' : undefined,
     layout: w.layout === 'sidebar' ? 'sidebar' : undefined,
     components: Array.isArray(w.components) ? w.components.map(normNode).filter(Boolean) : [],
+    spec: w.spec && Array.isArray(w.spec.sections) ? w.spec : undefined, // 頁面規格（區段＋項目）
   }
 }
 
