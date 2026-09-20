@@ -27,6 +27,7 @@ const COMP_ICON = {
 let cmpClipboard = null
 import { ConfigProvider, Modal, Input, Dropdown, message, theme } from 'antd'
 import { normalizeWireframes, SAMPLE_WIREFRAME } from '../lib/wireframeImport.js'
+import { normPage } from '../lib/elements.js'
 import { normalizeField } from '../lib/fieldSpec.js'
 import { applyRequirementPatches } from '../lib/reqPatches.js'
 import { requirementCoverage } from '../lib/sop.js'
@@ -1110,7 +1111,26 @@ export default function WireframeBoard() {
     let wfs
     try { wfs = normalizeWireframes(json) } catch (e) { setImportErr('解析失敗：' + e.message); return }
     if (!wfs.length) { setImportErr('找不到任何畫面'); return }
-    dispatch({ type: 'ADD_WIREFRAME', wireframes: wfs })
+    // 語意合併：同單元、同名（忽略「頁/頁面/畫面」字尾）的既有頁不另開新頁，
+    // 而是把規格/需求綁定併進去（既有頁的位置、磚塊、元件都保留）
+    const existing = current.wireframes || []
+    const byId = new Set(existing.map((w) => w.id))
+    const toAdd = []
+    let merged = 0
+    for (const w of wfs) {
+      if (byId.has(w.id)) { toAdd.push(w); continue } // 同 id → reducer 端同步取代
+      const hit = existing.find((x) => (x.unit || '') === (w.unit || '') && normPage(x.name) === normPage(w.name))
+      if (hit) {
+        merged++
+        dispatch({ type: 'UPDATE_WIREFRAME', id: hit.id, patch: {
+          spec: w.spec || hit.spec,
+          requirementId: hit.requirementId || w.requirementId || null,
+          components: (hit.components || []).length ? hit.components : (w.components || []),
+        } })
+      } else toAdd.push(w)
+    }
+    if (toAdd.length) dispatch({ type: 'ADD_WIREFRAME', wireframes: toAdd })
+    if (merged) message.success(`已把 ${merged} 頁併入同名既有頁`)
     // JSON 帶 flows → 一併鋪成業務流程圖（在剛匯入的頁面上綁定）
     if (Array.isArray(json.flows) && json.flows.length) dispatch({ type: 'IMPORT_FLOWS', flows: json.flows })
     // JSON 帶 fields → 一併帶入欄位規格草稿

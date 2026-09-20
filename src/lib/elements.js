@@ -35,7 +35,7 @@ export function findElementOnPages(label, pages = []) {
 }
 
 // 頁面名比對用：再去掉「頁/頁面/畫面」尾綴（「詳情頁」要對得到「訂單詳情」）
-const normPage = (s) => norm(s).replace(/(頁面|畫面|頁)$/, '')
+export const normPage = (s) => norm(s).replace(/(頁面|畫面|頁)$/, '')
 
 // 頁面清單：依名稱在全部 wireframe 中找已建的頁（模糊比對，與卡片「N 頁」chip 同邏輯）
 export function findPageByName(name, wireframes = []) {
