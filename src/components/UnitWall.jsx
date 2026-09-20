@@ -8,6 +8,7 @@ import UnitFlows from './UnitFlows.jsx'
 import QuoteMap from './QuoteMap.jsx'
 import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
+import SpecSheet from './SpecSheet.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -40,7 +41,7 @@ function uwEndDrag() {
 }
 
 // 頁面樹節點：頁名 + 需求膠囊；編輯模式浮出 ＋ / ≡ / ⋯
-function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, onReq }) {
+function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, onReq, onSpec }) {
   const [open, setOpen] = useState(depth === 0)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
@@ -77,7 +78,7 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
           </span>
         )}
         <span className="uw-caret">{hasBody ? (open ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <i className="uw-leaf" />}</span>
-        <span className="uw-nname">{node.wf.name}</span>
+        <span className="uw-nname" title="開頁面規格清單" onClick={(e) => { if (!edit) { e.stopPropagation(); onSpec?.(node.wf.id) } }}>{node.wf.name}</span>
         {reqs.length > 0 && <span className="uw-ncnt">{reqs.length} 需求</span>}
         {edit ? (
           <>
@@ -105,7 +106,7 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
           )}
           {node.kids.length > 0 && (
             <div className="uw-kids">
-              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} onReq={onReq} />)}
+              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} onReq={onReq} onSpec={onSpec} />)}
             </div>
           )}
         </div>
@@ -244,6 +245,7 @@ export default function UnitWall() {
   const [showQuote, setShowQuote] = useState(false)
   const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
   const [openReq, setOpenReq] = useState(null) // 磁磚內點需求 → 就地開需求卡（單元內循環）
+  const [specWf, setSpecWf] = useState(null) // 磁磚內點頁名 → 開頁面規格清單
   const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
   // 報價條目的標記/筆記更新（存回 quote.items）
   const patchQuoteItem = (id, p) => {
@@ -389,7 +391,7 @@ export default function UnitWall() {
                       }}>加入</button>
                     </div>
                   )}
-                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} onReq={setOpenReq} />)}
+                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} onReq={setOpenReq} onSpec={setSpecWf} />)}
                   {pageTree(current, u).length === 0 && <div className="uw-empty">這個單元還沒有頁面 — 按「編輯結構 → ＋」直接新增，或到卡片的畫面地圖「建立此頁」</div>}
                   {looseReqs(current, u).length > 0 && (
                     <div className="uw-loose">
@@ -416,6 +418,7 @@ export default function UnitWall() {
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
       {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
+      {specWf && <SpecSheet wfId={specWf} onClose={() => setSpecWf(null)} />}
       {openReq && (() => {
         const r = (current.requirements || []).find((x) => x.id === openReq)
         if (!r) return null
