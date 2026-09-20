@@ -119,7 +119,9 @@ export default function RequirementsEditor() {
   const reqs = current.requirements
   const [interview, setInterview] = useState(false)
   const [wheel, setWheel] = useState(false)
-  const [wall, setWall] = useState(false)
+  // 單元牆是最常用的工作台 → 預設檢視，並記住上次選擇
+  const [wall, setWall] = useState(() => { try { return localStorage.getItem('wp-req-view') !== 'cards' } catch { return true } })
+  const pickWall = (w) => { setWall(w); try { localStorage.setItem('wp-req-view', w ? 'wall' : 'cards') } catch {} }
   const [doc, setDoc] = useState(false)
   const [assess, setAssess] = useState(false)
   const [paste, setPaste] = useState(null) // null=關閉, ''=開啟輸入中, 其他=結果訊息
@@ -235,7 +237,7 @@ export default function RequirementsEditor() {
         <button className="primary" onClick={() => setInterview(true)}><Mic size={15} /> 訪談</button>
         <button onClick={() => { window.location.hash = 'triage' }} title="收牌局：合併重複、掃優先度、複製摘要"><Layers size={15} /> 收整</button>
         <button className={wheel ? 'active' : ''} onClick={() => setWheel((w) => !w)} title="轉盤模式：快速翻滾找卡">{wheel ? <List size={15} /> : <Orbit size={15} />} {wheel ? '清單' : '轉盤'}</button>
-        <button className={wall ? 'active' : ''} onClick={() => setWall((w) => !w)} title="單元牆：以單元總覽需求與頁面樹"><LayoutGrid size={15} /> 單元</button>
+        <button className={wall ? 'active' : ''} onClick={() => pickWall(!wall)} title="單元牆：以單元總覽需求與頁面樹"><LayoutGrid size={15} /> 單元</button>
         <button className={'rp-icbtn' + (showSearch || q ? ' active' : '')} onClick={() => { if (showSearch) { setQ('') } setShowSearch((v) => !v) }} title="搜尋"><Search size={17} /></button>
         <button className="rp-icbtn" onClick={addBlank} title="新增需求"><Plus size={18} /></button>
         <button className="rp-icbtn" onClick={() => setSheet(true)} title="更多功能"><MoreHorizontal size={18} /></button>

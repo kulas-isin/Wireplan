@@ -197,7 +197,7 @@ function ElemList({ req, pages, onChange }) {
 
 // 全螢幕故事頁：核心三件（故事/對話/驗收）大空間，行政欄位收進「更多資訊」。
 // 帶入目前的過濾清單 — 左右滑動或頁頭箭頭直接換上一張/下一張卡，不用退回列表。
-function ReqDetailSheet({ startId, list, onClose }) {
+export function ReqDetailSheet({ startId, list, onClose }) {
   const { current, dispatch } = useStore()
   const [more, setMore] = useState(false)
   const [id, setId] = useState(startId)
