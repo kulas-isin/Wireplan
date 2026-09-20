@@ -27,6 +27,16 @@ export function loadState() {
     const parsed = JSON.parse(raw)
     if (!parsed.projects || !parsed.projects.length) return defaultState()
     parsed.library = { ...DEFAULT_LIBRARY, ...(parsed.library || {}) }
+    // 自癒：清掉歷史重複匯入造成的同 id 頁面（保留第一份）
+    for (const p of parsed.projects) {
+      if (Array.isArray(p.wireframes)) {
+        const seen = new Set()
+        p.wireframes = p.wireframes.filter((w) => {
+          if (!w || !w.id || seen.has(w.id)) return false
+          seen.add(w.id); return true
+        })
+      }
+    }
     return parsed
   } catch {
     return defaultState()

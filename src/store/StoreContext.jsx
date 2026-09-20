@@ -305,7 +305,10 @@ function reducer(state, action) {
 
     case 'ADD_WIREFRAME': {
       const incoming = action.wireframes || (action.wireframe ? [action.wireframe] : [])
-      return replaceCurrent(touch({ ...cur, wireframes: [...cur.wireframes, ...incoming] }))
+      // 同 id 視為同步更新：取代既有、不重複附加（重複匯入不再長出副本）
+      const ids = new Set(incoming.map((w) => w.id))
+      const kept = cur.wireframes.filter((w) => !ids.has(w.id))
+      return replaceCurrent(touch({ ...cur, wireframes: [...kept, ...incoming] }))
     }
 
     case 'SAVE_BLOCK': {
