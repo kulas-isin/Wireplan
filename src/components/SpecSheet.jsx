@@ -31,6 +31,7 @@ export function compileSpec(spec) {
   for (const s of spec.sections || []) {
     const ls = (s.items || []).map((i) => i.label)
     const push = (o) => comps.push({ id: uid('c'), region: 'content', ...o })
+    if (s.title) push({ type: 'divider', label: s.title })
     if (s.kind === 'searchbar') push({ type: 'searchbar', label: '搜尋：' + ls.join('／') })
     else if (s.kind === 'filter') push({ type: 'filter', fields: ls })
     else if (s.kind === 'toolbar' || s.kind === 'actions') push({ type: 'buttonRow', buttons: ls })
@@ -46,13 +47,35 @@ export function compileSpec(spec) {
 }
 
 // 示意預覽：低保真但帶標籤——框裡直接寫欄位名，看得懂誰是誰
+// 有「頁籤」區段時頁籤可點：點哪個籤，就只顯示標題對應該籤的區段（無對應標題的區段恆顯示）
 const short = (s, n = 10) => { const t = String(s || '').replace(/（[^）]*）/g, '').trim(); return t.length > n ? t.slice(0, n) + '…' : t }
+const secCap = (s) => (SECTION_KINDS[s.kind] || s.kind) + (s.title ? '・' + s.title : '')
 function Sketch({ spec }) {
+  const sections = spec.sections || []
+  const tabsSec = sections.find((s) => s.kind === 'tabs' && (s.items || []).length)
+  const tabLabels = tabsSec ? tabsSec.items.map((i) => i.label.trim()) : []
+  const [tab, setTab] = useState(0)
+  const active = tabLabels[Math.min(tab, Math.max(0, tabLabels.length - 1))]
+  const visible = (s) => {
+    if (s === tabsSec) return true
+    const t = (s.title || '').trim()
+    return t && tabLabels.includes(t) ? t === active : true
+  }
   return (
     <div className="ps-preview">
-      {(spec.sections || []).map((s) => {
+      {sections.filter(visible).map((s) => {
         const ls = (s.items || []).map((i) => i.label)
-        const cap = <div className="pv-cap">{SECTION_KINDS[s.kind] || s.kind}</div>
+        const cap = <div className="pv-cap">{secCap(s)}</div>
+        if (s === tabsSec) return (
+          <div key={s.id}>{cap}
+            <div className="pv-bar" style={{ border: 'none', padding: 0 }}>
+              {ls.map((l, i) => (
+                <button key={i} className={'pv-pill pv-tab' + (l.trim() === active ? ' on' : '')} onClick={() => setTab(i)}>{short(l, 6)}</button>
+              ))}
+            </div>
+            <div className="pv-tabhint">點頁籤切換內容（標題對應該籤的區段才會顯示）</div>
+          </div>
+        )
         if (s.kind === 'searchbar') return <div key={s.id}>{cap}<div className="pv-bar">{ls.slice(0, 6).map((l, i) => <span key={i} className="pv-pill">{short(l, 6)}</span>)}<span className="pv-go">搜</span></div></div>
         if (s.kind === 'filter' || s.kind === 'tabs') return <div key={s.id}>{cap}<div className="pv-bar" style={{ border: 'none', padding: 0 }}>{ls.slice(0, 8).map((l, i) => <span key={i} className="pv-pill" style={{ background: '#E1EDF9', color: '#2E5F96' }}>{short(l, 6)}</span>)}</div></div>
         if (s.kind === 'toolbar' || s.kind === 'actions') return <div key={s.id}>{cap}<div className="pv-bar" style={{ borderStyle: 'dashed', justifyContent: s.kind === 'actions' ? 'flex-end' : 'flex-start' }}>{ls.slice(0, 6).map((l, i) => <span key={i} className="pv-btn">{short(l, 7)}</span>)}</div></div>
@@ -97,6 +120,8 @@ function SectionEditor({ sec, onPatch, onRemove, onMove }) {
     <div className="ps-sec ps-editing">
       <div className="ps-sec-head">
         {SECTION_KINDS[sec.kind] || sec.kind}
+        <input className="ps-title-in" value={sec.title || ''} placeholder="自訂標題（如：銷售資訊）"
+          onChange={(e) => onPatch({ title: e.target.value })} />
         <div className="spacer" />
         <button className="uw-mini" title="區段上移" onClick={() => onMove(-1)}><ChevronUp size={13} /></button>
         <button className="uw-mini" title="區段下移" onClick={() => onMove(1)}><ChevronDown size={13} /></button>
@@ -191,7 +216,7 @@ export default function SpecSheet({ wfId, onClose }) {
           <div className="uf-card" style={{ gap: 10 }}>
             {spec.sections.map((s) => (
               <div key={s.id} className="ps-sec">
-                <div className="ps-sec-head">{SECTION_KINDS[s.kind] || s.kind}
+                <div className="ps-sec-head">{secCap(s)}
                   {(s.items || []).length > 0 && <span className="ps-kind">{s.items.length} 項</span>}</div>
                 {(s.items || []).length > 0 && (
                   <div className="ps-items">
