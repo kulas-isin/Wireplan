@@ -7,6 +7,7 @@ import { PackView, GalaxyView } from './UnitViz.jsx'
 import UnitFlows from './UnitFlows.jsx'
 import QuoteMap from './QuoteMap.jsx'
 import QuoteText from './QuoteText.jsx'
+import { ReqDetailSheet } from './MobileReqCard.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -39,7 +40,7 @@ function uwEndDrag() {
 }
 
 // 頁面樹節點：頁名 + 需求膠囊；編輯模式浮出 ＋ / ≡ / ⋯
-function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds }) {
+function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, onReq }) {
   const [open, setOpen] = useState(depth === 0)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
@@ -98,12 +99,13 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds }) 
           )}
           {reqs.length > 0 && !edit && (
             <div className="uw-reqs">
-              {reqs.map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}>{r.name}</span>)}
+              {reqs.map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
+                onClick={(e) => { e.stopPropagation(); onReq?.(r.id) }}>{r.name}</span>)}
             </div>
           )}
           {node.kids.length > 0 && (
             <div className="uw-kids">
-              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} />)}
+              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} onReq={onReq} />)}
             </div>
           )}
         </div>
@@ -241,6 +243,7 @@ export default function UnitWall() {
   const [flowUnit, setFlowUnit] = useState(null)
   const [showQuote, setShowQuote] = useState(false)
   const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
+  const [openReq, setOpenReq] = useState(null) // 磁磚內點需求 → 就地開需求卡（單元內循環）
   const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
   // 報價條目的標記/筆記更新（存回 quote.items）
   const patchQuoteItem = (id, p) => {
@@ -386,12 +389,13 @@ export default function UnitWall() {
                       }}>加入</button>
                     </div>
                   )}
-                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} />)}
+                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} onReq={setOpenReq} />)}
                   {pageTree(current, u).length === 0 && <div className="uw-empty">這個單元還沒有頁面 — 按「編輯結構 → ＋」直接新增，或到卡片的畫面地圖「建立此頁」</div>}
                   {looseReqs(current, u).length > 0 && (
                     <div className="uw-loose">
                       <span className="uw-loose-t">還沒掛到頁面：</span>
-                      {looseReqs(current, u).map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}>{r.name}</span>)}
+                      {looseReqs(current, u).map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
+                        onClick={(e) => { e.stopPropagation(); setOpenReq(r.id) }}>{r.name}</span>)}
                     </div>
                   )}
                 </div>
@@ -412,6 +416,12 @@ export default function UnitWall() {
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
       {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
+      {openReq && (() => {
+        const r = (current.requirements || []).find((x) => x.id === openReq)
+        if (!r) return null
+        const list = (current.requirements || []).filter((x) => (x.unit || '').trim() === (r.unit || '').trim())
+        return <ReqDetailSheet startId={openReq} list={list} onClose={() => setOpenReq(null)} />
+      })()}
     </div>
   )
 }
