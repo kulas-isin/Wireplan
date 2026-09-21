@@ -300,7 +300,7 @@ export default function UnitFlows({ unit, onClose }) {
               <div className="uf-main"><Mermaid code={ver.code} /></div>
               <div className="uf-side">
               <div className="uf-rev">
-                <div className="uf-rev-head"><Pencil size={12} /> 修改備註<span className="ps-kind">先記方向，AI 改完再存新版</span></div>
+                <div className="uf-rev-head"><Pencil size={12} /> 修改備註<span className="ps-kind">先記方向，改好再存新版</span></div>
                 {(f.revNotes || []).map((n) => (
                   <div key={n.id} className={'uf-rev-note' + (n.done ? ' done' : '')}>
                     <input type="checkbox" checked={n.done} title="已反映到新版"
@@ -316,11 +316,11 @@ export default function UnitFlows({ unit, onClose }) {
                   <button className="uw-mini" onClick={() => addRevNote(f)}><Plus size={13} /></button>
                 </div>
                 <div className="uf-rev-row">
-                  <label className="qr-qtoggle"><input type="checkbox" checked={revAssess} onChange={() => setRevAssess(!revAssess)} /> 需評估（超出目前範圍）</label>
+                  <label className="qr-qtoggle"><input type="checkbox" checked={revAssess} onChange={() => setRevAssess(!revAssess)} /> 需評估</label>
                   <div className="spacer" />
                   {(f.revNotes || []).some((n) => !n.done) && (
                     <button className="uf-sealbtn" onClick={() => copyForAI(f, ver)}>
-                      {copiedAI === f.id ? '已複製，貼給 AI' : '複製給 AI 改圖'}</button>
+                      {copiedAI === f.id ? '已複製' : '複製修改指示'}</button>
                   )}
                 </div>
               </div>
