@@ -100,35 +100,38 @@ function toMd(p, data, meta, range) {
 
 // —— 郵件版（行內樣式；貼進 Gmail/Outlook 保留樣式）——
 function toHtml(p, data, meta, range) {
-  // 信件配色走中性藍灰（客戶信箱裡不搶戲）；狀態標籤保留語意色
+  // 信件配色：內文中性黑、表格淡藍；需評估保留語意橙
   const tag = (t, c, b) => `<span style="font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;color:${c};background:${b}">${t}</span>`
   const assessTag = tag('需評估', '#9A6B1F', '#FBF3E2')
-  const h2 = (t) => `<h2 style="font-size:15.5px;color:#1F3A5F;border-left:4px solid #7BA7D4;padding-left:9px;margin:20px 0 6px">${t}</h2>`
-  const h3 = (t) => `<h3 style="font-size:14px;margin:14px 0 4px;color:#243342">${t}</h3>`
-  const small = (t) => `<p style="font-size:12px;color:#5A6B7C;margin:2px 0">${t}</p>`
-  const li = (arr) => `<ul style="margin:4px 0;padding-left:20px;font-size:13.5px;line-height:1.8">${arr.map((x) => `<li>${x}</li>`).join('')}</ul>`
-  const H = [`<div style="font-family:'Noto Sans TC',sans-serif;color:#243342;line-height:1.7">`,
-    `<h1 style="font-size:17px;margin:0 0 2px;color:#1F3A5F">${p.name}・需求確認會議記錄</h1>`]
+  const TH = 'background:#EAF2FB;color:#1A1A1A;text-align:left;padding:7px 10px;border:1px solid #C9DCEF;font-size:13px'
+  const TD = 'padding:7px 10px;border:1px solid #D9E5F2;font-size:13px;vertical-align:top;line-height:1.7;color:#1A1A1A'
+  const table = (heads, rows) => `<table style="border-collapse:collapse;width:100%;margin:6px 0">` +
+    `<tr>${heads.map((h) => `<th style="${TH}">${h}</th>`).join('')}</tr>` +
+    rows.map((r) => `<tr>${r.map((c) => `<td style="${TD}">${c}</td>`).join('')}</tr>`).join('') + `</table>`
+  const h2 = (t) => `<h2 style="font-size:15.5px;color:#1A1A1A;border-left:4px solid #B8D4EE;padding-left:9px;margin:20px 0 6px">${t}</h2>`
+  const small = (t) => `<p style="font-size:12px;color:#666666;margin:2px 0">${t}</p>`
+  const H = [`<div style="font-family:'Noto Sans TC',sans-serif;color:#1A1A1A;line-height:1.7">`,
+    `<h1 style="font-size:17px;margin:0 0 2px;color:#1A1A1A">${p.name}・需求確認會議記錄</h1>`]
   const m = [meta.session, range, meta.attend].filter(Boolean).join('｜')
   if (m) H.push(small(m))
   for (const u of data.units) {
     H.push(h2(u.name), small('單元進度：' + u.stat))
-    for (const { f, vers, sealedNow, done, open } of u.flows) {
-      H.push(h3(f.name))
-      const rows = []
-      for (const v of vers) rows.push(`${v.v === 1 ? '建立初版 v1' : `v${v.v - 1} → v${v.v}`}：${v.note}（${fmtT(v.at)}${sealedNow && f.sealed.v === v.v ? '，會中定稿 ✓' : ''}）`)
-      if (!vers.length) rows.push(`本次無改版，維持 v${f.versions.length}${f.sealed ? '（已定稿）' : ''}${sealedNow ? '，會中定稿 ✓' : ''}`)
-      if (done.length) rows.push(`決議事項：${done.map((n) => n.text).join('；')}`)
-      if (open.length) rows.push(`待辦：${open.map((n) => n.text + (n.assess ? ' ' + assessTag : '')).join('；')}`)
-      H.push(li(rows))
-    }
-    for (const t of u.talks) H.push(`<p style="border-left:3px solid #D5E3F1;padding-left:9px;font-size:13px;color:#5A6B7C;margin:4px 0">${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）</p>`)
-    if (u.specs.length) H.push(h3('頁面規格調整'), li(u.specs.map((s) => `${s.page}・${s.sec}：新增「${s.label}」${s.c ? '' : ' ' + assessTag}`)))
+    const rows = u.flows.map(({ f, vers, sealedNow, done, open }) => {
+      const cell = []
+      for (const v of vers) cell.push(`${v.v === 1 ? '建立初版 v1' : `v${v.v - 1} → v${v.v}`}：${v.note}（${fmtT(v.at)}${sealedNow && f.sealed.v === v.v ? '，會中定稿 ✓' : ''}）`)
+      if (!vers.length) cell.push(`本次無改版，維持 v${f.versions.length}${f.sealed ? '（已定稿）' : ''}${sealedNow ? '，會中定稿 ✓' : ''}`)
+      if (done.length) cell.push(`決議：${done.map((n) => n.text).join('；')}`)
+      if (open.length) cell.push(`待辦：${open.map((n) => n.text + (n.assess ? ' ' + assessTag : '')).join('；')}`)
+      return [`<b>${f.name}</b>`, cell.join('<br>')]
+    })
+    if (rows.length) H.push(table(['流程', '本次內容'], rows))
+    for (const t of u.talks) H.push(`<p style="border-left:3px solid #D9E5F2;padding-left:9px;font-size:13px;color:#555555;margin:4px 0">${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）</p>`)
+    if (u.specs.length) H.push(table(['頁面規格調整', '新增項目'], u.specs.map((s) => [`${s.page}・${s.sec}`, `「${s.label}」${s.c ? '' : ' ' + assessTag}`])))
     if (u.orphans.length) H.push(small(`單元備註：尚有 ${u.orphans.length} 條需求未被粗流涵蓋（${u.orphans.join('、')}）`))
     if (u.seals.length) H.push(small(`本次定案需求：<b>${u.seals.join('、')}</b>`))
   }
-  if (data.assess.length) H.push(h2('需評估彙整'), li(data.assess.map((a) => `${a.text}（${a.src}）`)))
-  if (data.pending.length) H.push(h2('待確認事項（下次會議）'), li(data.pending.map((q, i) => `Q${i + 1}. ${q.text}${q.src ? `（${q.src}）` : ''}`)))
+  if (data.assess.length) H.push(h2('需評估彙整'), table(['#', '內容', '出處'], data.assess.map((a, i) => [String(i + 1), a.text, a.src])))
+  if (data.pending.length) H.push(h2('待確認事項（下次會議）'), table(['#', '問題', '出處'], data.pending.map((q, i) => [`Q${i + 1}`, q.text, q.src || ''])))
   H.push(small(meta.foot), '</div>')
   return H.join('')
 }
