@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import QuoteText from './QuoteText.jsx'
+import UnitFlows from './UnitFlows.jsx'
 import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText } from 'lucide-react'
 
 // 頁面規格清單：頁面的真相來源是「區段＋項目」，線稿由規格自動渲染。
@@ -165,6 +166,7 @@ export default function SpecSheet({ wfId, onClose }) {
   const [mode, setMode] = useState('view')
   const [addSec, setAddSec] = useState(false)
   const [quoteOpen, setQuoteOpen] = useState(false)
+  const [openFlow, setOpenFlow] = useState(null) // 點粗流 chip → 直達該張圖
   if (!wf) return null
   // 脈絡列：這頁的需求 → 相關粗流（covers 反查）＋ 報價原文（審規格時就地比對缺漏）
   const req = (current.requirements || []).find((r) => r.id === wf.requirementId)
@@ -223,7 +225,10 @@ export default function SpecSheet({ wfId, onClose }) {
             {(req || relFlows.length > 0 || qItems.length > 0) && (
               <div className="ps-links">
                 {req && <span className="ps-kind">需求：{req.name}</span>}
-                {relFlows.map((f) => <span key={f.id} className="rd-flow-chip"><GitBranch size={11} /> {f.name}{f.sealed ? ' ✓' : ''}</span>)}
+                {relFlows.map((f) => (
+                  <button key={f.id} className="rd-flow-chip" onClick={() => setOpenFlow(f)}>
+                    <GitBranch size={11} /> {f.name}{f.sealed ? ' ✓' : ''}</button>
+                ))}
                 {qItems.length > 0 && (
                   <button className={'uf-quotebtn' + (quoteOpen ? ' on' : '')} onClick={() => setQuoteOpen(!quoteOpen)}>
                     <ScrollText size={12} /> 報價原文 {qItems.length}</button>
@@ -274,6 +279,7 @@ export default function SpecSheet({ wfId, onClose }) {
           </div>
         )}
       </div>
+      {openFlow && <UnitFlows unit={openFlow.unit || ''} focusId={openFlow.id} onClose={() => setOpenFlow(null)} />}
     </div>,
     document.body
   )

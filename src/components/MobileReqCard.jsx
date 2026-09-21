@@ -7,6 +7,7 @@ import { isLocked } from '../lib/change.js'
 import { statusOfReq } from '../lib/units.js'
 import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages, linkedPages } from '../lib/elements.js'
 import PageMap from './PageMap.jsx'
+import UnitFlows from './UnitFlows.jsx'
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes, Scissors, GitBranch } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
@@ -213,11 +214,13 @@ export function ReqDetailSheet({ startId, list, onClose }) {
     ...(req.changeLog || []).map((c) => ({ kind: 'cut', at: c.at, note: c.note })),
   ].sort((a, b) => (a.at || 0) - (b.at || 0))
   const go = (d) => { const n = idx + d; if (n < 0 || n >= list.length) return; setId(list[n].id); setMore(false) }
+  const [openFlow, setOpenFlow] = useState(null) // 點相關粗流 chip → 直達該張圖
   // 桌機鍵盤：←→ 換卡（輸入中不搶）、Esc 關閉
   const goRef = useRef(go); goRef.current = go
   useEffect(() => {
     const onKey = (e) => {
       if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return
+      if (document.querySelector('.uf-wrap')) return // 粗流浮層在上時讓它接鍵盤
       if (e.key === 'ArrowLeft') goRef.current(-1)
       else if (e.key === 'ArrowRight') goRef.current(1)
       else if (e.key === 'Escape') onClose()
@@ -275,12 +278,15 @@ export function ReqDetailSheet({ startId, list, onClose }) {
         ))}
       </aside>
       <div className="rd-body" key={req.id}>
-        {(() => { // 相關粗流：covers 綁定的反向曝光（哪些流程涵蓋這條需求）
+        {(() => { // 相關粗流：covers 綁定的反向曝光；點 chip 直達該張圖
           const flows = (current.unitFlows || []).filter((f) => (f.covers || []).includes(req.id))
           return flows.length > 0 && (
             <div className="rd-flows">
               <GitBranch size={13} />
-              {flows.map((f) => <span key={f.id} className="rd-flow-chip">{f.name}{f.sealed ? ' ✓' : ''}</span>)}
+              {flows.map((f) => (
+                <button key={f.id} className="rd-flow-chip" onClick={() => setOpenFlow(f)}>
+                  {f.name}{f.sealed ? ' ✓' : ''}</button>
+              ))}
             </div>
           )
         })()}
@@ -338,6 +344,7 @@ export function ReqDetailSheet({ startId, list, onClose }) {
           </div>
         )}
       </div>
+      {openFlow && <UnitFlows unit={openFlow.unit || ''} focusId={openFlow.id} onClose={() => setOpenFlow(null)} />}
     </div>,
     document.body
   )

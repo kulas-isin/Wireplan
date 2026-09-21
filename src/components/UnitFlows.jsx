@@ -69,7 +69,7 @@ const TEMPLATES = {
 
 // 流程圖檢視器：scope 由 unit 決定（'' ＝ 專案級，字串＝單元級；頁面級預留 pageId 欄位）。
 // 每張圖：kind 分類、版本履歷（變更原因＋時間）、定稿標記；左右滑切換上下張。
-export default function UnitFlows({ unit, onClose }) {
+export default function UnitFlows({ unit, onClose, focusId }) {
   const { current, dispatch } = useStore()
   const isProject = !unit
   const scopeName = isProject ? '專案級' : unit
@@ -80,7 +80,11 @@ export default function UnitFlows({ unit, onClose }) {
   const kindsPresent = [...new Set(scoped.map((f) => f.kind || 'main'))]
   const save = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'unitFlows', value: next })
   const [viewVer, setViewVer] = useState({})
-  const [idx, setIdx] = useState(0)
+  const [idx, setIdx] = useState(() => { // focusId：從需求卡/規格頁的粗流 chip 直達指定圖
+    if (!focusId) return 0
+    const i = all.filter((f) => (f.unit || '') === (unit || '')).findIndex((f) => f.id === focusId)
+    return i >= 0 ? i : 0
+  })
   const cur = Math.min(idx, Math.max(0, flows.length - 1))
   const go = (d) => { const n = cur + d; if (n < 0 || n >= flows.length) return; setIdx(n) }
   // 桌機鍵盤：←→ 換流程圖（輸入中不搶）、Esc 逐層關（編輯器 → 整頁）
