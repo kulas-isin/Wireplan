@@ -166,9 +166,9 @@ export default function SpecSheet({ wfId, onClose }) {
   const [mode, setMode] = useState('view')
   const [addSec, setAddSec] = useState(false)
   const [quoteOpen, setQuoteOpen] = useState(false)
-  const [openFlow, setOpenFlow] = useState(null) // 點粗流 chip → 直達該張圖
+  const [openFlow, setOpenFlow] = useState(null) // 點流程 chip → 直達該張圖
   if (!wf) return null
-  // 脈絡列：這頁的需求 → 相關粗流（covers 反查）＋ 報價原文（審規格時就地比對缺漏）
+  // 脈絡列：這頁的需求 → 相關流程（covers 反查）＋ 報價原文（審規格時就地比對缺漏）
   const req = (current.requirements || []).find((r) => r.id === wf.requirementId)
   const relFlows = req ? (current.unitFlows || []).filter((f) => (f.covers || []).includes(req.id)) : []
   const qItems = req ? (current.quote?.items || []).filter((it) => (it.reqIds || []).includes(req.id)) : []

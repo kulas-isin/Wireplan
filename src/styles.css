@@ -1818,6 +1818,8 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 }
 .uw-reqs { display: flex; flex-wrap: wrap; gap: 5px; padding: 1px 2px 9px 21px; }
 .uw-rq { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3.5px 10px; line-height: 1.3; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.uw-rq-flow { display: inline-flex; align-items: center; justify-content: center; gap: 1px; font-size: 10px; font-weight: 800; min-width: 24px; width: auto; padding: 0 3px; height: 24px; border: none; background: none; color: rgba(58,93,37,0.5); cursor: pointer; border-radius: 50%; padding: 0; flex-shrink: 0; }
+.uw-rq-flow:active { background: rgba(58,93,37,0.12); color: #3A5D25; }
 .uw-st0 { background: #E1EDF9; color: #2E5F96; }
 .uw-st1 { background: #E1F0D8; color: #4E7A2E; }
 .uw-st2 { background: #FBF0DC; color: #B0691F; animation: uwWarn 2.8s 1s ease-in-out infinite; }

@@ -10,7 +10,7 @@ import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
 import SpecSheet from './SpecSheet.jsx'
 import MeetingDoc from './MeetingDoc.jsx'
-import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
+import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
 
@@ -42,7 +42,7 @@ function uwEndDrag() {
 }
 
 // 頁面樹節點：頁名 + 需求膠囊；編輯模式浮出 ＋ / ≡ / ⋯
-function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, onReq, onSpec }) {
+function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, onReq, onSpec, onFlow }) {
   const [open, setOpen] = useState(depth === 0)
   const [adding, setAdding] = useState(false)
   const [newName, setNewName] = useState('')
@@ -101,13 +101,20 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
           )}
           {reqs.length > 0 && !edit && (
             <div className="uw-reqs">
-              {reqs.map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
-                onClick={(e) => { e.stopPropagation(); onReq?.(r.id) }}>{r.name}</span>)}
+              {reqs.map((r) => {
+                const fls = (project.unitFlows || []).filter((f) => (f.covers || []).includes(r.id))
+                return (<span key={r.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                  <span className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
+                    onClick={(e) => { e.stopPropagation(); onReq?.(r.id) }}>{r.name}</span>
+                  {fls.length > 0 && <button className="uw-rq-flow" title={'開流程圖：' + fls.map((f) => f.name).join('、')}
+                    onClick={(e) => { e.stopPropagation(); onFlow?.(fls[0]) }}><GitBranch size={11} />{fls.length > 1 ? fls.length : ''}</button>}
+                </span>)
+              })}
             </div>
           )}
           {node.kids.length > 0 && (
             <div className="uw-kids">
-              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} onReq={onReq} onSpec={onSpec} />)}
+              {node.kids.map((k) => <TreeNode key={k.wf.id} node={k} project={project} depth={depth + 1} edit={edit} dispatch={dispatch} onMore={onMore} subtreeIds={subtreeIds} onReq={onReq} onSpec={onSpec} onFlow={onFlow} />)}
             </div>
           )}
         </div>
@@ -248,6 +255,7 @@ export default function UnitWall() {
   const [openReq, setOpenReq] = useState(null) // 磁磚內點需求 → 就地開需求卡（單元內循環）
   const [specWf, setSpecWf] = useState(null) // 磁磚內點頁名 → 開頁面規格清單
   const [showMeeting, setShowMeeting] = useState(false)
+  const [jumpFlow, setJumpFlow] = useState(null) // 樹上 ⑂ 直達指定流程
   const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
   // 報價條目的標記/筆記更新（存回 quote.items）
   const patchQuoteItem = (id, p) => {
@@ -370,7 +378,7 @@ export default function UnitWall() {
                   <div className="uw-treehead">
                     {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
                     <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>
-                      粗流 {(current.unitFlows || []).filter((f) => f.unit === u).length}
+                      流程 {(current.unitFlows || []).filter((f) => f.unit === u).length}
                       {(current.unitFlows || []).some((f) => f.unit === u && f.sealed) ? ' ✓' : ''}
                     </button>
                     {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
@@ -394,13 +402,20 @@ export default function UnitWall() {
                       }}>加入</button>
                     </div>
                   )}
-                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} onReq={setOpenReq} onSpec={setSpecWf} />)}
+                  {pageTree(current, u).map((n) => <TreeNode key={n.wf.id} node={n} project={current} depth={0} edit={editStruct} dispatch={dispatch} onMore={setMoreWf} subtreeIds={subtreeIds} onReq={setOpenReq} onSpec={setSpecWf} onFlow={setJumpFlow} />)}
                   {pageTree(current, u).length === 0 && <div className="uw-empty">這個單元還沒有頁面 — 按「編輯結構 → ＋」直接新增，或到卡片的畫面地圖「建立此頁」</div>}
                   {looseReqs(current, u).length > 0 && (
                     <div className="uw-loose">
                       <span className="uw-loose-t">還沒掛到頁面：</span>
-                      {looseReqs(current, u).map((r) => <span key={r.id} className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
-                        onClick={(e) => { e.stopPropagation(); setOpenReq(r.id) }}>{r.name}</span>)}
+                      {looseReqs(current, u).map((r) => {
+                        const fls = (current.unitFlows || []).filter((f) => (f.covers || []).includes(r.id))
+                        return (<span key={r.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                          <span className={'uw-rq ' + ST_CLASS[statusOfReq(r)]}
+                            onClick={(e) => { e.stopPropagation(); setOpenReq(r.id) }}>{r.name}</span>
+                          {fls.length > 0 && <button className="uw-rq-flow" title={'開流程圖：' + fls.map((f) => f.name).join('、')}
+                            onClick={(e) => { e.stopPropagation(); setJumpFlow(fls[0]) }}><GitBranch size={11} />{fls.length > 1 ? fls.length : ''}</button>}
+                        </span>)
+                      })}
                     </div>
                   )}
                 </div>
@@ -423,6 +438,7 @@ export default function UnitWall() {
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
       {specWf && <SpecSheet wfId={specWf} onClose={() => setSpecWf(null)} />}
       {showMeeting && <MeetingDoc onClose={() => setShowMeeting(false)} />}
+      {jumpFlow && <UnitFlows unit={jumpFlow.unit || ''} focusId={jumpFlow.id} onClose={() => setJumpFlow(null)} />}
       {openReq && (() => {
         const r = (current.requirements || []).find((x) => x.id === openReq)
         if (!r) return null

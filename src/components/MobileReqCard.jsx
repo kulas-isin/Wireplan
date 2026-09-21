@@ -214,13 +214,13 @@ export function ReqDetailSheet({ startId, list, onClose }) {
     ...(req.changeLog || []).map((c) => ({ kind: 'cut', at: c.at, note: c.note })),
   ].sort((a, b) => (a.at || 0) - (b.at || 0))
   const go = (d) => { const n = idx + d; if (n < 0 || n >= list.length) return; setId(list[n].id); setMore(false) }
-  const [openFlow, setOpenFlow] = useState(null) // 點相關粗流 chip → 直達該張圖
+  const [openFlow, setOpenFlow] = useState(null) // 點相關流程 chip → 直達該張圖
   // 桌機鍵盤：←→ 換卡（輸入中不搶）、Esc 關閉
   const goRef = useRef(go); goRef.current = go
   useEffect(() => {
     const onKey = (e) => {
       if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return
-      if (document.querySelector('.uf-wrap')) return // 粗流浮層在上時讓它接鍵盤
+      if (document.querySelector('.uf-wrap')) return // 流程浮層在上時讓它接鍵盤
       if (e.key === 'ArrowLeft') goRef.current(-1)
       else if (e.key === 'ArrowRight') goRef.current(1)
       else if (e.key === 'Escape') onClose()
@@ -278,7 +278,7 @@ export function ReqDetailSheet({ startId, list, onClose }) {
         ))}
       </aside>
       <div className="rd-body" key={req.id}>
-        {(() => { // 相關粗流：covers 綁定的反向曝光；點 chip 直達該張圖
+        {(() => { // 相關流程：covers 綁定的反向曝光；點 chip 直達該張圖
           const flows = (current.unitFlows || []).filter((f) => (f.covers || []).includes(req.id))
           return flows.length > 0 && (
             <div className="rd-flows">

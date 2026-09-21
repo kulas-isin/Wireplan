@@ -6,7 +6,7 @@ import { SECTION_KINDS } from './SpecSheet.jsx'
 import Mermaid from './Mermaid.jsx'
 import { X, Mail, FileText, Image as ImageIcon } from 'lucide-react'
 
-// 會議記錄產生器：以「單元 → 粗流」為主軸，聚合時間範圍內的系統資料成一份記錄。
+// 會議記錄產生器：以「單元 → 流程」為主軸，聚合時間範圍內的系統資料成一份記錄。
 // 輸出：複製郵件格式（HTML 進剪貼簿，貼 Gmail/Outlook 保留表格與標籤）／複製 Markdown（存檔用）。
 // 用詞規範：定案需求（不寫蓋章）、需評估（不寫規格外）、不出現 AI 字樣。
 
@@ -58,7 +58,7 @@ function build(project, from, to) {
     if (fb.length || seals.length || talks.length || specs.length) {
       out.units.push({
         name: u || '專案級流程', flows: fb, seals, talks, specs, orphans: orphans.map((r) => r.name),
-        stat: u ? `粗流 ${flows.length} 張・定稿 ${flows.filter((f) => f.sealed).length}・需求涵蓋 ${reqs.filter((r) => covered.has(r.id)).length}/${reqs.length}` : `流程圖 ${flows.length} 張`,
+        stat: u ? `流程 ${flows.length} 張・定稿 ${flows.filter((f) => f.sealed).length}・需求涵蓋 ${reqs.filter((r) => covered.has(r.id)).length}/${reqs.length}` : `流程圖 ${flows.length} 張`,
       })
     }
   }
@@ -89,7 +89,7 @@ function toMd(p, data, meta, range) {
     }
     if (u.talks.length) { L.push('\n對話重點：'); u.talks.forEach((t) => L.push(`> ${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）`)) }
     if (u.specs.length) { L.push('\n頁面規格調整：'); u.specs.forEach((s) => L.push(`- ${s.page}・${s.sec}：新增「${s.label}」${s.c ? '' : '【需評估】'}`)) }
-    if (u.orphans.length) L.push(`\n單元備註：尚有 ${u.orphans.length} 條需求未被粗流涵蓋（${u.orphans.join('、')}）`)
+    if (u.orphans.length) L.push(`\n單元備註：尚有 ${u.orphans.length} 條需求未被流程涵蓋（${u.orphans.join('、')}）`)
     if (u.seals.length) L.push(`本次定案需求：${u.seals.join('、')}`)
   }
   if (data.assess.length) { L.push('\n## 需評估彙整'); data.assess.forEach((a, i) => L.push(`${i + 1}. ${a.text}（${a.src}）`)) }
@@ -127,7 +127,7 @@ function toHtml(p, data, meta, range) {
     if (rows.length) H.push(table(['流程', '本次內容'], rows))
     for (const t of u.talks) H.push(`<p style="border-left:3px solid #D9E5F2;padding-left:9px;font-size:13px;color:#555555;margin:4px 0">${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）</p>`)
     if (u.specs.length) H.push(table(['頁面規格調整', '新增項目'], u.specs.map((s) => [`${s.page}・${s.sec}`, `「${s.label}」${s.c ? '' : ' ' + assessTag}`])))
-    if (u.orphans.length) H.push(small(`單元備註：尚有 ${u.orphans.length} 條需求未被粗流涵蓋（${u.orphans.join('、')}）`))
+    if (u.orphans.length) H.push(small(`單元備註：尚有 ${u.orphans.length} 條需求未被流程涵蓋（${u.orphans.join('、')}）`))
     if (u.seals.length) H.push(small(`本次定案需求：<b>${u.seals.join('、')}</b>`))
   }
   if (data.assess.length) H.push(h2('需評估彙整'), table(['#', '內容', '出處'], data.assess.map((a, i) => [String(i + 1), a.text, a.src])))
@@ -251,7 +251,7 @@ export default function MeetingDoc({ onClose }) {
             {data.imgs.filter((x) => x.changed).map((x) => <FlowImg key={x.f.id} {...x} copied={copied} copyImg={copyImg} imgRefs={imgRefs} />)}
             {data.imgs.some((x) => !x.changed) && (
               <button className="ps-add" style={{ alignSelf: 'flex-start' }} onClick={() => setShowAllImgs((v) => !v)}>
-                {showAllImgs ? '收合' : `其他本期涉及的粗流 ${data.imgs.filter((x) => !x.changed).length} 張（第一次寄給客戶時全附）`}
+                {showAllImgs ? '收合' : `其他本期涉及的流程圖 ${data.imgs.filter((x) => !x.changed).length} 張（第一次寄給客戶時全附）`}
               </button>
             )}
             {showAllImgs && data.imgs.filter((x) => !x.changed).map((x) => <FlowImg key={x.f.id} {...x} copied={copied} copyImg={copyImg} imgRefs={imgRefs} />)}
