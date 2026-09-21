@@ -115,7 +115,7 @@ function SectionEditor({ sec, onPatch, onRemove, onMove }) {
     const arr = [...items]; const [x] = arr.splice(i, 1); arr.splice(n, 0, x)
     setItems(arr)
   }
-  const add = () => { if (!adding.trim()) return; setItems([...items, { id: sid(), label: adding.trim(), c: false }]); setAdding('') }
+  const add = () => { if (!adding.trim()) return; setItems([...items, { id: sid(), label: adding.trim(), c: false, at: Date.now() }]); setAdding('') }
   return (
     <div className="ps-sec ps-editing">
       <div className="ps-sec-head">
@@ -148,7 +148,7 @@ function SectionEditor({ sec, onPatch, onRemove, onMove }) {
             <textarea rows={4} value={pasteText} placeholder={'貼上多行文字（或以「、，/」分隔）\n每行變成一個項目'} onChange={(e) => setPasteText(e.target.value)} />
             <button className="uf-new" onClick={() => {
               const parts = pasteText.split(/[\n、，,／/]/).map((s) => s.trim()).filter(Boolean)
-              if (parts.length) setItems([...items, ...parts.map((label) => ({ id: sid(), label, c: false }))])
+              if (parts.length) setItems([...items, ...parts.map((label) => ({ id: sid(), label, c: false, at: Date.now() }))])
               setPasteText(''); setPasteOpen(false)
             }}>加入 {pasteText.split(/[\n、，,／/]/).filter((s) => s.trim()).length} 項</button>
           </div>
