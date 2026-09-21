@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
-import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight } from 'lucide-react'
+import QuoteText from './QuoteText.jsx'
+import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText } from 'lucide-react'
 
 // 頁面規格清單：頁面的真相來源是「區段＋項目」，線稿由規格自動渲染。
 // 檢視模式＝膠囊掃視＋示意預覽（無任何編輯鈕）；編輯模式＝一行一項大列表（手機友善）＋貼上多行批次。
@@ -163,7 +164,12 @@ export default function SpecSheet({ wfId, onClose }) {
   const wf = (current.wireframes || []).find((w) => w.id === wfId)
   const [mode, setMode] = useState('view')
   const [addSec, setAddSec] = useState(false)
+  const [quoteOpen, setQuoteOpen] = useState(false)
   if (!wf) return null
+  // 脈絡列：這頁的需求 → 相關粗流（covers 反查）＋ 報價原文（審規格時就地比對缺漏）
+  const req = (current.requirements || []).find((r) => r.id === wf.requirementId)
+  const relFlows = req ? (current.unitFlows || []).filter((f) => (f.covers || []).includes(req.id)) : []
+  const qItems = req ? (current.quote?.items || []).filter((it) => (it.reqIds || []).includes(req.id)) : []
   const spec = wf.spec
   const patch = (p) => dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: p })
   const patchSpec = (p) => patch({ spec: { ...spec, ...p } })
@@ -214,6 +220,22 @@ export default function SpecSheet({ wfId, onClose }) {
         )}
         {spec && mode === 'view' && (
           <div className="uf-card" style={{ gap: 10 }}>
+            {(req || relFlows.length > 0 || qItems.length > 0) && (
+              <div className="ps-links">
+                {req && <span className="ps-kind">需求：{req.name}</span>}
+                {relFlows.map((f) => <span key={f.id} className="rd-flow-chip"><GitBranch size={11} /> {f.name}{f.sealed ? ' ✓' : ''}</span>)}
+                {qItems.length > 0 && (
+                  <button className={'uf-quotebtn' + (quoteOpen ? ' on' : '')} onClick={() => setQuoteOpen(!quoteOpen)}>
+                    <ScrollText size={12} /> 報價原文 {qItems.length}</button>
+                )}
+              </div>
+            )}
+            {quoteOpen && qItems.map((it) => (
+              <div key={it.id} className="uf-quote">
+                <div className="uf-quote-name"><ScrollText size={11} /> {it.name}｜報價原文</div>
+                <QuoteText text={it.text} interactive />
+              </div>
+            ))}
             {spec.sections.map((s) => (
               <div key={s.id} className="ps-sec">
                 <div className="ps-sec-head">{secCap(s)}
