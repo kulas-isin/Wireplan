@@ -2049,6 +2049,18 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-cov-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
 .uf-cov-note { font-size: 12px; color: #B0691F; background: #FBF0DC; border-radius: 10px; padding: 8px 10px; line-height: 1.6; }
 .uf-cov-note.ok { color: #4E7A2E; background: #E1F0D8; }
+/* 會議記錄產生器 */
+.md-ctrl { gap: 10px; }
+.md-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.md-row label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: #3A5D25; flex: 1; min-width: 130px; }
+.md-row input { border: 1px solid rgba(58,93,37,0.2); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 13px; background: #fff; width: 100%; }
+.md-foot { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: #3A5D25; }
+.md-foot textarea { border: 1px solid rgba(58,93,37,0.2); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 12.5px; background: #fff; resize: vertical; }
+.md-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.md-preview { display: block; }
+.md-img { display: flex; flex-direction: column; gap: 6px; }
+.md-img-head { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #22301F; flex-wrap: wrap; }
+.md-img-head .uf-sealbtn { margin-left: auto; }
 /* 修改備註：先記方向、不動圖 */
 .uf-rev { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.14); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
 .uf-rev-head { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: #3A5D25; flex-wrap: wrap; }

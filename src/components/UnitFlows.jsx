@@ -304,7 +304,7 @@ export default function UnitFlows({ unit, onClose }) {
                 {(f.revNotes || []).map((n) => (
                   <div key={n.id} className={'uf-rev-note' + (n.done ? ' done' : '')}>
                     <input type="checkbox" checked={n.done} title="已反映到新版"
-                      onChange={() => patchFlow(f.id, { revNotes: f.revNotes.map((x) => x.id === n.id ? { ...x, done: !x.done } : x) })} />
+                      onChange={() => patchFlow(f.id, { revNotes: f.revNotes.map((x) => x.id === n.id ? { ...x, done: !x.done, doneAt: x.done ? null : Date.now() } : x) })} />
                     <span className="uf-rev-text">{n.text}</span>
                     {n.assess && <span className="uf-rev-tag">需評估</span>}
                     <button className="qr-note-del" onClick={() => patchFlow(f.id, { revNotes: f.revNotes.filter((x) => x.id !== n.id) })}>✕</button>

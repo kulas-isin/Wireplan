@@ -9,6 +9,7 @@ import QuoteMap from './QuoteMap.jsx'
 import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
 import SpecSheet from './SpecSheet.jsx'
+import MeetingDoc from './MeetingDoc.jsx'
 import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -246,6 +247,7 @@ export default function UnitWall() {
   const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
   const [openReq, setOpenReq] = useState(null) // 磁磚內點需求 → 就地開需求卡（單元內循環）
   const [specWf, setSpecWf] = useState(null) // 磁磚內點頁名 → 開頁面規格清單
+  const [showMeeting, setShowMeeting] = useState(false)
   const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
   // 報價條目的標記/筆記更新（存回 quote.items）
   const patchQuoteItem = (id, p) => {
@@ -283,6 +285,7 @@ export default function UnitWall() {
           <button key={k} className={viz === k ? 'on' : ''} onClick={() => setViz(k)}>{label}</button>
         ))}
         <div className="spacer" />
+        <button className="uw-editbtn" onClick={() => setShowMeeting(true)}>會議記錄</button>
         <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
           報價對照{quoteItems.length === 0 ? '' : quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
         </button>
@@ -419,6 +422,7 @@ export default function UnitWall() {
       {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
       {specWf && <SpecSheet wfId={specWf} onClose={() => setSpecWf(null)} />}
+      {showMeeting && <MeetingDoc onClose={() => setShowMeeting(false)} />}
       {openReq && (() => {
         const r = (current.requirements || []).find((x) => x.id === openReq)
         if (!r) return null
