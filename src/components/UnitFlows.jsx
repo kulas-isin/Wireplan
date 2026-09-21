@@ -76,7 +76,12 @@ export default function UnitFlows({ unit, onClose, focusId }) {
   const all = current.unitFlows || []
   const scoped = all.filter((f) => (f.unit || '') === (unit || ''))
   const [kindTab, setKindTab] = useState('all')
-  const flows = kindTab === 'all' ? scoped : scoped.filter((f) => (f.kind || 'main') === kindTab)
+  const [reqTab, setReqTab] = useState('all') // 單元層級改依「需求」分籤（'all' | 'none' | reqId）；專案級仍依圖型
+  const flows = isProject
+    ? (kindTab === 'all' ? scoped : scoped.filter((f) => (f.kind || 'main') === kindTab))
+    : (reqTab === 'all' ? scoped
+      : reqTab === 'none' ? scoped.filter((f) => !(f.covers || []).length)
+      : scoped.filter((f) => (f.covers || []).includes(reqTab)))
   const kindsPresent = [...new Set(scoped.map((f) => f.kind || 'main'))]
   const save = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'unitFlows', value: next })
   const [viewVer, setViewVer] = useState({})
@@ -231,15 +236,28 @@ export default function UnitFlows({ unit, onClose, focusId }) {
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
-        {(kindsPresent.length > 1 || flows.length > 1) && (
+        {((isProject ? kindsPresent.length > 1 : scoped.length > 1) || flows.length > 1) && (
           <div className="uw-modes uf-tabs">
-            {kindsPresent.length > 1 && (<>
+            {isProject && kindsPresent.length > 1 && (<>
               <button className={kindTab === 'all' ? 'on' : ''} onClick={() => { setKindTab('all'); setIdx(0) }}>全部 {scoped.length}</button>
               {FLOW_KINDS.filter(([k]) => kindsPresent.includes(k)).map(([k, label]) => (
                 <button key={k} className={kindTab === k ? 'on' : ''} onClick={() => { setKindTab(k); setIdx(0) }}>
                   {label} {scoped.filter((f) => (f.kind || 'main') === k).length}
                 </button>
               ))}
+            </>)}
+            {!isProject && scoped.length > 1 && (<>
+              <button className={reqTab === 'all' ? 'on' : ''} onClick={() => { setReqTab('all'); setIdx(0) }}>全部 {scoped.length}</button>
+              {unitReqs.map((r) => {
+                const c = scoped.filter((f) => (f.covers || []).includes(r.id)).length
+                return c > 0 && (
+                  <button key={r.id} className={reqTab === r.id ? 'on' : ''} onClick={() => { setReqTab(r.id); setIdx(0) }}>
+                    {r.name} {c}
+                  </button>
+                )
+              })}
+              {(() => { const n = scoped.filter((f) => !(f.covers || []).length).length
+                return n > 0 && <button className={reqTab === 'none' ? 'on' : ''} onClick={() => { setReqTab('none'); setIdx(0) }}>未對應 {n}</button> })()}
             </>)}
             {flows.length > 1 && (
               <span className="uf-pager">
