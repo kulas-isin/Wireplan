@@ -7,7 +7,7 @@ import { isLocked } from '../lib/change.js'
 import { statusOfReq } from '../lib/units.js'
 import { findElementOnPages, suggestElements, findPageByName, normalizeReqPages, linkedPages } from '../lib/elements.js'
 import PageMap from './PageMap.jsx'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes, Scissors } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, RotateCw, Trash2, Check, X, Plus, User, Store, ArrowDownToLine, ArrowLeft, MessageSquareText, BookOpen, CalendarDays, LayoutTemplate, Boxes, Scissors, GitBranch } from 'lucide-react'
 
 // 標題輸入：多行自動長高（需求名稱常常一行放不下）
 function TitleArea({ value, disabled, title, placeholder, onChange }) {
@@ -275,6 +275,15 @@ export function ReqDetailSheet({ startId, list, onClose }) {
         ))}
       </aside>
       <div className="rd-body" key={req.id}>
+        {(() => { // 相關粗流：covers 綁定的反向曝光（哪些流程涵蓋這條需求）
+          const flows = (current.unitFlows || []).filter((f) => (f.covers || []).includes(req.id))
+          return flows.length > 0 && (
+            <div className="rd-flows">
+              <GitBranch size={13} />
+              {flows.map((f) => <span key={f.id} className="rd-flow-chip">{f.name}{f.sealed ? ' ✓' : ''}</span>)}
+            </div>
+          )
+        })()}
         <div className="rd-sec"><BookOpen size={14} /> 故事句（一句話說清楚）</div>
         <GrowInput multiline className="rd-input" value={req.description} placeholder="身為＿＿，我想要＿＿，以便＿＿"
           disabled={locked} title={lockTip} onChange={(e) => patch({ description: e.target.value })} />
