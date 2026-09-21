@@ -97,7 +97,7 @@ export default function UnitFlows({ unit, onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, []) // eslint-disable-line
   const onTS = (e) => {
-    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, input, textarea, button')) { window.__ufTouch = null; return }
+    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, .uf-rev, input, textarea, button')) { window.__ufTouch = null; return }
     window.__ufTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
   }
   const onTE = (e) => {
@@ -175,6 +175,24 @@ export default function UnitFlows({ unit, onClose }) {
   const doSeal = (f) => {
     save(all.map((x) => x.id === f.id ? { ...x, sealed: { v: x.versions.length, at: Date.now() } } : x))
     setSealAsk(null)
+  }
+
+  // 修改備註：先記方向、不動圖 —— 累積後「複製給 AI」改 mermaid，回來再存新版
+  // flow.revNotes = [{ id, text, assess, at, done }]；assess = 需評估（超出目前範圍，用詞刻意不寫「規格外」）
+  const [revAdd, setRevAdd] = useState('')
+  const [revAssess, setRevAssess] = useState(false)
+  const [copiedAI, setCopiedAI] = useState(false)
+  const patchFlow = (fid, p) => save(all.map((x) => x.id === fid ? { ...x, ...p } : x))
+  const addRevNote = (f) => {
+    if (!revAdd.trim()) return
+    patchFlow(f.id, { revNotes: [...(f.revNotes || []), { id: 'rn' + Math.random().toString(36).slice(2, 9), text: revAdd.trim(), assess: revAssess, at: Date.now(), done: false }] })
+    setRevAdd(''); setRevAssess(false)
+  }
+  const copyForAI = async (f, ver) => {
+    const open = (f.revNotes || []).filter((n) => !n.done)
+    const lines = open.map((n, i) => `${i + 1}. ${n.text}${n.assess ? '（需評估）' : ''}`).join('\n')
+    const txt = `請幫我修改這張 mermaid 流程圖（維持整潔：節點字短、細節寫在邊標籤、文字用引號、失敗路徑要有去處）：\n\n【流程圖】${f.name}（${scopeName}・目前 v${ver.v}）\n【修改方向】\n${lines}\n\n【目前的 mermaid】\n\`\`\`mermaid\n${ver.code.trim()}\n\`\`\`\n\n請回傳完整修改後的 mermaid 程式碼。`
+    try { await navigator.clipboard.writeText(txt); setCopiedAI(f.id); setTimeout(() => setCopiedAI(false), 2500) } catch { alert('複製失敗，請手動選取') }
   }
 
   // 需求涵蓋盤點（單元級才有）：flow.covers = 需求 id 陣列；盤點是記錄不是規格，定稿後仍可勾
@@ -281,6 +299,31 @@ export default function UnitFlows({ unit, onClose }) {
               <div className={'uf-cols' + (sideOpen ? '' : ' side-off')}>{/* 桌機雙欄：左圖、右盤點＋履歷；手機維持直排 */}
               <div className="uf-main"><Mermaid code={ver.code} /></div>
               <div className="uf-side">
+              <div className="uf-rev">
+                <div className="uf-rev-head"><Pencil size={12} /> 修改備註<span className="ps-kind">先記方向，AI 改完再存新版</span></div>
+                {(f.revNotes || []).map((n) => (
+                  <div key={n.id} className={'uf-rev-note' + (n.done ? ' done' : '')}>
+                    <input type="checkbox" checked={n.done} title="已反映到新版"
+                      onChange={() => patchFlow(f.id, { revNotes: f.revNotes.map((x) => x.id === n.id ? { ...x, done: !x.done } : x) })} />
+                    <span className="uf-rev-text">{n.text}</span>
+                    {n.assess && <span className="uf-rev-tag">需評估</span>}
+                    <button className="qr-note-del" onClick={() => patchFlow(f.id, { revNotes: f.revNotes.filter((x) => x.id !== n.id) })}>✕</button>
+                  </div>
+                ))}
+                <div className="uf-rev-add">
+                  <input value={revAdd} placeholder="要往哪個方向改…" onChange={(e) => setRevAdd(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addRevNote(f)} />
+                  <button className="uw-mini" onClick={() => addRevNote(f)}><Plus size={13} /></button>
+                </div>
+                <div className="uf-rev-row">
+                  <label className="qr-qtoggle"><input type="checkbox" checked={revAssess} onChange={() => setRevAssess(!revAssess)} /> 需評估（超出目前範圍）</label>
+                  <div className="spacer" />
+                  {(f.revNotes || []).some((n) => !n.done) && (
+                    <button className="uf-sealbtn" onClick={() => copyForAI(f, ver)}>
+                      {copiedAI === f.id ? '已複製，貼給 AI' : '複製給 AI 改圖'}</button>
+                  )}
+                </div>
+              </div>
               {!isProject && unitReqs.length > 0 && (
                 <div className="uf-cov">
                   <button className="uf-cov-head" onClick={() => setCovOpen((covOpen === null ? isDesk : covOpen === f.id) ? 'closed' : f.id)}>
