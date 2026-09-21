@@ -80,7 +80,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
   const kindsPresent = [...new Set(scoped.map((f) => f.kind || 'main'))]
   const save = (next) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'unitFlows', value: next })
   const [viewVer, setViewVer] = useState({})
-  const [idx, setIdx] = useState(() => { // focusId：從需求卡/規格頁的粗流 chip 直達指定圖
+  const [idx, setIdx] = useState(() => { // focusId：從需求卡/規格頁的流程 chip 直達指定圖
     if (!focusId) return 0
     const i = all.filter((f) => (f.unit || '') === (unit || '')).findIndex((f) => f.id === focusId)
     return i >= 0 ? i : 0
@@ -153,7 +153,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
     save(all.filter((x) => x.id !== f.id))
   }
 
-  // 匯入粗流檔：只新增（id 已存在的略過），既有圖與定稿完全不動
+  // 匯入流程檔：只新增（id 已存在的略過），既有圖與定稿完全不動
   const flowFileRef = useRef(null)
   const importFlows = (file) => {
     if (!file) return
@@ -165,9 +165,9 @@ export default function UnitFlows({ unit, onClose, focusId }) {
         if (!Array.isArray(inc)) { alert('檔案裡找不到 unitFlows 陣列') ; return }
         const have = new Set(all.map((f) => f.id))
         const add = inc.filter((f) => f && f.id && f.name && Array.isArray(f.versions) && f.versions.length && !have.has(f.id))
-        if (!add.length) { alert('沒有可新增的粗流（全部已存在或格式不符）'); return }
+        if (!add.length) { alert('沒有可新增的流程圖（全部已存在或格式不符）'); return }
         save([...all, ...add])
-        alert(`已新增 ${add.length} 張粗流草稿${inc.length - add.length ? `（略過已存在 ${inc.length - add.length} 張）` : ''}，既有圖與定稿不受影響`)
+        alert(`已新增 ${add.length} 張流程圖草稿${inc.length - add.length ? `（略過已存在 ${inc.length - add.length} 張）` : ''}，既有圖與定稿不受影響`)
       } catch { alert('不是有效的 JSON 檔') }
     }
     rd.readAsText(file)
@@ -222,11 +222,11 @@ export default function UnitFlows({ unit, onClose, focusId }) {
     <div className="uf-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
       <div className="uf-head">
         <GitBranch size={18} />
-        <strong>{isProject ? '專案級流程圖' : scopeName + ' · 單元粗流'}（{scoped.length}）</strong>
+        <strong>{isProject ? '專案級流程圖' : scopeName + ' · 單元流程'}（{scoped.length}）</strong>
         <div className="spacer" />
         <input ref={flowFileRef} type="file" accept=".json" style={{ display: 'none' }}
           onChange={(e) => { importFlows(e.target.files?.[0]); e.target.value = '' }} />
-        <button className="uw-mini" title="匯入粗流檔（只新增草稿，不動既有圖與定稿）" onClick={() => flowFileRef.current?.click()}><Upload size={14} /></button>
+        <button className="uw-mini" title="匯入流程檔（只新增草稿，不動既有圖與定稿）" onClick={() => flowFileRef.current?.click()}><Upload size={14} /></button>
         <button className="uf-new" onClick={openNew}><Plus size={14} /> 新增</button>
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
@@ -254,7 +254,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
           <div className="uf-empty">
             {isProject
               ? <>還沒有專案級流程圖。建議三張：<b>全站架構</b>、<b>核心價值流</b>（錢和貨的端到端主線）、<b>系統邊界</b>（我們 vs 外部系統）。</>
-              : <>這個單元還沒有粗流。建議 1~3 張：<b>主流程</b>＋必要的<b>例外情境</b>；有多狀態單據的單元補一張<b>狀態機</b>。<br />粗流「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。</>}
+              : <>這個單元還沒有流程圖。建議 1~3 張：<b>主流程</b>＋必要的<b>例外情境</b>；有多狀態單據的單元補一張<b>狀態機</b>。<br />流程「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。</>}
           </div>
         )}
         {flows.filter((_, i) => i === cur).map((f) => {
@@ -364,8 +364,8 @@ export default function UnitFlows({ unit, onClose, focusId }) {
                         )
                       })}
                       {orphans.length > 0
-                        ? <div className="uf-cov-note">還有 {orphans.length} 條需求未被任何粗流涵蓋：{orphans.map((r) => r.name).join('、')} — 是漏畫流程，還是需求本身多餘？</div>
-                        : <div className="uf-cov-note ok">此單元所有需求都已被粗流涵蓋 — 可以開始長頁面。</div>}
+                        ? <div className="uf-cov-note">還有 {orphans.length} 條需求未被任何流程涵蓋：{orphans.map((r) => r.name).join('、')} — 是漏畫流程，還是需求本身多餘？</div>
+                        : <div className="uf-cov-note ok">此單元所有需求都已被流程涵蓋 — 可以開始長頁面。</div>}
                     </div>
                   )}
                 </div>
