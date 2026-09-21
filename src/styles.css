@@ -2049,6 +2049,19 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-cov-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
 .uf-cov-note { font-size: 12px; color: #B0691F; background: #FBF0DC; border-radius: 10px; padding: 8px 10px; line-height: 1.6; }
 .uf-cov-note.ok { color: #4E7A2E; background: #E1F0D8; }
+/* 修改備註：先記方向、不動圖 */
+.uf-rev { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.14); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
+.uf-rev-head { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: #3A5D25; flex-wrap: wrap; }
+.uf-rev-note { display: flex; align-items: flex-start; gap: 7px; font-size: 12.5px; color: #22301F; line-height: 1.5; }
+.uf-rev-note input { width: 15px; height: 15px; padding: 0; border: none; box-shadow: none; margin-top: 2px; accent-color: #3A5D25; flex-shrink: 0; }
+.uf-rev-note.done .uf-rev-text { text-decoration: line-through; color: #9AA893; }
+.uf-rev-text { flex: 1; }
+.uf-rev-tag { font-size: 10px; font-weight: 800; color: #B0691F; background: #FBF0DC; border-radius: 999px; padding: 2px 8px; flex-shrink: 0; }
+.uf-rev-add { display: flex; gap: 6px; }
+.uf-rev-add input { flex: 1; min-width: 0; border: 1px dashed rgba(58,93,37,0.25); border-radius: 10px; padding: 8px 10px; font: inherit; font-size: 12.5px; background: #fff; }
+.uf-rev-add input:focus { outline: none; border-color: #9CBD48; }
+.uf-rev-add .uw-mini { width: 32px; height: 32px; flex-shrink: 0; }
+.uf-rev-row { display: flex; align-items: center; gap: 6px; }
 /* 涵蓋清單列＋報價原文速查 */
 .uf-covrow { display: flex; align-items: flex-start; gap: 6px; }
 .uf-covrow .uf-check { flex: 1; }
