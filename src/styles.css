@@ -2051,7 +2051,8 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
 .uf-cov-note.ok { color: #4E7A2E; background: #E1F0D8; }
 /* 相關粗流 chips＋規格頁脈絡列 */
 .rd-flows { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12px; color: #3A5D25; }
-.rd-flow-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: #3A5D25; background: rgba(58,93,37,0.07); border: 1px solid rgba(58,93,37,0.14); border-radius: 999px; padding: 3px 10px; }
+.rd-flow-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 11.5px; font-weight: 700; color: #3A5D25; background: rgba(58,93,37,0.07); border: 1px solid rgba(58,93,37,0.14); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.rd-flow-chip:active { background: rgba(58,93,37,0.16); }
 .ps-links { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 /* 會議記錄產生器 */
 .md-ctrl { gap: 10px; }
