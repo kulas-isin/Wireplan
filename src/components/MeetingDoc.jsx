@@ -35,7 +35,7 @@ function build(project, from, to) {
       const noteAdded = (f.revNotes || []).some((n) => inWin(n.at))
       if (!(vers.length || sealedNow || done.length || noteAdded)) continue
       fb.push({ f, vers, sealedNow, done, open })
-      if (vers.length) out.imgs.push({ f, ver: f.versions[f.versions.length - 1], unit: u || '專案級' })
+      out.imgs.push({ f, unit: u || '專案級', changed: vers.length > 0 || sealedNow })
       for (const n of open) if (n.assess) out.assess.push({ text: n.text, src: (u || '專案級') + '・' + f.name })
     }
     const covered = new Set(flows.flatMap((f) => f.covers || []))
@@ -100,14 +100,15 @@ function toMd(p, data, meta, range) {
 
 // —— 郵件版（行內樣式；貼進 Gmail/Outlook 保留樣式）——
 function toHtml(p, data, meta, range) {
+  // 信件配色走中性藍灰（客戶信箱裡不搶戲）；狀態標籤保留語意色
   const tag = (t, c, b) => `<span style="font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;color:${c};background:${b}">${t}</span>`
-  const assessTag = tag('需評估', '#B0691F', '#FBF0DC')
-  const h2 = (t) => `<h2 style="font-size:15.5px;color:#3A5D25;border-left:4px solid #C6DC6A;padding-left:9px;margin:20px 0 6px">${t}</h2>`
-  const h3 = (t) => `<h3 style="font-size:14px;margin:14px 0 4px;color:#22301F">${t}</h3>`
-  const small = (t) => `<p style="font-size:12px;color:#56684C;margin:2px 0">${t}</p>`
+  const assessTag = tag('需評估', '#9A6B1F', '#FBF3E2')
+  const h2 = (t) => `<h2 style="font-size:15.5px;color:#1F3A5F;border-left:4px solid #7BA7D4;padding-left:9px;margin:20px 0 6px">${t}</h2>`
+  const h3 = (t) => `<h3 style="font-size:14px;margin:14px 0 4px;color:#243342">${t}</h3>`
+  const small = (t) => `<p style="font-size:12px;color:#5A6B7C;margin:2px 0">${t}</p>`
   const li = (arr) => `<ul style="margin:4px 0;padding-left:20px;font-size:13.5px;line-height:1.8">${arr.map((x) => `<li>${x}</li>`).join('')}</ul>`
-  const H = [`<div style="font-family:'Noto Sans TC',sans-serif;color:#22301F;line-height:1.7">`,
-    `<h1 style="font-size:17px;margin:0 0 2px">${p.name}・需求確認會議記錄</h1>`]
+  const H = [`<div style="font-family:'Noto Sans TC',sans-serif;color:#243342;line-height:1.7">`,
+    `<h1 style="font-size:17px;margin:0 0 2px;color:#1F3A5F">${p.name}・需求確認會議記錄</h1>`]
   const m = [meta.session, range, meta.attend].filter(Boolean).join('｜')
   if (m) H.push(small(m))
   for (const u of data.units) {
@@ -121,7 +122,7 @@ function toHtml(p, data, meta, range) {
       if (open.length) rows.push(`待辦：${open.map((n) => n.text + (n.assess ? ' ' + assessTag : '')).join('；')}`)
       H.push(li(rows))
     }
-    for (const t of u.talks) H.push(`<p style="border-left:3px solid #E1EDF9;padding-left:9px;font-size:13px;color:#56684C;margin:4px 0">${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）</p>`)
+    for (const t of u.talks) H.push(`<p style="border-left:3px solid #D5E3F1;padding-left:9px;font-size:13px;color:#5A6B7C;margin:4px 0">${t.who === 'client' ? '客戶' : '我方'}：「${t.text}」（${t.req}，${fmtT(t.at)}）</p>`)
     if (u.specs.length) H.push(h3('頁面規格調整'), li(u.specs.map((s) => `${s.page}・${s.sec}：新增「${s.label}」${s.c ? '' : ' ' + assessTag}`)))
     if (u.orphans.length) H.push(small(`單元備註：尚有 ${u.orphans.length} 條需求未被粗流涵蓋（${u.orphans.join('、')}）`))
     if (u.seals.length) H.push(small(`本次定案需求：<b>${u.seals.join('、')}</b>`))
@@ -130,6 +131,29 @@ function toHtml(p, data, meta, range) {
   if (data.pending.length) H.push(h2('待確認事項（下次會議）'), li(data.pending.map((q, i) => `Q${i + 1}. ${q.text}${q.src ? `（${q.src}）` : ''}`)))
   H.push(small(meta.foot), '</div>')
   return H.join('')
+}
+
+// 附圖列：版本 chips 可切舊版（複製「調整前」）；預設顯示最新版
+function FlowImg({ f, unit, copied, copyImg, imgRefs }) {
+  const [vi, setVi] = useState(f.versions.length - 1)
+  const ver = f.versions[vi]
+  return (
+    <div className="md-img">
+      <div className="md-img-head">
+        <span>{unit}・{f.name}</span>
+        {f.versions.length > 1 && (
+          <span className="uf-vchips">
+            {f.versions.map((v, i) => (
+              <button key={v.v} className={'uf-vchip' + (i === vi ? ' on' : '')} onClick={() => setVi(i)}>v{v.v}</button>
+            ))}
+          </span>
+        )}
+        <button className="uf-sealbtn" onClick={() => copyImg(f.id)}>
+          <ImageIcon size={12} /> {copied === 'img' + f.id ? '已複製' : `複製 v${ver.v} 圖片`}</button>
+      </div>
+      <div ref={(el) => { imgRefs.current[f.id] = el }}><Mermaid code={ver.code} /></div>
+    </div>
+  )
 }
 
 const DEF_FOOT = '以上決議若三日內未回覆異議，視為雙方確認，列入需求基準。標示「需評估」之項目將另行提出評估結果。'
@@ -145,6 +169,7 @@ export default function MeetingDoc({ onClose }) {
   const [attend, setAttend] = useState(ls('wp-meet-attend', ''))
   const [foot, setFoot] = useState(ls('wp-meet-foot', DEF_FOOT))
   const [copied, setCopied] = useState('')
+  const [showAllImgs, setShowAllImgs] = useState(false)
   const from = new Date(d1 + 'T00:00:00').getTime()
   const to = new Date(d2 + 'T00:00:00').getTime() + DAY - 1
   const data = useMemo(() => build(current, from, to), [current, from, to])
@@ -219,17 +244,14 @@ export default function MeetingDoc({ onClose }) {
 
         {data.imgs.length > 0 && (
           <div className="uf-card" style={{ gap: 10 }}>
-            <div className="ht-title">附圖（改過版的流程圖 — 逐張複製貼進信件）</div>
-            {data.imgs.map(({ f, ver, unit }) => (
-              <div key={f.id} className="md-img">
-                <div className="md-img-head">
-                  <span>{unit}・{f.name}（v{ver.v}）</span>
-                  <button className="uf-sealbtn" onClick={() => copyImg(f.id)}>
-                    <ImageIcon size={12} /> {copied === 'img' + f.id ? '已複製' : '複製為圖片'}</button>
-                </div>
-                <div ref={(el) => { imgRefs.current[f.id] = el }}><Mermaid code={ver.code} /></div>
-              </div>
-            ))}
+            <div className="ht-title">附圖（逐張複製貼進信件；改過版的可切舊版複製「調整前」）</div>
+            {data.imgs.filter((x) => x.changed).map((x) => <FlowImg key={x.f.id} {...x} copied={copied} copyImg={copyImg} imgRefs={imgRefs} />)}
+            {data.imgs.some((x) => !x.changed) && (
+              <button className="ps-add" style={{ alignSelf: 'flex-start' }} onClick={() => setShowAllImgs((v) => !v)}>
+                {showAllImgs ? '收合' : `其他本期涉及的粗流 ${data.imgs.filter((x) => !x.changed).length} 張（第一次寄給客戶時全附）`}
+              </button>
+            )}
+            {showAllImgs && data.imgs.filter((x) => !x.changed).map((x) => <FlowImg key={x.f.id} {...x} copied={copied} copyImg={copyImg} imgRefs={imgRefs} />)}
           </div>
         )}
       </div>
