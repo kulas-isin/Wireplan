@@ -374,7 +374,8 @@ export function Visual({ cmp }) {
           if (fixedCols) col.fixed = 'right'
         } else {
           if (sortable) { col.sorter = () => 0; col.showSorterTooltip = false }
-          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri, sampleDomain)
+          // 攙入欄索引：同一列的「待出貨量／可銷量／庫存」才不會三欄都是同一個數字
+          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri + i * 3, sampleDomain)
           if (fixedCols && i === 0) { col.fixed = 'left'; col.width = 160 }
         }
         return col
@@ -404,7 +405,14 @@ export function Visual({ cmp }) {
     }
     case 'statcards': {
       const cards = arr(cmp, ['指標一', '指標二', '指標三', '指標四'])
-      const nums = ['82%', '1,280', '100+', '$3.75']
+      // 數字看標題決定型別：金額類給 $、比率類給 %，其餘一律給筆數（「可出貨 $3.75」很假）
+      const statNum = (label, i) => {
+        const l = String(label)
+        if (/金額|營收|業績|銷售額|成本|毛利|價/.test(l)) return `$${(182400 + i * 37600).toLocaleString()}`
+        if (/率|占比|百分比|%/.test(l)) return `${62 + i * 9}%`
+        return (1280 - i * 317 + 12).toLocaleString()
+      }
+      const nums = cards.map(statNum)
       const trends = ['▲ 12%', '▲ 5%', '▼ 3%', '▲ 8%']
       const spark = [[40, 55, 48, 62, 70], [30, 42, 38, 55, 60], [60, 52, 58, 44, 40], [35, 48, 52, 64, 72]]
       const showTrend = cmp.showTrend || hifi
