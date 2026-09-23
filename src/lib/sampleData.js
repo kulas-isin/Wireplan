@@ -4,6 +4,8 @@ import { Tag, Button, Space, Avatar, Progress, Rate, Switch } from 'antd'
 
 const PEOPLE = ['王小明', '陳怡君', '林志豪', '張雅婷', '李俊宏', '黃淑芬', '吳建德', '劉美玲', '蔡承翰', '鄭家豪', '許文彥', '周品妧']
 const STATUS = [['上架', 'green'], ['下架', 'default'], ['審核中', 'gold'], ['草稿', 'default'], ['已封存', 'red'], ['啟用', 'green'], ['停用', 'red']]
+// 出貨／配送類欄位另一組：用「上架／草稿」當貨況看起來很假
+const SHIP_STATUS = [['可出貨', 'green'], ['部分可出', 'gold'], ['不可出貨', 'red'], ['配送中', 'blue'], ['已出貨', 'green'], ['待處理', 'default']]
 
 // 領域資料包：示意資料要像該產業的東西，客戶看了才有代入感
 const POOLS = {
@@ -52,17 +54,40 @@ const n2 = (x) => String(x).padStart(2, '0')
 export function colRole(title = '') {
   const t = String(title).toLowerCase()
   if (/操作|action|管理|編輯/.test(t)) return 'actions'
+  if (/^(刪除|移除)$/.test(t)) return 'rowdel'   // 明細表最後一欄常只有一顆刪除鈕
   if (/評分|星等|評價|rating|rate/.test(t)) return 'rate'
   if (/進度|完成度|達成度|progress/.test(t)) return 'progress'
   if (/啟用|開關|是否|顯示\/隱藏|上下架|switch|toggle|enabled/.test(t)) return 'switch'
+  // 後台常見欄位：放在「名稱／編號」等通用規則之前，否則會被吃掉變成 SKU、項目 N
+  if (/托運編號|物流編號|追蹤號/.test(t)) return 'tracking'
+  if (/訂單編號|訂單號|採購單號|進貨單號|退貨單號|單號/.test(t)) return 'order'
+  if (/貨況|貨態|配送狀態|配貨狀態|出貨狀態|到貨狀態/.test(t)) return 'shipstatus'
+  if (/儲位/.test(t)) return 'slot'
+  if (/倉庫|倉別/.test(t)) return 'warehouse'
+  if (/物流|宅配|貨運/.test(t)) return 'carrier'
+  if (/通路|來源|商店/.test(t)) return 'channel'
+  if (/地址|門市/.test(t)) return 'address'
+  if (/備註|原因/.test(t)) return 'note'
+  if (/說明|描述|摘要/.test(t)) return 'brief'
+  if (/角色|職務|權限群組/.test(t)) return 'role'
+  if (/等級|級別|階級/.test(t)) return 'level'
+  if (/最近一次|最後一次|最後登入|登入時間/.test(t)) return 'date'
+  if (/收件人|寄件人|聯絡人|人員/.test(t)) return 'person'
+  if (/貨號|料品編號|規格編號|商品編號/.test(t)) return 'id'
+  if (/規格|尺寸|顏色|款式|版型/.test(t)) return 'spec'   // 「廠商規格」是規格不是廠商，要排在廠商前
+  if (/廠商|供應商|檔口/.test(t)) return 'vendor'
+  if (/幣別|貨幣|currency/.test(t)) return 'currency'
+  if (/匯率/.test(t)) return 'exrate'
+  if (/順位|項次|序位/.test(t)) return 'seq'
+  if (/筆數|件數|量$/.test(t)) return 'count'
   if (/連結|網址|link|url|外連/.test(t)) return 'link'
   if (/狀態|status|state/.test(t)) return 'status'
   if (/頭像|avatar|頭貼|大頭/.test(t)) return 'avatar'
-  if (/縮圖|封面|圖片|相片|商品圖|thumb|cover|image/.test(t)) return 'thumb'
+  if (/縮圖|封面|圖片|相片|主圖|商品圖|料品圖|thumb|cover|image/.test(t)) return 'thumb'
   if (/編號|id|代號|序號|no\.?$|單號/.test(t)) return 'id'
   if (/時長|長度|duration/.test(t)) return 'duration'
   if (/播放|次數|數量|觀看|count|views|銷量|庫存/.test(t)) return 'count'
-  if (/金額|價格|費用|價錢|price|amount|總額|營收|\$/.test(t)) return 'price'
+  if (/金額|價格|費用|價錢|成本|毛利|售價|單價|price|amount|總額|營收|\$/.test(t)) return 'price'
   if (/百分|比率|占比|percent|%|達成/.test(t)) return 'percent'
   if (/日期|時間|建立|更新|到期|date|time/.test(t)) return 'date'
   if (/email|信箱|郵件/.test(t)) return 'email'
@@ -87,6 +112,12 @@ export function cellContent(role, i, domain = 'generic') {
       const [label, color] = pick(STATUS, i * 3 + (i % 2))
       return React.createElement(Tag, { color, style: { marginInlineEnd: 0 } }, label)
     }
+    case 'rowdel':
+      return React.createElement(Button, { type: 'link', size: 'small', danger: true, style: { padding: 0 } }, '刪除')
+    case 'shipstatus': {
+      const [label, color] = pick(SHIP_STATUS, i)
+      return React.createElement(Tag, { color, style: { marginInlineEnd: 0 } }, label)
+    }
     case 'avatar':
       return React.createElement(Avatar, { size: 'small', style: { background: '#dfe7f5', color: '#3a5a9b', fontSize: 11 } }, pick(PEOPLE, i).slice(0, 1))
     case 'rate':
@@ -101,6 +132,38 @@ export function cellContent(role, i, domain = 'generic') {
       return React.createElement('a', { style: { color: '#2563eb' } }, '檢視詳情')
     case 'id':
       return `${P.ID}-${String(10231 + i * 7).padStart(5, '0')}`
+    case 'order':
+      return `SO-26${n2(1 + (i % 9))}-${String(1043 + i * 3).padStart(5, '0')}`
+    case 'tracking':
+      return `${pick(['SF', 'HCT', 'FAMI', 'TCAT'], i)}${100238471 + i * 977}`
+    case 'carrier':
+      return pick(['新竹物流', '順豐速運', '全家取貨', '黑貓宅急便'], i)
+    case 'warehouse':
+      return pick(['CCS 總倉', '網店倉', '快閃倉 A', '瑕疵倉'], i)
+    case 'slot':
+      return `${pick(['A', 'B', 'C'], i)}-${n2(1 + i % 12)}-${n2(1 + (i * 3) % 24)}`
+    case 'vendor':
+      return pick(['立益紡織', '宏采服飾', '晟品貿易', '東大門直送', '韓星國際'], i)
+    case 'channel':
+      return pick(['Shopline 官網', '快閃店 POS', 'Shopline 官網', '線下門市'], i)
+    case 'address':
+      return pick(['台北市內湖區瑞光路 513 號', '全家 忠孝敦化店', '台中市西屯區台灣大道三段', '7-11 竹北門市'], i)
+    case 'note':
+      return i % 3 === 0 ? '—' : pick(['客戶指定平日配送', '缺貨待補', '贈品另寄'], i)
+    case 'brief':
+      return pick(['供一般作業使用', '限特定人員使用', '—', '預設設定'], i)
+    case 'role':
+      return pick(['管理員', '倉管人員', '客服人員', '採購人員', '出貨人員'], i)
+    case 'level':
+      return pick(['一般會員', '銀卡會員', '金卡會員', 'VIP'], i)
+    case 'spec':
+      return `${pick(['S', 'M', 'L', 'XL', 'F'], i)}／${pick(['黑', '米白', '藕粉', '深藍', '卡其'], i)}`
+    case 'seq':
+      return String(i + 1)
+    case 'currency':
+      return pick(['TWD', 'KRW', 'USD', 'TWD'], i)
+    case 'exrate':
+      return (0.0234 + i * 0.0007).toFixed(4)
     case 'duration':
       return `${2 + (i % 4)}:${n2((i * 17 + 5) % 60)}`
     case 'count':
