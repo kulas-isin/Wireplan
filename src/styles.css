@@ -575,7 +575,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .wb-cardbox { border: 1px solid var(--border); border-radius: 10px; background: #fff; overflow: hidden; }
 .wb-cardbox-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
 .wb-cardbox-head .t { font-weight: 700; font-size: 13px; color: var(--neutral-dark); }
-.wb-cardbox-body { display: flex; padding: 14px; width: 100%; align-content: flex-start; }
+.wb-cardbox-body { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; width: 100%; align-content: flex-start; }
 .wf-cardwrap:hover > .wf-rowhandle, .wf-cardwrap.selected > .wf-rowhandle { display: inline-flex; }
 .wf-cardwrap.selected .wb-cardbox { border-color: var(--primary); }
 .hifi .wb-cardbox { box-shadow: 0 1px 3px rgba(16,24,40,0.08); border-color: #e7ebf0; }
