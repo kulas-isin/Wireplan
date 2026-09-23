@@ -1,19 +1,13 @@
 // SOP 儀表：需求覆蓋檢查 + 五階段進度統計
 import { validateField, wireframeSync } from './fieldSpec.js'
+import { linkedPages } from './elements.js'
 
-const core = (l) => String(l || '')
-  .replace(/^[wWＷ]?\s*[.\d]+[a-zA-Z]?\s*/, '').replace(/[（(【[].*?[）)】\]]/g, '').replace(/\s+/g, '').trim()
-
-// 哪些需求還沒有對應頁面（用頁名模糊比對，與流程圖同邏輯）
+// 哪些需求還沒有對應頁面
+// 用 linkedPages 判定（requirementId 綁定優先、其次頁名模糊比對），
+// 與單元磁磚的「缺頁」同一套邏輯 —— 兩邊數字必須一致
 export function requirementCoverage(project) {
-  const wfNames = (project.wireframes || []).map((w) => core(w.name)).filter(Boolean)
-  const missing = []
-  for (const r of project.requirements || []) {
-    const k = core(r.screen || r.name)
-    if (!k) continue
-    if (!wfNames.some((n) => n.includes(k) || k.includes(n))) missing.push(r)
-  }
-  return missing
+  const wfs = project.wireframes || []
+  return (project.requirements || []).filter((r) => linkedPages(r, wfs).length === 0)
 }
 
 // SOP 進度列統計：每站數字 + 缺漏
