@@ -53,6 +53,7 @@ export function normalizeWireframe(spec) {
     unit: w.unit || '',
     parentId: w.parentId || null,
     name: w.name || '匯入畫面',
+    code: w.code || undefined, // 頁面編號標籤（如 P3-01）；與頁名分開，樹上以小籤顯示
     device: w.device || 'desktop',
     template: w.template || 'imported',
     theme: w.theme === 'music' ? 'music' : undefined,

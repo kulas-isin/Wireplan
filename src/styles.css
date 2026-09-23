@@ -2129,6 +2129,8 @@ button.qm-chip { cursor: pointer; }
 .qr-editor-row { display: flex; align-items: center; gap: 6px; }
 .qr-qtoggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: #2E4A6B; cursor: pointer; }
 .qr-qtoggle input { width: 14px; height: 14px; padding: 0; border: none; accent-color: #2E5F96; }
+/* 頁面編號標籤：與頁名分開，安靜不搶戲 */
+.wf-code { flex-shrink: 0; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; color: #7A8A70; background: rgba(58,93,37,0.07); border-radius: 5px; padding: 2px 6px; font-family: ui-monospace, SFMono-Regular, monospace; }
 /* ═══ 頁面規格清單（SpecSheet）═══ */
 .ps-type { font-size: 10.5px; font-weight: 700; color: #2E5F96; background: #E1EDF9; border-radius: 999px; padding: 3px 9px; flex-shrink: 0; }
 .ps-sec { background: #FDFEF7; border: 1px solid rgba(58,93,37,0.14); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }

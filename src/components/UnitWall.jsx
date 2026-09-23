@@ -79,6 +79,7 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
           </span>
         )}
         <span className="uw-caret">{hasBody ? (open ? <ChevronDown size={13} /> : <ChevronRight size={13} />) : <i className="uw-leaf" />}</span>
+        {node.wf.code && <span className="wf-code">{node.wf.code}</span>}
         <span className="uw-nname" title="開頁面規格清單" onClick={(e) => { if (!edit) { e.stopPropagation(); onSpec?.(node.wf.id) } }}>{node.wf.name}</span>
         {reqs.length > 0 && <span className="uw-ncnt">{reqs.length} 需求</span>}
         {edit ? (
