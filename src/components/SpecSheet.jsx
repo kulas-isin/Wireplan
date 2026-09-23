@@ -193,6 +193,7 @@ export default function SpecSheet({ wfId, onClose }) {
   return createPortal(
     <div className="uf-wrap">
       <div className="uf-head">
+        {wf.code && <span className="wf-code">{wf.code}</span>}
         <strong>{wf.name}</strong>
         {spec?.template && <span className="ps-type">{TPL_LABEL[spec.template] || spec.template}</span>}
         <div className="spacer" />
