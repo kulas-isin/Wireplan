@@ -201,7 +201,15 @@ export function Visual({ cmp }) {
       return <Steps size="small" current={cmp.active ?? 0} items={steps} />
     }
     case 'pagination':
-      return <div style={{ textAlign: 'center' }}><Pagination size="small" total={50} defaultCurrent={1} /></div>
+      // pageSizer：顯示「共 N 筆」與每頁筆數切換（列表頁共用機制要求，預設 20 筆／頁）
+      return (
+        <div style={{ textAlign: cmp.pageSizer ? 'right' : 'center' }}>
+          <Pagination size="small" total={cmp.total ?? 128} defaultCurrent={1}
+            defaultPageSize={cmp.pageSize ?? 20}
+            showSizeChanger={!!cmp.pageSizer} pageSizeOptions={['20', '50', '100']}
+            showTotal={cmp.pageSizer ? (t) => `共 ${t} 筆` : undefined} />
+        </div>
+      )
     case 'dropdown':
       return <Button>{cmp.label || '更多操作'} ▾</Button>
 
@@ -385,7 +393,7 @@ export function Visual({ cmp }) {
         <div className={hoverActions ? 'wb-hoveract' : undefined}>
           <Table
             size={cmp.size || 'small'}
-            pagination={cmp.pager ? { pageSize: rowN, total: 128, showSizeChanger: false } : false}
+            pagination={cmp.pager ? { pageSize: rowN, total: cmp.total ?? 128, showSizeChanger: !!cmp.pageSizer, pageSizeOptions: ['20', '50', '100'], showTotal: cmp.pageSizer ? (t) => `共 ${t} 筆` : undefined } : false}
             rowSelection={cmp.selectable ? {} : undefined}
             columns={cols}
             dataSource={rows}
