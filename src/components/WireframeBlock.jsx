@@ -2,7 +2,7 @@
 import { useRef } from 'react'
 import { COMPONENT_TYPES } from '../lib/wireframeTemplates.js'
 import { useStore } from '../store/StoreContext.jsx'
-import { colRole, cellContent } from '../lib/sampleData.js'
+import { colRole, cellContent, detectDomain } from '../lib/sampleData.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal, Play, MapPin, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -97,6 +97,7 @@ export function Visual({ cmp }) {
   const T = Typography
   const { current } = useStore()
   const hifi = current?.fidelity === 'hifi'
+  const sampleDomain = detectDomain(current)
 
   switch (cmp.type) {
     // ── 版面 ──
@@ -365,7 +366,7 @@ export function Visual({ cmp }) {
           if (fixedCols) col.fixed = 'right'
         } else {
           if (sortable) { col.sorter = () => 0; col.showSorterTooltip = false }
-          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri)
+          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri, sampleDomain)
           if (fixedCols && i === 0) { col.fixed = 'left'; col.width = 160 }
         }
         return col
