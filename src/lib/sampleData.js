@@ -2,11 +2,48 @@
 import React from 'react'
 import { Tag, Button, Space, Avatar, Progress, Rate, Switch } from 'antd'
 
-const SONGS = ['夜空中最亮的星', '起風了', '晴天', '告白氣球', '光年之外', '小幸運', '說好的幸福呢', '體面', '可惜沒如果', '演員', '七里香', '稻香']
 const PEOPLE = ['王小明', '陳怡君', '林志豪', '張雅婷', '李俊宏', '黃淑芬', '吳建德', '劉美玲', '蔡承翰', '鄭家豪', '許文彥', '周品妧']
-const ALBUMS = ['城市之光', '時光留聲', '初夏', '夜行者', '原點', '海的另一端', '無限循環', '日常詩']
-const CATS = ['流行', '搖滾', '電子', '嘻哈', '古典', '爵士', '民謠', 'R&B']
 const STATUS = [['上架', 'green'], ['下架', 'default'], ['審核中', 'gold'], ['草稿', 'default'], ['已封存', 'red'], ['啟用', 'green'], ['停用', 'red']]
+
+// 領域資料包：示意資料要像該產業的東西，客戶看了才有代入感
+const POOLS = {
+  ecommerce: {
+    NAME: ['純棉寬版 T 恤', '高腰直筒牛仔褲', '法式碎花洋裝', '羊毛混紡大衣', '寬鬆針織上衣', '抽繩運動短褲', '真皮樂福鞋', '亞麻長袖襯衫', '百褶中長裙', '機能防風外套', '無鋼圈舒適內衣', '厚底帆布鞋'],
+    CAT: ['上身', '下身', '洋裝', '外套', '套裝', '鞋子', '配件', '內衣'],
+    GROUP: ['新品上市', '人氣熱銷', '折扣出清', '春夏新款', '經典必備', '限時特惠'],
+    ID: 'SKU', PRICE: [390, 690, 890, 1280, 1580, 2180, 2980, 3680],
+  },
+  logistics: {
+    NAME: ['宅配單 - 台北內湖', '超取單 - 全家忠孝店', '冷藏單 - 台中西屯', '跨境單 - 香港九龍', '宅配單 - 高雄前鎮', '超取單 - 新竹竹北'],
+    CAT: ['宅配', '超商取貨', '冷藏', '冷凍', '跨境'],
+    GROUP: ['今日配送', '待取號', '已出貨', '配送中', '異常件'],
+    ID: 'TW', PRICE: [60, 80, 120, 150, 200, 280],
+  },
+  music: {
+    NAME: ['夜空中最亮的星', '起風了', '晴天', '告白氣球', '光年之外', '小幸運', '說好的幸福呢', '體面', '可惜沒如果', '演員', '七里香', '稻香'],
+    CAT: ['流行', '搖滾', '電子', '嘻哈', '古典', '爵士', '民謠', 'R&B'],
+    GROUP: ['城市之光', '時光留聲', '初夏', '夜行者', '原點', '海的另一端'],
+    ID: 'SNG', PRICE: [150, 290, 390, 490],
+  },
+  generic: {
+    NAME: ['項目一', '項目二', '項目三', '項目四', '項目五', '項目六'],
+    CAT: ['分類 A', '分類 B', '分類 C', '分類 D'],
+    GROUP: ['群組一', '群組二', '群組三'],
+    ID: 'ITM', PRICE: [100, 250, 500, 1000],
+  },
+}
+
+// 依專案名稱與單元名稱推斷領域；專案可用 sampleDomain 明確指定
+export function detectDomain(project) {
+  const explicit = project?.sampleDomain
+  if (explicit && POOLS[explicit]) return explicit
+  const hay = [project?.name, ...(project?.units || [])].join(' ')
+  if (/物流|快遞|託運|配送|貨運/.test(hay)) return 'logistics'
+  if (/音樂|歌曲|專輯|創作者/.test(hay)) return 'music'
+  if (/電商|商品|訂單|庫存|採購|零售|ERP|POS/i.test(hay)) return 'ecommerce'
+  return 'generic'
+}
+const pool = (d) => POOLS[d] || POOLS.generic
 
 const pick = (arr, i) => arr[i % arr.length]
 const n2 = (x) => String(x).padStart(2, '0')
@@ -38,7 +75,8 @@ export function colRole(title = '') {
 }
 
 // 回傳該儲存格內容（字串或 React 節點）
-export function cellContent(role, i) {
+export function cellContent(role, i, domain = 'generic') {
+  const P = pool(domain)
   switch (role) {
     case 'actions':
       return React.createElement(Space, { size: 2 },
@@ -62,13 +100,13 @@ export function cellContent(role, i) {
     case 'link':
       return React.createElement('a', { style: { color: '#2563eb' } }, '檢視詳情')
     case 'id':
-      return `SNG-${String(10231 + i * 7).padStart(5, '0')}`
+      return `${P.ID}-${String(10231 + i * 7).padStart(5, '0')}`
     case 'duration':
       return `${2 + (i % 4)}:${n2((i * 17 + 5) % 60)}`
     case 'count':
-      return (1280 * (i + 3) + i * 137).toLocaleString()
+      return ((i * 37 + 13) % 480 + 6).toLocaleString()
     case 'price':
-      return `$${(1280 * (i + 1)).toLocaleString()}`
+      return `$${pick(P.PRICE, i).toLocaleString()}`
     case 'percent':
       return `${50 + (i * 7) % 50}%`
     case 'date':
@@ -78,19 +116,19 @@ export function cellContent(role, i) {
     case 'phone':
       return `09${n2((i * 7) % 100)}-${String(100 + (i * 37) % 900)}-${String(100 + (i * 53) % 900)}`
     case 'category':
-      return pick(CATS, i)
+      return pick(P.CAT, i)
     case 'person':
       return React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
         React.createElement(Avatar, { size: 20, style: { background: '#dfe7f5', color: '#3a5a9b', fontSize: 10, flexShrink: 0 } }, pick(PEOPLE, i).slice(0, 1)),
         pick(PEOPLE, i),
       )
     case 'album':
-      return pick(ALBUMS, i)
+      return pick(P.GROUP, i)
     case 'name':
-      return pick(SONGS, i)
+      return pick(P.NAME, i)
     default:
       return `項目 ${i + 1}`
   }
 }
 
-export const SAMPLE = { SONGS, PEOPLE, ALBUMS, CATS, STATUS }
+export const SAMPLE = { POOLS, PEOPLE, STATUS }
