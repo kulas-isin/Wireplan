@@ -301,9 +301,11 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 
 /* 手機版：屬性面板改底部彈出（不佔寬度） */
 @media (max-width: 980px) {
-  .wf-edit-row { flex-direction: column; }
-  .wf-layers { width: 100% !important; position: static; max-height: 200px; }
-  .wf-layers:not(.open) .wf-layers-toggle { justify-content: flex-start; padding: 10px 12px; }
+  .wf-edit-row { flex-direction: column; position: relative; }
+  /* 圖層：收合時只是一顆浮在畫面右上角的小鈕，不再佔一整列 */
+  .wf-layers.open { width: 100% !important; position: static; max-height: 200px; }
+  .wf-layers:not(.open) { width: 36px; height: 36px; position: absolute; right: 6px; top: 6px; z-index: 20; border-radius: 999px; overflow: hidden; }
+  .wf-layers:not(.open) .wf-layers-toggle { justify-content: center; padding: 0; height: 36px; }
   .wf-props {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 64vh;
     border-radius: 18px 18px 0 0; z-index: 60; box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
@@ -343,6 +345,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 瀏覽器視窗感的標題列（乾淨白底） */
 .wf-titlebar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .wf-titlebar input { flex: 1 1 90px; min-width: 60px; width: auto; }
+.wf-titlebar .wf-more { display: none; } /* 桌機不用，手機才出現 */
 .wf-titlebar > button, .wf-titlebar .device-toggle { flex-shrink: 0; }
 .wf-dots { display: flex; gap: 5px; flex-shrink: 0; }
 .wf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #cbd2cd; display: block; }
@@ -707,14 +710,26 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   .sidebar .proj-item { white-space: nowrap; }
   .sidebar > button { margin-top: 0 !important; white-space: nowrap; flex-shrink: 0; }
 
-  .topbar { flex-wrap: wrap; gap: 8px; padding: 6px 10px; }
-  .topbar .proj-name { min-width: 110px; font-size: 14px; }
+  /* 手機工作區：只留會按的東西。專案切換走目錄、匯入匯出走目錄的備份區、SOP 進度列收掉 */
+  .app .sidebar { display: none; }
+  .topbar { flex-wrap: nowrap; gap: 6px; padding: 4px 10px; }
+  .topbar .proj-name { min-width: 0; flex: 1; font-size: 14px; }
   .topbar .meta { display: none; }
+  .topbar .tb-desk { display: none; }
+  .main > .sop-bar { display: none; }
 
   .tabs { overflow-x: auto; padding: 3px 8px 0; -webkit-overflow-scrolling: touch; }
   .tab { padding: 6px 10px; }
 
-  .content { padding: 8px; }
+  .content { padding: 6px; }
+  .wf-studio { padding: 6px; gap: 6px; }
+  /* 畫面標題列：只剩名稱＋裝置切換＋⋯，其餘收進 ⋯ */
+  .wf-titlebar { flex-wrap: nowrap; gap: 4px; padding: 6px 8px; }
+  .wf-titlebar .tb-x { display: none; }
+  .wf-titlebar .wf-more { display: inline-flex; }
+  .wf-titlebar .wf-dots { display: none; }
+  .wf-titlebar input { font-size: 13px; }
+  .device-toggle button { padding: 5px 8px; }
   .grid2 { grid-template-columns: 1fr; }
   .wf-board { grid-template-columns: 1fr; }
 

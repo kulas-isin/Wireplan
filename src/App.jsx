@@ -136,13 +136,14 @@ export default function App() {
             </span>
           )}
           <div className="spacer" />
-          <button className="ghost sm" title="復原 (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
-          <button className="ghost sm" title="重做 (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
+          <button className="ghost sm tb-desk" title="復原 (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
+          <button className="ghost sm tb-desk" title="重做 (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
           <button className="ghost sm" title="專案待辦" onClick={() => setTodoOpen(true)}>
             <CheckSquare size={16} />{openCount(current) > 0 && <span className="badge">{openCount(current)}</span>}
           </button>
-          <button onClick={() => importRef.current?.click()}><Upload size={15} /> 匯入專案</button>
-          <button onClick={exportProject}><Download size={15} /> 匯出專案</button>
+          {/* 手機上收掉：匯入／匯出在目錄頁的備份區也有，這裡只留名稱與待辦 */}
+          <button className="tb-desk" onClick={() => importRef.current?.click()}><Upload size={15} /> 匯入專案</button>
+          <button className="tb-desk" onClick={exportProject}><Download size={15} /> 匯出專案</button>
           <input
             ref={importRef}
             type="file"
