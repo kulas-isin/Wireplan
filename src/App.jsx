@@ -13,8 +13,10 @@ const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
 // 流程畫布用到 reactflow，延遲載入
 const FlowCanvas = lazy(() => import('./components/FlowCanvas.jsx'))
 import FieldSpec from './components/FieldSpec.jsx'
+import Todos from './components/Todos.jsx'
+import { openCount } from './lib/todos.js'
 import { downloadText, readFileAsText } from './lib/download.js'
-import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid } from 'lucide-react'
+import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid, CheckSquare } from 'lucide-react'
 
 const TABS = [
   { key: 'import', label: '匯入', Icon: FileInput },
@@ -28,6 +30,7 @@ const TABS = [
 export default function App() {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
+  const [todoOpen, setTodoOpen] = useState(false)
   // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
   const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : window.location.hash === '#reqs' ? 'reqs' : 'menu'))
   const [focus, setFocus] = useState(false)
@@ -128,6 +131,9 @@ export default function App() {
           <div className="spacer" />
           <button className="ghost sm" title="復原 (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
           <button className="ghost sm" title="重做 (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
+          <button className="ghost sm" title="專案待辦" onClick={() => setTodoOpen(true)}>
+            <CheckSquare size={16} />{openCount(current) > 0 && <span className="badge">{openCount(current)}</span>}
+          </button>
           <button onClick={() => importRef.current?.click()}><Upload size={15} /> 匯入專案</button>
           <button onClick={exportProject}><Download size={15} /> 匯出專案</button>
           <input
@@ -150,6 +156,11 @@ export default function App() {
           <button className="focus-btn" title="回目錄選單" onClick={backToMenu}><LayoutGrid size={14} /> 目錄</button>
           <button className="focus-btn" title="專注模式（隱藏上方列，畫面最大化）" onClick={() => setFocus(true)}><Maximize2 size={14} /> 專注</button>
         </div>}
+
+        {todoOpen && (<>
+          <div className="td-drawer-bd" onClick={() => setTodoOpen(false)} />
+          <aside className="td-drawer"><Todos full onClose={() => setTodoOpen(false)} /></aside>
+        </>)}
 
         {!focus && <SopBar tab={tab} setTab={setTab} />}
 
