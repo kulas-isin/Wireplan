@@ -157,6 +157,12 @@ export function buildHandoff(wireframes, project, primary = '#2563eb') {
   const pages = (wireframes || []).filter(Boolean)
   const many = pages.length > 1
   const shared = sharedRules(project)
+  // 有頁面設成平板／手機，或規格裡提到 iPad，才要求做觸控版
+  const touch = pages.some(
+    (w) => w.device === 'tablet' || w.device === 'mobile'
+      || /iPad|平板|手機|觸控/i.test(JSON.stringify(w.spec || {})),
+  )
+  const touchNote = touch ? '。有頁面要在平板上用（規格有寫的照規格），那幾頁的點擊目標至少 44px' : ''
 
   const preamble = `你是前端工程師。下面是已經跟客戶確認過的後台畫面規格，請做成${many ? `${pages.length} 支` : '一支'}自包含的 HTML 檔（單檔可直接用瀏覽器開，CSS 寫在 <style> 裡）。
 
@@ -169,13 +175,27 @@ export function buildHandoff(wireframes, project, primary = '#2563eb') {
 - 字型 'Noto Sans TC', system-ui；標題 #101828、內文 #1f2733、次要文字 #667085
 - 狀態用色票標籤（綠＝正常、黃＝待處理、紅＝異常、藍＝進行中）
 - **表格與表單請填入像真的${DOMAIN_HINT(project)}資料**，不要用 Lorem ipsum 或「項目 1、項目 2」
-- 畫面寬 1440px 為主，不必做 RWD
+- 畫面寬 1440px 為主；1280px 以下側欄收成只有圖示的 64px 窄欄，1024px 以下不必處理${touchNote}
+
+## 互動與狀態（規格沒寫到的照這裡做，不要留白）
+
+- **hover**：表格列換底 #f7f9fb；可點的儲存格文字（單號、品名）平常是主色、hover 加底線；按鈕與側欄項都要有 hover 底色
+- **focus**：輸入框與下拉 focus 時邊框轉主色 ＋ 2px 淡主色外圈；整頁用鍵盤 Tab 走得完
+- **disabled**：沒勾選任何一列時，批次動作是不可點的灰階，且 hover 要顯示原因（例：「請先勾選訂單」）
+- **loading**：表格載入中用骨架列（灰色長條佔滿各欄，約 6 列），不要整頁轉圈；按鈕送出中顯示 spinner 並鎖住，避免重複送出
+- **空狀態**：文案照規格「空狀態與錯誤」寫的，一字不改；規格沒寫的才自己補。版面置中、一句說明，接得到動作的附一顆按鈕
+- **錯誤**：欄位級錯誤在該欄位下方紅字；整頁級錯誤用列表上方的紅色橫幅；文案同樣照規格
+- **切換動效**：分頁籤切換、篩選面板展開收合用 150ms ease，不要更慢，也不要沒有
+- 可點的東西要看得出來可點：游標 pointer，不能只靠顏色差異
+
+> 這些狀態請在同一支 HTML 裡做得出來：把 loading／空狀態／錯誤各做一份隱藏的
+> 區塊，開頭放幾顆切換鈕（正常／載入中／空／錯誤）讓我點著看，別只寫在註解裡。
 
 ## 規則
 
 - 版面順序、欄位名稱、按鈕文字請照規格走，不要自行增刪
 - 規格裡寫「（展開時）」的區塊，預設收合，點按鈕才展開
-- 規格裡的「空狀態與錯誤」「驗收條件」是給你理解用的，不用畫在畫面上
+- 規格裡的「驗收條件」是給你理解用的，不用畫在畫面上
 ${many ? '- 每頁各自一支 HTML，共用的側欄與頂列做成一樣的\n' : ''}`
 
   return [preamble, shared, pages.map((w) => pageBlock(w, project)).join('\n\n---\n\n')]
