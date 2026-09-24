@@ -4,6 +4,7 @@ import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
 import { LAYOUT_PRESETS } from '../lib/layoutPresets.js'
 import { exportPng, exportHtml } from '../lib/exportWireframe.js'
+import { buildHandoff } from '../lib/aiHandoff.js'
 import WireframeBlock, { ARRAY_PROP, styleFromCmp, renderActions } from './WireframeBlock.jsx'
 import { categoryMeta } from '../lib/categories.js'
 import {
@@ -12,7 +13,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2 , Sparkles} from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Sparkles, Wand2 } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -81,6 +82,28 @@ export const WF_PALETTES = [
   { key: 'musicdark', name: '深色音樂', primary: '#D4A537', sage: '#3a3a3a', dark: true },
 ]
 const paletteOf = (key) => WF_PALETTES.find((p) => p.key === key) || WF_PALETTES[0]
+
+// 只有名字、規格待補的彈窗卡：是審修待辦，不是可以交出去做 HTML 的頁
+const isStub = (w) => (w.components || []).some((c) => c.label === '規格待審修時補上')
+
+// iOS PWA 的 navigator.clipboard 偶爾不給用，退回 textarea + execCommand
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      return ok
+    } catch { return false }
+  }
+}
 
 // 依主色產生 wireframe 的 antd 主題
 const makeWfTheme = (primary, hifi, dark) => dark ? ({
@@ -967,12 +990,22 @@ function WireframeFrame({ wireframe, requirement, dark }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedCmp, wireframe.id, undo, redo])
 
+  // 同單元、已有實質內容的頁（彈窗待辦卡還沒規格，交給 AI 也產不出東西）
+  const unitPages = (current.wireframes || []).filter(
+    (w) => (w.unit || '') === (wireframe.unit || '') && !isStub(w),
+  )
+
   const doExport = async (kind) => {
     const elId = `wf-${wireframe.id}`
     const name = (wireframe.name || 'wireframe').replace(/[\\/:*?"<>|]/g, '_')
     try {
       setExporting(true)
-      if (kind === 'png') { await exportPng(elId, name); message.success('已匯出 PNG') }
+      if (kind === 'ai' || kind === 'aiUnit') {
+        const pages = kind === 'aiUnit' ? unitPages : [wireframe]
+        const ok = await copyText(buildHandoff(pages, current, paletteOf(current.wfTheme).primary))
+        message[ok ? 'success' : 'error'](ok ? `已複製 ${pages.length} 頁的 AI 提示詞` : '複製失敗，請改用電腦版')
+      }
+      else if (kind === 'png') { await exportPng(elId, name); message.success('已匯出 PNG') }
       else { exportHtml(elId, name); message.success('已匯出 HTML') }
     } catch (err) {
       message.error('匯出失敗：' + (err?.message || err))
@@ -1008,7 +1041,12 @@ function WireframeFrame({ wireframe, requirement, dark }) {
           disabled={exporting}
           menu={{ items: [
             { key: 'png', label: '匯出 PNG 圖片', icon: <Image size={14} /> },
-            { key: 'html', label: '匯出 HTML', icon: <FileCode2 size={14} /> },
+            { key: 'html', label: '匯出 HTML 快照', icon: <FileCode2 size={14} /> },
+            { type: 'divider' },
+            { key: 'ai', label: '複製 AI 提示詞（這頁）', icon: <Wand2 size={14} /> },
+            ...(unitPages.length > 1
+              ? [{ key: 'aiUnit', label: `複製 AI 提示詞（${wireframe.unit || '本單元'} ${unitPages.length} 頁）`, icon: <Wand2 size={14} /> }]
+              : []),
           ], onClick: ({ key }) => doExport(key) }}
         >
           <button className="ghost sm" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
