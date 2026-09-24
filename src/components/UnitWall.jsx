@@ -11,7 +11,7 @@ import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
 import SpecSheet from './SpecSheet.jsx'
 import MeetingDoc from './MeetingDoc.jsx'
-import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
+import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, ArrowDownAZ, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
 
@@ -428,6 +428,10 @@ export default function UnitWall() {
                         onClick={() => { setFlowTrack('rule'); setFlowUnit(u) }}>
                         規則圖 {ruleFlows(current.unitFlows).filter((f) => f.unit === u).length}
                       </button>
+                    )}
+                    {editStruct && current.wireframes.some((w) => (w.unit || '').trim() === u && w.code) && (
+                      <button className="uw-mini" title="依頁面編號排序（P3-01、P3-02…，頁面在彈窗前；沒編號的排最後）"
+                        onClick={() => dispatch({ type: 'SORT_WIREFRAMES_BY_CODE', unit: u })}><ArrowDownAZ size={13} /></button>
                     )}
                     {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
                     <button className={'uw-editbtn' + (editStruct ? ' on' : '')} onClick={() => { setEditStruct((v) => !v); setAddingRoot(false) }}>
