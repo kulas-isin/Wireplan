@@ -2252,3 +2252,58 @@ button.qm-chip { cursor: pointer; }
   .rd-body { grid-row: 2; grid-column: 2; max-width: none; }
   .rd-body > * { max-width: 720px; margin-left: auto; margin-right: auto; width: 100%; }
 }
+
+/* ── 專案待辦 ──
+   目錄頁放預覽（未完成前三筆），工作區用右側抽屜開完整面板。
+   刻意不做第七個分頁：待辦是隨手記的東西，要在動線上而不是另一個地方 */
+.td-wrap { display: flex; flex-direction: column; gap: 8px; }
+.td-add { display: flex; gap: 8px; align-items: center; }
+.td-add input { flex: 1; width: auto; border: 1px solid var(--border); border-radius: 999px; padding: 10px 16px; font-size: 14px; background: #fff; }
+.td-add input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.td-addbtn { flex: 0 0 auto; width: 38px; height: 38px; border: none; border-radius: 50%; background: var(--primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.td-list { display: flex; flex-direction: column; }
+.td-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 2px; border-bottom: 1px solid rgba(60,80,40,.08); flex-wrap: wrap; }
+.td-row:last-child { border-bottom: none; }
+.td-box { flex: 0 0 auto; width: 21px; height: 21px; margin-top: 1px; border: 1.8px solid #B7C9A2; border-radius: 6px; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; padding: 0; }
+.td-row.done .td-box { background: var(--primary); border-color: var(--primary); }
+.td-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; cursor: default; text-align: left; }
+.td-text { font-size: 14px; line-height: 1.45; color: #22301F; word-break: break-word; }
+.td-row.done .td-text { color: #8A9A80; text-decoration: line-through; }
+.td-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.td-tag { font-style: normal; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+.td-tag.us { background: #EAF2D4; color: #3E5C22; }
+.td-tag.client { background: #E1EDF9; color: #2E5F96; }
+.td-tag.due { background: #FBF0DC; color: #B0691F; }
+.td-more { flex: 0 0 auto; border: none; background: none; color: #8A9A80; cursor: pointer; padding: 2px; }
+.td-edit { flex: 1 0 100%; display: flex; flex-direction: column; gap: 8px; padding: 8px 0 4px 31px; }
+.td-edit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.td-in { width: auto; flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; font-size: 13px; background: #fff; }
+.td-in:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.td-due { flex: 1 1 150px; }
+.td-owners { display: flex; gap: 6px; flex: 0 0 auto; }
+.td-own { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 7px 14px; font-size: 12.5px; cursor: pointer; color: #56684C; }
+.td-own.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700; }
+.td-del { flex: 0 0 auto; border: none; background: none; color: #b91c1c; cursor: pointer; padding: 6px; }
+.td-empty { font-size: 13px; color: #8A9A80; padding: 10px 2px; }
+.td-rest { font-size: 12px; padding: 2px; }
+.td-head { display: flex; align-items: center; gap: 10px; }
+.td-head .muted { font-size: 12px; }
+
+/* 目錄頁的待辦卡：跟磁磚同語彙的白霧卡 */
+.lm-todo { margin: 12px 18px 0; padding: 14px 16px; max-width: 944px; align-self: center; width: calc(100% - 36px);
+  border-radius: 20px; background: rgba(255,255,255,.72); backdrop-filter: blur(10px); box-shadow: 0 6px 22px rgba(60,80,40,.10); }
+.lm-todo-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; font-weight: 800; color: #3E5C22; }
+.lm-todo-h .n { font-weight: 700; color: #7A8A70; font-size: 12px; }
+.lm-todo-h button { margin-left: auto; border: none; background: none; color: #3E5C22; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; padding: 2px 4px; }
+
+/* 工作區右側抽屜 */
+.td-drawer-bd { position: fixed; inset: 0; background: rgba(20,30,15,.28); z-index: 60; }
+.td-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 92vw); z-index: 61;
+  background: #FBFDF4; box-shadow: -8px 0 30px rgba(40,60,20,.18); padding: 16px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px; }
+@media (max-width: 600px) {
+  .td-drawer { width: 100%; padding: 12px; }
+  .lm-todo { margin: 10px 12px 0; width: calc(100% - 24px); padding: 12px 14px; }
+}
+.td-head.slim { min-height: 0; margin-top: -2px; }
+.td-head.slim:empty { display: none; }

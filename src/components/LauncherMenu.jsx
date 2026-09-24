@@ -3,12 +3,15 @@ import { useStore } from '../store/StoreContext.jsx'
 import { sopStats } from '../lib/sop.js'
 import { shareOrDownloadProject, daysSince } from '../lib/sync.js'
 import GithubSync from './GithubSync.jsx'
-import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw } from 'lucide-react'
+import Todos from './Todos.jsx'
+import { openCount } from '../lib/todos.js'
+import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw, CheckSquare, ChevronDown, ChevronUp } from 'lucide-react'
 
 // 目錄選單：進 app 先選「要做哪件事」— 手機一格一格點，訪談是獨立大入口
 export default function LauncherMenu({ onGo }) {
   const { state, current, dispatch } = useStore()
   const [ghOpen, setGhOpen] = useState(false)
+  const [tdOpen, setTdOpen] = useState(false)
   const s = sopStats(current)
   // 備份提醒：資料有東西、且從未備份或距上次備份 >3 天且其間有更動
   const days = daysSince(state.lastBackupAt)
@@ -49,6 +52,16 @@ export default function LauncherMenu({ onGo }) {
           <button onClick={doBackup}><DownloadCloud size={14} /> 立即備份</button>
         </div>
       )}
+      <div className="lm-todo">
+        <div className="lm-todo-h">
+          <CheckSquare size={15} /> 待辦
+          <span className="n">{openCount(current) ? `${openCount(current)} 件未完成` : '都清光了'}</span>
+          <button onClick={() => setTdOpen((v) => !v)}>
+            {tdOpen ? <>收合 <ChevronUp size={13} /></> : <>展開 <ChevronDown size={13} /></>}
+          </button>
+        </div>
+        {tdOpen ? <Todos full headless /> : <Todos limit={3} />}
+      </div>
       <div className="lm-grid">
         {tiles.map((t) => (
           <button key={t.key} className={'lm-tile' + (t.primary ? ' primary' : '') + (t.tone === 'blue' ? ' tone-blue' : '')} onClick={() => onGo(t.key)}>
