@@ -511,12 +511,12 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
    擬真模式 High-Fidelity skin（.hifi root；皮膚層）
    真實後台質感：灰底頁面 + 白卡 + 實線細邊 + 輕陰影
    ───────────────────────────────────────────── */
-.hifi .wf-canvas { background: #f3f5f8; gap: 12px; padding: 18px; }
-.hifi .wf-side .wf-canvas { background: #f8fafc; }
+.hifi .wf-canvas { background: var(--wf-bg, #f3f5f8); gap: 12px; padding: 18px; }
+.hifi .wf-side .wf-canvas { background: var(--wf-side, #f8fafc); }
 .hifi .wf-titlebar { background: #fff; }
-.hifi .wf-frame { box-shadow: 0 1px 3px rgba(16,24,40,0.08); border: 1px solid #e7ebf0; }
+.hifi .wf-frame { box-shadow: 0 1px 3px rgba(16,24,40,0.08); border: 1px solid var(--wf-line, #e7ebf0); }
 /* 編輯用的列容器外框收斂為細實線 */
-.hifi .wf-rowwrap { border: 1px solid #eef1f4; }
+.hifi .wf-rowwrap { border: 1px solid var(--wf-line2, #eef1f4); }
 .hifi .wf-rowwrap.selected { border-color: var(--wf-ink); }
 
 /* 標題 / 區段底線 */
