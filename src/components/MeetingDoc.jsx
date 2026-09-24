@@ -38,7 +38,7 @@ function build(project, from, to) {
       out.imgs.push({ f, unit: u || '專案級', changed: vers.length > 0 || sealedNow })
       for (const n of open) if (n.assess) out.assess.push({ text: n.text, src: (u || '專案級') + '・' + f.name })
     }
-    const covered = new Set(flows.flatMap((f) => f.covers || []))
+    const covered = new Set(flows.filter((f) => (f.kind || 'main') !== 'rule').flatMap((f) => f.covers || [])) // 規則圖不算涵蓋
     const orphans = u ? reqs.filter((r) => !covered.has(r.id)) : []
     const seals = reqs.filter((r) => (r.versions || []).some((v) => inWin(v.at))).map((r) => r.name)
     const talks = reqs.flatMap((r) => (r.talks || []).filter((t) => inWin(t.at)).map((t) => ({ ...t, req: r.name })))

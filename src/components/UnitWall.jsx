@@ -5,6 +5,7 @@ import { unitsOf, unitStats, pageTree, reqsOfPage, looseReqs, unassignedReqs, st
 import { linkedPages } from '../lib/elements.js'
 import { PackView, GalaxyView } from './UnitViz.jsx'
 import UnitFlows from './UnitFlows.jsx'
+import { procFlows, ruleFlows } from '../lib/flowTracks.js'
 import QuoteMap from './QuoteMap.jsx'
 import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
@@ -251,6 +252,7 @@ export default function UnitWall() {
   const [deal, setDeal] = useState(false)
   const [editStruct, setEditStruct] = useState(false)
   const [flowUnit, setFlowUnit] = useState(null)
+  const [flowTrack, setFlowTrack] = useState('flow') // 'flow' | 'rule'：磁磚上點哪顆就開哪一軌
   const [showQuote, setShowQuote] = useState(false)
   const [tileQuote, setTileQuote] = useState(false) // 展開磁磚內的報價原文區
   const [openReq, setOpenReq] = useState(null) // 磁磚內點需求 → 就地開需求卡（單元內循環）
@@ -298,10 +300,15 @@ export default function UnitWall() {
         <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
           報價對照{quoteItems.length === 0 ? '' : quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
         </button>
-        <button className="uw-editbtn" onClick={() => setFlowUnit('')}>
-          專案流程 {(current.unitFlows || []).filter((f) => !(f.unit || '')).length}
-          {(current.unitFlows || []).some((f) => !(f.unit || '') && f.sealed) ? ' ✓' : ''}
+        <button className="uw-editbtn" onClick={() => { setFlowTrack('flow'); setFlowUnit('') }}>
+          專案流程 {procFlows(current.unitFlows).filter((f) => !(f.unit || '')).length}
+          {procFlows(current.unitFlows).some((f) => !(f.unit || '') && f.sealed) ? ' ✓' : ''}
         </button>
+        {ruleFlows(current.unitFlows).some((f) => !(f.unit || '')) && (
+          <button className="uw-editbtn rule" onClick={() => { setFlowTrack('rule'); setFlowUnit('') }}>
+            規則圖 {ruleFlows(current.unitFlows).filter((f) => !(f.unit || '')).length}
+          </button>
+        )}
       </div>
       {viz === 'pack' && <PackView />}
       {viz === 'force' && <GalaxyView />}
@@ -378,10 +385,16 @@ export default function UnitWall() {
                   })()}
                   <div className="uw-treehead">
                     {editStruct && <span className="uw-treehead-hint">≡ 可拖曳改層；拖到本列＝單元最上層</span>}
-                    <button className="uw-editbtn" onClick={() => setFlowUnit(u)}>
-                      流程 {(current.unitFlows || []).filter((f) => f.unit === u).length}
-                      {(current.unitFlows || []).some((f) => f.unit === u && f.sealed) ? ' ✓' : ''}
+                    <button className="uw-editbtn" onClick={() => { setFlowTrack('flow'); setFlowUnit(u) }}>
+                      流程 {procFlows(current.unitFlows).filter((f) => f.unit === u).length}
+                      {procFlows(current.unitFlows).some((f) => f.unit === u && f.sealed) ? ' ✓' : ''}
                     </button>
+                    {ruleFlows(current.unitFlows).some((f) => f.unit === u) && (
+                      <button className="uw-editbtn rule" title="規則／關係圖：資料模型、欄位層級、計算規則，不算進流程數與定稿"
+                        onClick={() => { setFlowTrack('rule'); setFlowUnit(u) }}>
+                        規則圖 {ruleFlows(current.unitFlows).filter((f) => f.unit === u).length}
+                      </button>
+                    )}
                     {editStruct && <button className="uw-mini" title="在單元最上層新增頁" onClick={() => setAddingRoot(true)}><Plus size={13} /></button>}
                     <button className={'uw-editbtn' + (editStruct ? ' on' : '')} onClick={() => { setEditStruct((v) => !v); setAddingRoot(false) }}>
                       {editStruct ? '完成' : '編輯結構'}
@@ -435,11 +448,11 @@ export default function UnitWall() {
       </>}
       {deal && <DealMode onClose={() => setDeal(false)} />}
       {moreWf && <NodeSheet wf={moreWf} project={current} dispatch={dispatch} onClose={() => setMoreWf(null)} />}
-      {flowUnit !== null && <UnitFlows unit={flowUnit} onClose={() => setFlowUnit(null)} />}
+      {flowUnit !== null && <UnitFlows unit={flowUnit} track={flowTrack} onClose={() => setFlowUnit(null)} />}
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
       {specWf && <SpecSheet wfId={specWf} onClose={() => setSpecWf(null)} />}
       {showMeeting && <MeetingDoc onClose={() => setShowMeeting(false)} />}
-      {jumpFlow && <UnitFlows unit={jumpFlow.unit || ''} focusId={jumpFlow.id} onClose={() => setJumpFlow(null)} />}
+      {jumpFlow && <UnitFlows unit={jumpFlow.unit || ''} focusId={jumpFlow.id} track={(jumpFlow.kind || 'main') === 'rule' ? 'rule' : 'flow'} onClose={() => setJumpFlow(null)} />}
       {openReq && (() => {
         const r = (current.requirements || []).find((x) => x.id === openReq)
         if (!r) return null
