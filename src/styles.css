@@ -304,7 +304,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   .wf-edit-row { flex-direction: column; position: relative; }
   /* 圖層：收合時只是一顆浮在畫面右上角的小鈕，不再佔一整列 */
   .wf-layers.open { width: 100% !important; position: static; max-height: 200px; }
-  .wf-layers:not(.open) { width: 36px; height: 36px; position: absolute; right: 6px; top: 6px; z-index: 20; border-radius: 999px; overflow: hidden; }
+  .wf-layers:not(.open) { width: 36px; height: 36px; position: absolute; right: 6px; top: 52px; z-index: 20; border-radius: 999px; overflow: hidden; }
   .wf-layers:not(.open) .wf-layers-toggle { justify-content: center; padding: 0; height: 36px; }
   .wf-props {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto; max-height: 64vh;
@@ -724,7 +724,8 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
   .content { padding: 6px; }
   .wf-studio { padding: 6px; gap: 6px; }
   /* 畫面標題列：只剩名稱＋裝置切換＋⋯，其餘收進 ⋯ */
-  .wf-titlebar { flex-wrap: nowrap; gap: 4px; padding: 6px 8px; }
+  /* 畫面框會橫向捲，標題列黏在可視區左緣、寬度就是可視區，裝置切換與 ⋯ 才不會被捲出畫面 */
+  .wf-titlebar { flex-wrap: nowrap; gap: 4px; padding: 6px 8px; position: sticky; left: 0; width: calc(100vw - 70px); z-index: 3; }
   .wf-titlebar .tb-x { display: none; }
   .wf-titlebar .wf-more { display: inline-flex; }
   .wf-titlebar .wf-dots { display: none; }
