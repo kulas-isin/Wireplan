@@ -74,8 +74,8 @@ function computeTransitions(flow, wireframes, currentWf) {
 export const WF_PALETTES = [
   { key: 'adminblue', name: '後台藍', primary: '#2563eb', sage: '#9db8ee' },
   {
-    key: 'greigeolive', name: '橄欖×灰褐', primary: '#3F7D4E', sage: '#C9C1B4',
-    tones: { bg: '#F4F2EE', side: '#ECE8E1', line: '#E3DED5', line2: '#EEEAE3', thead: '#F7F5F1', text: '#2B2A27', heading: '#1F1E1B', muted: '#7A756C', radius: 10 },
+    key: 'greigeolive', name: '橄欖×灰褐', primary: '#3F7D4E', sage: '#C9C1B4', glass: true,
+    tones: { bg: '#F4F2EE', bgTo: '#E6F0E4', side: '#ECE8E1', line: '#E3DED5', line2: '#EEEAE3', thead: '#F7F5F1', text: '#2B2A27', heading: '#1F1E1B', muted: '#7A756C', radius: 14 },
     brand: {
       neutral: '#C6BDB0', tint: '#E6F0E4',
       note: '客戶前台是暖灰褐（頂列、按鈕都是灰褐、黑字白底）；後台沿用同一系灰褐當中性色，主色改用綠，不要出現冷灰',
@@ -1252,8 +1252,8 @@ export default function WireframeBoard() {
 
   return (
     <ConfigProvider theme={makeWfTheme(pal.primary, hifi, pal.dark, pal.tones)} componentSize="small">
-      <div className={'wf-studio' + (hifi ? ' hifi' : '') + (demo ? ' demo' : '')}
-        style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage, '--wf-bg': pal.tones?.bg, '--wf-side': pal.tones?.side, '--wf-line': pal.tones?.line, '--wf-line2': pal.tones?.line2 }}>
+      <div className={'wf-studio' + (hifi ? ' hifi' : '') + (hifi && pal.glass ? ' glass' : '') + (demo ? ' demo' : '')}
+        style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage, '--wf-bg': pal.tones?.bg, '--wf-bg-to': pal.tones?.bgTo, '--wf-side': pal.tones?.side, '--wf-line': pal.tones?.line, '--wf-line2': pal.tones?.line2 }}>
         {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>

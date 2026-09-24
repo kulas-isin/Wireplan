@@ -130,16 +130,26 @@ function sharedRules(project) {
 }
 
 // 主題帶品牌說明時，把「主色只有一個、中性色跟客戶品牌同一系」講死，AI 才不會又做成冷灰藍後台
-const brandBlock = (primary, t, brand) => `
+const brandBlock = (primary, t, brand, glass) => `
 ## 品牌與配色（這組不能自己換）
 
 - ${brand.note}
 - **主色只有綠 ${primary}**：主要按鈕、選中狀態、連結、側欄選中項；淡綠 ${brand.tint} 只用在選中底與狀態標籤底
 - **中性色全部用暖灰褐，不用冷灰**：頁面底 ${t.bg}、側欄底 ${t.side}、邊框 ${t.line}、表頭 ${t.thead}、次要文字 ${t.muted}、主文字 ${t.text}
 - 品牌灰褐 ${brand.neutral} 只放在側欄頂端的 logo 區與次要按鈕的邊框，不要整條頂列或側欄塗成深灰褐
-- 頁面底可以有極淡的漸層（左上 ${t.bg} → 右下 ${brand.tint}），卡片仍是純白、圓角 ${t.radius}px、陰影極輕，留白比一般後台多一點
+${glass ? glassLines(primary, t, brand) : `- 頁面底可以有極淡的漸層（左上 ${t.bg} → 右下 ${brand.tint}），卡片仍是純白、圓角 ${t.radius}px、陰影極輕，留白比一般後台多一點`}
 - 成功／異常／待處理的狀態色照常用綠／紅／黃淡底深字；其餘看起來是「彩色」的東西都不該出現
 `
+
+// 透明漸層感：頁面底是一整片漸層，側欄與卡片是半透明磨砂玻璃浮在上面，不是死板的白卡灰框
+const glassLines = (primary, t, brand) => `- **整體是透明漸層感，不是死板的白卡灰框**：頁面底一整片 135deg 漸層 #FBFAF7 → ${t.bg} → ${brand.tint}（灰褐白到淡綠），\`background-attachment: fixed\`，捲動時漸層不動
+- 右上角再疊一片淡綠光暈：\`radial-gradient(600px 400px at 85% 0%, ${brand.tint}, transparent)\`，只在背景層，不蓋內容
+- **側欄**：白 50% 透明 ＋ \`backdrop-filter: blur(16px)\`，右緣 1px 白 70%；選中項是淡綠 12% 透明底、圓角 10px，不畫右側強調線
+- **頂列**：透明，跟頁面底同一片；捲動後才變白 60% ＋ blur(12px)，底下 1px 白 70%
+- **卡片**：白 72% 透明 ＋ blur(14px)，1px 白 75% 邊、圓角 ${t.radius}px、陰影 \`0 8px 24px rgba(43,42,39,.06)\`；表格放在卡片裡時表格本身透明，表頭白 45%，列 hover 白 60%
+- **主要按鈕**：綠漸層 \`linear-gradient(180deg, 淡 12% 的 ${primary}, ${primary})\` ＋ 綠 28% 透明的柔光陰影；次要按鈕白 60% 透明、1px 深灰褐 14% 邊
+- 輸入框與下拉白 65% 透明；圖片佔位白 50% 透明
+- 不透明的純白、硬的灰框線、每格都有邊框的表格，在這個主題裡都不該出現；分隔一律用白 70% 的細線或留白`
 
 const DOMAIN_HINT = (project) => {
   const hay = [project?.name, ...(project?.units || [])].join(' ')
@@ -176,6 +186,7 @@ export function buildHandoff(wireframes, project, palette = '#2563eb') {
     text: '#1f2733', heading: '#101828', muted: '#667085', radius: 6, ...(pal.tones || {}),
   }
   const brand = pal.brand
+  const glass = !!pal.glass
   // 有頁面設成平板／手機，或規格裡提到 iPad，才要求做觸控版
   const touch = pages.some(
     (w) => w.device === 'tablet' || w.device === 'mobile'
@@ -189,12 +200,12 @@ export function buildHandoff(wireframes, project, palette = '#2563eb') {
 
 - 純 HTML + CSS；分頁籤切換、篩選面板展開收合這類互動可用少量原生 JS，不要引入框架
 - 後台版型：左側選單（固定寬 220px）＋ 頂列 ＋ 內容區
-- 主色 ${primary}；頁面底色 ${t.bg}；側欄底 ${t.side}；卡片白底、圓角 ${t.radius}px、邊框 ${t.line}、陰影極輕
+- 主色 ${primary}；${glass ? `頁面底是漸層 ${t.bg} → ${t.bgTo || brand?.tint}，側欄與卡片半透明加模糊（細節見「品牌與配色」）、圓角 ${t.radius}px` : `頁面底色 ${t.bg}；側欄底 ${t.side}；卡片白底、圓角 ${t.radius}px、邊框 ${t.line}、陰影極輕`}
 - 表格：表頭底 ${t.thead}、文字 ${t.muted}、列高 40px、分隔線 ${t.line2}、內文 13px
 - 字型 'Noto Sans TC', system-ui；標題 ${t.heading}、內文 ${t.text}、次要文字 ${t.muted}
 - 狀態用色票標籤（綠＝正常、黃＝待處理、紅＝異常、藍＝進行中）
 - **表格與表單請填入像真的${DOMAIN_HINT(project)}資料**，不要用 Lorem ipsum 或「項目 1、項目 2」
-${brand ? brandBlock(primary, t, brand) : ''}
+${brand ? brandBlock(primary, t, brand, glass) : ''}
 ## 質感要求（客戶現用的系統做得很好看，這份不能輸）
 
 做得「正確但平庸」不算過關。以下是把後台做好看的具體規則，不是建議：
@@ -203,13 +214,13 @@ ${brand ? brandBlock(primary, t, brand) : ''}
 - **字級只用三檔**：頁面標題 20px／內文與表格 13–14px／輔助文字 12px。層級靠字重與顏色深淺，不靠一直換字級
 - **數字對齊**：金額、數量、日期欄位靠右、用等寬數字（\`font-variant-numeric: tabular-nums\`），千分位逗號
 - **一個強調色**：主色只用在主要按鈕、選中狀態、連結；其餘全部中性灰。狀態標籤用淡底深字，不用飽和色塊
-- **卡片不要硬框線**：用 1px 極淡的線（黑 6% 透明）或極輕陰影擇一；卡片裡的表格不再加外框，避免框中框
+- **卡片不要硬框線**：${glass ? '用 1px 白 75% 的邊配柔陰影' : '用 1px 極淡的線（黑 6% 透明）或極輕陰影擇一'}；卡片裡的表格不再加外框，避免框中框
 - **表格**：表頭固定、不要斑馬紋、hover 換底；首欄字重 500；操作欄用圖示＋hover 顯示文字，不要一排文字按鈕
 - **圖示只用一套**：Lucide，16 或 18px，線寬 1.75；不混用 emoji 或別套圖示
 - **每個畫面只有一顆主要按鈕**（實心主色），其餘用線框或文字鈕；危險操作只在確認框裡是紅的
 - **頁首固定結構**：麵包屑（小、灰）→ 標題（20px、700）→ 右側主要按鈕，同一條水平線
 - **空狀態要設計**：置中、一個圖示、一句話、一顆按鈕；不是一行灰字
-- **不要**：卡片與表格裡用漸層${brand ? '（頁面底的極淡漸層除外）' : ''}、多種強調色、預設瀏覽器控件樣式、每格都有邊框的表格、置中的整頁表單
+- **不要**：${glass ? '卡片裡再塞第二層漸層' : `卡片與表格裡用漸層${brand ? '（頁面底的極淡漸層除外）' : ''}`}、多種強調色、預設瀏覽器控件樣式、每格都有邊框的表格、置中的整頁表單
 - 若這段提示詞附有**客戶現有系統或參考畫面的截圖**，以截圖的密度、留白與質感為準，優先於上面的數值
 - 畫面寬 1440px 為主；1280px 以下側欄收成只有圖示的 64px 窄欄，1024px 以下不必處理${touchNote}
 
