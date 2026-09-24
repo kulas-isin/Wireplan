@@ -11,11 +11,8 @@ import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, A
 // 「轉自由編輯」單向編譯成元件陣列交給 83 元件編輯器，該頁從此脫離規格模式。
 // wf.spec = { template, sections: [{ id, kind, items: [{ id, label, c }] }] }（c=true 表示合約/報價來源）
 
-export const SECTION_KINDS = {
-  searchbar: '搜尋列', filter: '快速篩選', toolbar: '工具列', table: '表格欄',
-  form: '表單欄位', desc: '詳情欄位', tabs: '頁籤', stats: '統計卡',
-  actions: '動作鈕', pagination: '分頁', note: '備註',
-}
+export { SECTION_KINDS } from '../lib/specKinds.js'
+import { SECTION_KINDS } from '../lib/specKinds.js'
 const NO_ITEMS = new Set(['pagination'])
 export const SPEC_TEMPLATES = [
   ['list', '列表頁', ['searchbar', 'toolbar', 'table', 'pagination']],
