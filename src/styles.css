@@ -566,6 +566,34 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 /* 卡片群封面縮圖 */
 .wb-cover { height: 72px; background: linear-gradient(135deg, #e7ecf5, #d7e0ef); border-bottom: 1px solid #e7ebf0; }
 
+/* ─────────────────────────────────────────────
+   擬真 × 透明漸層（.hifi.glass；主題有 glass 旗標時）
+   頁面底是漸層、側欄與卡片半透明加模糊、陰影軟、圓角大
+   ───────────────────────────────────────────── */
+.hifi.glass .wf-frame { border-color: rgba(255,255,255,0.7); box-shadow: 0 10px 30px rgba(43,42,39,0.08); overflow: hidden; }
+.hifi.glass .wf-canvas { background: linear-gradient(135deg, #FBFAF7 0%, var(--wf-bg, #F4F2EE) 45%, var(--wf-bg-to, #E6F0E4) 100%); }
+.hifi.glass .wf-side .wf-canvas { background: rgba(255,255,255,0.5); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-right: 1px solid rgba(255,255,255,0.7); }
+.hifi.glass .wf-titlebar { background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.hifi.glass .wf-rowwrap { border-color: transparent; }
+.hifi.glass .wb-ad .ant-card,
+.hifi.glass .wb-ad .ant-table-wrapper,
+.hifi.glass .wb-stat2,
+.hifi.glass .wb-ad-appbar {
+  background: rgba(255,255,255,0.72); border: 1px solid rgba(255,255,255,0.75);
+  box-shadow: 0 8px 24px rgba(43,42,39,0.06); border-radius: 14px;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.hifi.glass .wb-ad .ant-card .ant-table-wrapper { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.hifi.glass .wb-ad .ant-table-thead > tr > th { background: rgba(255,255,255,0.45); }
+.hifi.glass .wb-ad .ant-table-tbody > tr > td { background: transparent; }
+.hifi.glass .wb-ad .ant-table-tbody > tr:hover > td { background: rgba(255,255,255,0.6); }
+.hifi.glass .wb-ad .ant-btn-primary { background: linear-gradient(180deg, color-mix(in srgb, var(--wf-ink) 88%, #fff), var(--wf-ink)); box-shadow: 0 4px 12px color-mix(in srgb, var(--wf-ink) 28%, transparent); border: none; }
+.hifi.glass .wb-ad .ant-btn-default { background: rgba(255,255,255,0.6); border-color: rgba(43,42,39,0.14); }
+.hifi.glass .wb-ad .ant-input, .hifi.glass .wb-ad .ant-select-selector, .hifi.glass .wb-ad .ant-input-affix-wrapper { background: rgba(255,255,255,0.65); }
+.hifi.glass .wf-side .wb-ad .ant-menu-item-selected { background: color-mix(in srgb, var(--wf-ink) 12%, transparent); border-right: none; border-radius: 10px; }
+.hifi.glass .wb-ph { background: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.8); }
+.hifi.glass .wb-ad-header { border-bottom-color: rgba(43,42,39,0.1); }
+
 /* 拖曳新元件：落點指示 + 容器高亮 */
 .wf-dragnew .wf-rowwrap > .wf-row, .wf-dragnew .wf-cardbox { outline: 1px dashed var(--accent); outline-offset: 2px; }
 .wf-item.drop-target::before { content: ''; position: absolute; top: -5px; left: 0; right: 0; height: 3px; border-radius: 3px; background: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); z-index: 6; }
