@@ -70,8 +70,17 @@ function computeTransitions(flow, wireframes, currentWf) {
 }
 
 // wireframe 配色主題（和諧自然的成套色票）
+// 有 tones 的主題會把中性色（頁面底、邊框、文字）一起換掉，擬真預覽與 AI 提示詞都吃同一組
 export const WF_PALETTES = [
   { key: 'adminblue', name: '後台藍', primary: '#2563eb', sage: '#9db8ee' },
+  {
+    key: 'greigeolive', name: '橄欖×灰褐', primary: '#3F7D4E', sage: '#C9C1B4',
+    tones: { bg: '#F4F2EE', side: '#ECE8E1', line: '#E3DED5', line2: '#EEEAE3', thead: '#F7F5F1', text: '#2B2A27', heading: '#1F1E1B', muted: '#7A756C', radius: 10 },
+    brand: {
+      neutral: '#C6BDB0', tint: '#E6F0E4',
+      note: '客戶前台是暖灰褐（頂列、按鈕都是灰褐、黑字白底）；後台沿用同一系灰褐當中性色，主色改用綠，不要出現冷灰',
+    },
+  },
   { key: 'forest', name: '森林綠', primary: '#103d2e', sage: '#9fb6ab' },
   { key: 'slate', name: '石板灰', primary: '#334155', sage: '#aab4c2' },
   { key: 'indigo', name: '靛藍', primary: '#3730a3', sage: '#aaa9d4' },
@@ -106,7 +115,7 @@ async function copyText(text) {
 }
 
 // 依主色產生 wireframe 的 antd 主題
-const makeWfTheme = (primary, hifi, dark) => dark ? ({
+const makeWfTheme = (primary, hifi, dark, tones = {}) => dark ? ({
   // 深色音樂主題：用 antd 原生深色演算法，元件自帶深底（再由 .theme-music CSS 微調成參考色）
   algorithm: theme.darkAlgorithm,
   token: {
@@ -126,12 +135,13 @@ const makeWfTheme = (primary, hifi, dark) => dark ? ({
   // 擬真模式：真實後台質感（實線細邊、白卡輕陰影、方角小圓角、彩色狀態）
   token: {
     colorPrimary: primary,
-    colorText: '#1f2733',
-    colorTextHeading: '#101828',
-    colorBorder: '#e2e5ec',
-    colorBorderSecondary: '#eef1f4',
-    colorBgLayout: '#f4f5f7',
-    borderRadius: 6,
+    colorLink: primary,
+    colorText: tones.text || '#1f2733',
+    colorTextHeading: tones.heading || '#101828',
+    colorBorder: tones.line || '#e2e5ec',
+    colorBorderSecondary: tones.line2 || '#eef1f4',
+    colorBgLayout: tones.bg || '#f4f5f7',
+    borderRadius: tones.radius ? Math.min(tones.radius, 8) : 6,
     fontSize: 13,
     fontFamily: 'inherit',
     boxShadowTertiary: '0 1px 2px rgba(16,24,40,0.06)',
@@ -139,7 +149,7 @@ const makeWfTheme = (primary, hifi, dark) => dark ? ({
   components: {
     Button: { borderRadius: 6, controlHeight: 32, fontWeight: 500, primaryShadow: '0 1px 2px rgba(16,24,40,0.10)', defaultShadow: 'none' },
     Card: { boxShadowTertiary: '0 1px 3px rgba(16,24,40,0.08)' },
-    Table: { headerBg: '#f7f9fb', headerColor: '#475467', borderColor: '#eef1f4', rowHoverBg: '#f7f9fb' },
+    Table: { headerBg: tones.thead || '#f7f9fb', headerColor: tones.muted || '#475467', borderColor: tones.line2 || '#eef1f4', rowHoverBg: tones.thead || '#f7f9fb' },
     Menu: { itemSelectedBg: hexA(primary, 0.10), itemSelectedColor: primary, itemHeight: 34, itemBorderRadius: 6 },
     Segmented: { itemSelectedBg: primary, itemSelectedColor: '#fff' },
   },
@@ -1002,7 +1012,7 @@ function WireframeFrame({ wireframe, requirement, dark }) {
       setExporting(true)
       if (kind === 'ai' || kind === 'aiUnit') {
         const pages = kind === 'aiUnit' ? unitPages : [wireframe]
-        const ok = await copyText(buildHandoff(pages, current, paletteOf(current.wfTheme).primary))
+        const ok = await copyText(buildHandoff(pages, current, paletteOf(current.wfTheme)))
         message[ok ? 'success' : 'error'](ok ? `已複製 ${pages.length} 頁的 AI 提示詞` : '複製失敗，請改用電腦版')
       }
       else if (kind === 'png') { await exportPng(elId, name); message.success('已匯出 PNG') }
@@ -1241,8 +1251,9 @@ export default function WireframeBoard() {
   }
 
   return (
-    <ConfigProvider theme={makeWfTheme(pal.primary, hifi, pal.dark)} componentSize="small">
-      <div className={'wf-studio' + (hifi ? ' hifi' : '') + (demo ? ' demo' : '')} style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage }}>
+    <ConfigProvider theme={makeWfTheme(pal.primary, hifi, pal.dark, pal.tones)} componentSize="small">
+      <div className={'wf-studio' + (hifi ? ' hifi' : '') + (demo ? ' demo' : '')}
+        style={{ '--wf-ink': pal.primary, '--wf-sage': pal.sage, '--wf-bg': pal.tones?.bg, '--wf-side': pal.tones?.side, '--wf-line': pal.tones?.line, '--wf-line2': pal.tones?.line2 }}>
         {navOpen && <div className="wf-nav-backdrop" onClick={() => setNavOpen(false)} />}
         {!navOpen && (
           <div className="wf-screens-toggle" title="展開畫面清單" onClick={() => setNavOpen(true)}>
@@ -1279,7 +1290,7 @@ export default function WireframeBoard() {
                   key={pt.key}
                   className={'wf-swatch' + ((current.wfTheme || 'forest') === pt.key ? ' active' : '')}
                   title={pt.name}
-                  style={{ background: pt.dark ? `linear-gradient(135deg, ${pt.primary} 50%, #1a1a1a 50%)` : pt.primary }}
+                  style={{ background: pt.dark ? `linear-gradient(135deg, ${pt.primary} 50%, #1a1a1a 50%)` : pt.brand ? `linear-gradient(135deg, ${pt.primary} 50%, ${pt.brand.neutral} 50%)` : pt.primary }}
                   onClick={() => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'wfTheme', value: pt.key })}
                 />
               ))}

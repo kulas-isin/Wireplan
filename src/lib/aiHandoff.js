@@ -129,6 +129,18 @@ function sharedRules(project) {
   return `## 全站共用規範（所有列表頁一致，不要各頁自己發明）\n\n來源：${hit.code ? hit.code + ' ' : ''}${hit.name}\n\n${body}\n`
 }
 
+// 主題帶品牌說明時，把「主色只有一個、中性色跟客戶品牌同一系」講死，AI 才不會又做成冷灰藍後台
+const brandBlock = (primary, t, brand) => `
+## 品牌與配色（這組不能自己換）
+
+- ${brand.note}
+- **主色只有綠 ${primary}**：主要按鈕、選中狀態、連結、側欄選中項；淡綠 ${brand.tint} 只用在選中底與狀態標籤底
+- **中性色全部用暖灰褐，不用冷灰**：頁面底 ${t.bg}、側欄底 ${t.side}、邊框 ${t.line}、表頭 ${t.thead}、次要文字 ${t.muted}、主文字 ${t.text}
+- 品牌灰褐 ${brand.neutral} 只放在側欄頂端的 logo 區與次要按鈕的邊框，不要整條頂列或側欄塗成深灰褐
+- 頁面底可以有極淡的漸層（左上 ${t.bg} → 右下 ${brand.tint}），卡片仍是純白、圓角 ${t.radius}px、陰影極輕，留白比一般後台多一點
+- 成功／異常／待處理的狀態色照常用綠／紅／黃淡底深字；其餘看起來是「彩色」的東西都不該出現
+`
+
 const DOMAIN_HINT = (project) => {
   const hay = [project?.name, ...(project?.units || [])].join(' ')
   if (/服飾|電商|零售|商品|訂單/.test(hay)) return '服飾電商後台（商品名、SKU、倉庫、廠商、金額、收件資訊）'
@@ -151,12 +163,19 @@ function pageBlock(wf, project) {
 /**
  * @param {object[]} wireframes 要交接的頁（1 張或整個單元）
  * @param {object}   project    目前專案（取名稱、單元、共用機制頁）
- * @param {string}   primary    wireframe 主色
+ * @param {string|object} palette wireframe 主色字串，或 WF_PALETTES 的整個主題（含 tones／brand 時會連中性色與品牌說明一起交代）
  */
-export function buildHandoff(wireframes, project, primary = '#2563eb') {
+export function buildHandoff(wireframes, project, palette = '#2563eb') {
   const pages = (wireframes || []).filter(Boolean)
   const many = pages.length > 1
   const shared = sharedRules(project)
+  const pal = typeof palette === 'string' ? { primary: palette } : (palette || {})
+  const primary = pal.primary || '#2563eb'
+  const t = {
+    bg: '#f4f5f7', side: '#f8fafc', line: '#e2e5ec', line2: '#eef1f4', thead: '#f7f9fb',
+    text: '#1f2733', heading: '#101828', muted: '#667085', radius: 6, ...(pal.tones || {}),
+  }
+  const brand = pal.brand
   // 有頁面設成平板／手機，或規格裡提到 iPad，才要求做觸控版
   const touch = pages.some(
     (w) => w.device === 'tablet' || w.device === 'mobile'
@@ -170,16 +189,33 @@ export function buildHandoff(wireframes, project, primary = '#2563eb') {
 
 - 純 HTML + CSS；分頁籤切換、篩選面板展開收合這類互動可用少量原生 JS，不要引入框架
 - 後台版型：左側選單（固定寬 220px）＋ 頂列 ＋ 內容區
-- 主色 ${primary}；頁面底色 #f4f5f7；卡片白底、圓角 6px、邊框 #e2e5ec、陰影極輕
-- 表格：表頭底 #f7f9fb、文字 #475467、列高 40px、分隔線 #eef1f4、內文 13px
-- 字型 'Noto Sans TC', system-ui；標題 #101828、內文 #1f2733、次要文字 #667085
+- 主色 ${primary}；頁面底色 ${t.bg}；側欄底 ${t.side}；卡片白底、圓角 ${t.radius}px、邊框 ${t.line}、陰影極輕
+- 表格：表頭底 ${t.thead}、文字 ${t.muted}、列高 40px、分隔線 ${t.line2}、內文 13px
+- 字型 'Noto Sans TC', system-ui；標題 ${t.heading}、內文 ${t.text}、次要文字 ${t.muted}
 - 狀態用色票標籤（綠＝正常、黃＝待處理、紅＝異常、藍＝進行中）
 - **表格與表單請填入像真的${DOMAIN_HINT(project)}資料**，不要用 Lorem ipsum 或「項目 1、項目 2」
+${brand ? brandBlock(primary, t, brand) : ''}
+## 質感要求（客戶現用的系統做得很好看，這份不能輸）
+
+做得「正確但平庸」不算過關。以下是把後台做好看的具體規則，不是建議：
+
+- **間距用 8px 網格**：卡片內距 20–24px、區塊間距 24px、欄位間距 16px；不要 13px、19px 這種數字
+- **字級只用三檔**：頁面標題 20px／內文與表格 13–14px／輔助文字 12px。層級靠字重與顏色深淺，不靠一直換字級
+- **數字對齊**：金額、數量、日期欄位靠右、用等寬數字（\`font-variant-numeric: tabular-nums\`），千分位逗號
+- **一個強調色**：主色只用在主要按鈕、選中狀態、連結；其餘全部中性灰。狀態標籤用淡底深字，不用飽和色塊
+- **卡片不要硬框線**：用 1px 極淡的線（黑 6% 透明）或極輕陰影擇一；卡片裡的表格不再加外框，避免框中框
+- **表格**：表頭固定、不要斑馬紋、hover 換底；首欄字重 500；操作欄用圖示＋hover 顯示文字，不要一排文字按鈕
+- **圖示只用一套**：Lucide，16 或 18px，線寬 1.75；不混用 emoji 或別套圖示
+- **每個畫面只有一顆主要按鈕**（實心主色），其餘用線框或文字鈕；危險操作只在確認框裡是紅的
+- **頁首固定結構**：麵包屑（小、灰）→ 標題（20px、700）→ 右側主要按鈕，同一條水平線
+- **空狀態要設計**：置中、一個圖示、一句話、一顆按鈕；不是一行灰字
+- **不要**：卡片與表格裡用漸層${brand ? '（頁面底的極淡漸層除外）' : ''}、多種強調色、預設瀏覽器控件樣式、每格都有邊框的表格、置中的整頁表單
+- 若這段提示詞附有**客戶現有系統或參考畫面的截圖**，以截圖的密度、留白與質感為準，優先於上面的數值
 - 畫面寬 1440px 為主；1280px 以下側欄收成只有圖示的 64px 窄欄，1024px 以下不必處理${touchNote}
 
 ## 互動與狀態（規格沒寫到的照這裡做，不要留白）
 
-- **hover**：表格列換底 #f7f9fb；可點的儲存格文字（單號、品名）平常是主色、hover 加底線；按鈕與側欄項都要有 hover 底色
+- **hover**：表格列換底 ${t.thead}；可點的儲存格文字（單號、品名）平常是主色、hover 加底線；按鈕與側欄項都要有 hover 底色
 - **focus**：輸入框與下拉 focus 時邊框轉主色 ＋ 2px 淡主色外圈；整頁用鍵盤 Tab 走得完
 - **disabled**：沒勾選任何一列時，批次動作是不可點的灰階，且 hover 要顯示原因（例：「請先勾選訂單」）
 - **loading**：表格載入中用骨架列（灰色長條佔滿各欄，約 6 列），不要整頁轉圈；按鈕送出中顯示 spinner 並鎖住，避免重複送出
