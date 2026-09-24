@@ -151,6 +151,30 @@ const glassLines = (primary, t, brand) => `- **整體是透明漸層感，不是
 - 輸入框與下拉白 65% 透明；圖片佔位白 50% 透明
 - 不透明的純白、硬的灰框線、每格都有邊框的表格，在這個主題裡都不該出現；分隔一律用白 70% 的細線或留白`
 
+// 整個單元一起交：先出一份 admin.css（tokens＋共用元件），每頁只 link 它。
+// 目的是 80 幾頁長得一模一樣，之後後端工程師只組元件、不做視覺決定。
+const fileNameOf = (w) => (w.code ? String(w.code).replace(/[\\/:*?"<>|\s]/g, '_') : String(w.name || 'page').replace(/[\\/:*?"<>|\s]/g, '_'))
+const deliveryBlock = (pages) => `
+## 交付格式（${pages.length} 頁共用一套樣式，不是 ${pages.length} 支各自為政的檔）
+
+1. **先做 \`admin.css\`**，所有頁面共用；每頁 HTML 開頭 \`<link rel="stylesheet" href="admin.css">\`，頁面裡**不寫 \`<style>\`**（真的只有這頁用到的樣式，最多 20 行，放在該頁 head 並加註解說明為什麼）
+2. \`admin.css\` 的結構固定，由上到下：
+   - \`:root\` design tokens：主色與淡色、中性色（頁面底、側欄底、邊框、表頭、主文字、次要文字）、圓角、陰影、字級三檔、間距 8px 網格
+   - 版型：\`.app\`（側欄＋內容兩欄）、\`.side\`、\`.top\`、\`main\`
+   - 頁首：\`.crumb\`、\`.phead\`（麵包屑→標題→右側主要按鈕）
+   - 按鈕：\`.btn\`、\`.btn.pri\`、\`.btn.ghost\`、\`.btn.sm\`、\`[disabled]\`
+   - 表單：\`.field\`（輸入、下拉、日期共用外框）、\`.field:focus-within\`、\`.formgrid\`（2／3 欄）、欄位級錯誤 \`.err\`
+   - 卡片 \`.card\`、分頁籤 \`.tabs\`、就地展開面板 \`.adv\`、已篩選標籤列 \`.chips\`／\`.chip\`
+   - 表格：\`.tablecard\`、\`.tscroll\`（橫向捲）、表頭固定、\`.num\` 靠右等寬數字、勾選 \`.cb\`、開關 \`.sw\`、操作欄 \`.ops\`／\`.mini\`（圖示鈕＋hover 提示）
+   - 狀態：\`.tag.ok／.warn／.bad／.info／.mute\`、列內驚嘆號 \`.warnic\`
+   - 批次列 \`.batch\`、分頁 \`.pager\`、骨架 \`.skel\`、空狀態 \`.empty\`、整頁錯誤橫幅 \`.banner\`、確認框 \`.modal\`、抽屜 \`.drawer\`
+   - RWD 兩個斷點（1280 側欄收窄、760 側欄抽屜）
+3. **每頁只能用 admin.css 裡有的 class**；做到某頁發現缺一種元件，回頭加進 admin.css，不要在頁面裡臨時寫
+4. 檔名用頁面代碼：${pages.slice(0, 4).map((w) => `\`${fileNameOf(w)}.html\``).join('、')}${pages.length > 4 ? ' …' : ''}；另附 \`index.html\` 列出全部頁面的連結，方便逐頁點
+5. 側欄、頂列的 HTML 每頁完全一樣（複製同一段），只改選中項
+6. 若這段提示詞附有**已定稿的頁面或既有的 admin.css**，以它為準：沿用它的 tokens 與 class 名稱，只補缺的，不要重寫
+`
+
 const DOMAIN_HINT = (project) => {
   const hay = [project?.name, ...(project?.units || [])].join(' ')
   if (/服飾|電商|零售|商品|訂單/.test(hay)) return '服飾電商後台（商品名、SKU、倉庫、廠商、金額、收件資訊）'
@@ -194,8 +218,10 @@ export function buildHandoff(wireframes, project, palette = '#2563eb') {
   )
   const touchNote = touch ? '。有頁面要在平板上用（規格有寫的照規格），那幾頁的點擊目標至少 44px' : ''
 
-  const preamble = `你是前端工程師。下面是已經跟客戶確認過的後台畫面規格，請做成${many ? `${pages.length} 支` : '一支'}自包含的 HTML 檔（單檔可直接用瀏覽器開，CSS 寫在 <style> 裡）。
-
+  const preamble = `你是前端工程師。下面是已經跟客戶確認過的後台畫面規格，${many
+    ? `請做成 ${pages.length} 支 HTML 檔，加一份大家共用的 admin.css（交付格式見下一段）。`
+    : '請做成一支自包含的 HTML 檔（單檔可直接用瀏覽器開，CSS 寫在 <style> 裡）。'}
+${many ? deliveryBlock(pages) : ''}
 ## 技術與風格
 
 - 純 HTML + CSS；分頁籤切換、篩選面板展開收合這類互動可用少量原生 JS，不要引入框架
@@ -243,7 +269,7 @@ ${brand ? brandBlock(primary, t, brand, glass) : ''}
 - 版面順序、欄位名稱、按鈕文字請照規格走，不要自行增刪
 - 規格裡寫「（展開時）」的區塊，預設收合，點按鈕才展開
 - 規格裡的「驗收條件」是給你理解用的，不用畫在畫面上
-${many ? '- 每頁各自一支 HTML，共用的側欄與頂列做成一樣的\n' : ''}`
+${many ? '- 每頁各自一支 HTML，全部 <link> 同一份 admin.css；側欄與頂列用同一段標記，只換選中項\n' : ''}`
 
   return [preamble, shared, pages.map((w) => pageBlock(w, project)).join('\n\n---\n\n')]
     .filter(Boolean).join('\n')
