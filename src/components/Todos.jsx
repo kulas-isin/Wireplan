@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
-import { listTodos, sortTodos, normalizeTodo, OWNERS, ownerLabel } from '../lib/todos.js'
+import { listTodos, sortTodos, normalizeTodo, parseTodoLines, OWNERS, ownerLabel } from '../lib/todos.js'
 import { Plus, Trash2, Check, ChevronDown, ChevronUp, X } from 'lucide-react'
 
 // 專案待辦。兩種用法：
@@ -27,6 +27,19 @@ export default function Todos({ limit = 0, full = false, onClose = null, headles
     ? { ...t, ...p, ...(p.done !== undefined ? { doneAt: p.done ? Date.now() : null } : {}) }
     : t)))
   const remove = (id) => save(all.filter((t) => t.id !== id))
+  // 貼多行 → 一次建多筆。單行貼上照常進輸入框，不攔
+  const [pasted, setPasted] = useState(0)
+  const onPaste = (e) => {
+    const raw = e.clipboardData?.getData('text') || ''
+    if (!/\r?\n/.test(raw.trim())) return
+    const items = parseTodoLines(raw)
+    if (!items.length) return
+    e.preventDefault()
+    save([...items, ...all])
+    setText('')
+    setPasted(items.length)
+    setTimeout(() => setPasted(0), 2500)
+  }
 
   const rows = full ? (showDone ? all : open) : open.slice(0, limit || 3)
 
@@ -89,11 +102,13 @@ export default function Todos({ limit = 0, full = false, onClose = null, headles
       )}
 
       <div className="td-add">
-        <input ref={inputRef} value={text} placeholder="新增待辦，按 Enter"
-          onChange={(e) => setText(e.target.value)}
+        <input ref={inputRef} value={text} placeholder="新增待辦，按 Enter；貼多行會一次建多筆"
+          onChange={(e) => setText(e.target.value)} onPaste={onPaste}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }} />
         <button className="td-addbtn" aria-label="新增" onClick={add}><Plus size={16} /></button>
       </div>
+
+      {pasted > 0 && <div className="td-pasted">已從貼上的文字建立 {pasted} 筆</div>}
 
       {rows.length === 0
         ? <div className="td-empty">沒有待辦。想到什麼就記上面那行。</div>
