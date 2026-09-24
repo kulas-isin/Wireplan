@@ -11,24 +11,33 @@ import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
 import SpecSheet from './SpecSheet.jsx'
 import MeetingDoc from './MeetingDoc.jsx'
-import { Plus, X, ArrowUpRight, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
+import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
 
-// 拖曳改層（編輯模式）：≡把手拖起幽靈列，放到目標頁列＝成為其子頁、放到樹頭列＝單元最上層
+// 拖曳改層／改序（編輯模式）：≡把手拖起幽靈列
+//   放到目標頁列的上緣＝排在它前面（同層）、下緣＝排在它後面（同層）、中段＝成為其子頁
+//   放到樹頭列＝單元最上層
 let uwDrag = null
+const HINT_CLASSES = ['uw-drophint', 'uw-dropbefore', 'uw-dropafter']
+const clearHints = () => document.querySelectorAll('.' + HINT_CLASSES.join(',.')).forEach((x) => x.classList.remove(...HINT_CLASSES))
 function uwMoveGhost(e) {
   uwDrag.ghost.style.left = (e.clientX + 12) + 'px'
   uwDrag.ghost.style.top = (e.clientY - 16) + 'px'
-  document.querySelectorAll('.uw-drophint').forEach((x) => x.classList.remove('uw-drophint'))
+  clearHints()
   uwDrag.target = null
   const el = document.elementFromPoint(e.clientX, e.clientY)
   const rowT = el?.closest?.('.uw-nrow')
   if (rowT && rowT.dataset.wfid && !uwDrag.banned.has(rowT.dataset.wfid)) {
-    rowT.classList.add('uw-drophint')
-    uwDrag.target = { id: rowT.dataset.wfid }
+    const r = rowT.getBoundingClientRect()
+    const y = (e.clientY - r.top) / Math.max(1, r.height)
+    const zone = y < 0.28 ? 'before' : y > 0.72 ? 'after' : 'into'
+    rowT.classList.add(zone === 'into' ? 'uw-drophint' : zone === 'before' ? 'uw-dropbefore' : 'uw-dropafter')
+    uwDrag.target = { id: rowT.dataset.wfid, zone, parentId: rowT.dataset.parent || null }
+    uwDrag.ghost.dataset.zone = zone
     return
   }
+  uwDrag.ghost.dataset.zone = ''
   const headT = el?.closest?.('.uw-treehead')
   if (headT) { headT.classList.add('uw-drophint'); uwDrag.target = { root: true } }
 }
@@ -36,10 +45,12 @@ function uwEndDrag() {
   if (!uwDrag) return
   const { ghost, target, wf, dispatch } = uwDrag
   ghost.remove()
-  document.querySelectorAll('.uw-drophint').forEach((x) => x.classList.remove('uw-drophint'))
+  clearHints()
   uwDrag = null
   if (!target) return
-  dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: target.root ? null : target.id } })
+  if (target.root) { dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: null } }); return }
+  if (target.zone === 'into') { dispatch({ type: 'UPDATE_WIREFRAME', id: wf.id, patch: { parentId: target.id } }); return }
+  dispatch({ type: 'MOVE_WIREFRAME', id: wf.id, parentId: target.parentId, [target.zone === 'before' ? 'beforeId' : 'afterId']: target.id })
 }
 
 // 頁面樹節點：頁名 + 需求膠囊；編輯模式浮出 ＋ / ≡ / ⋯
@@ -71,10 +82,10 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
   const hasBody = reqs.length > 0 || node.kids.length > 0
   return (
     <div className="uw-node">
-      <div className="uw-nrow" role="button" data-wfid={node.wf.id}
+      <div className="uw-nrow" role="button" data-wfid={node.wf.id} data-parent={node.wf.parentId || ''}
         onClick={(e) => { if (e.target.closest && e.target.closest('.uw-drag')) return; if (hasBody) setOpen((o) => !o) }}>
         {edit && (
-          <span className="uw-drag" title="按住拖到別的頁面底下" onPointerDown={startDrag}
+          <span className="uw-drag" title="按住拖曳：放在別頁上緣／下緣＝排到它前後，放在中間＝成為子頁" onPointerDown={startDrag}
             onPointerMove={(e) => { if (uwDrag) uwMoveGhost(e) }} onPointerUp={uwEndDrag} onPointerCancel={uwEndDrag}>
             <GripVertical size={14} />
           </span>
@@ -130,12 +141,23 @@ function NodeSheet({ wf, project, onClose, dispatch }) {
   const [moving, setMoving] = useState(false)
   const unit = wf.unit || ''
   const flat = []
+  const tree = pageTree(project, unit)
   const walk = (nodes, lv, banned) => nodes.forEach((n) => {
     const isBanned = banned || n.wf.id === wf.id
     if (!isBanned) flat.push({ wf: n.wf, lv })
     walk(n.kids, lv + 1, isBanned)
   })
-  walk(pageTree(project, unit), 0, false)
+  walk(tree, 0, false)
+  // 同層的前後鄰居：給「上移／下移」用（手機一拇指就能調順序）
+  const findSibs = (nodes) => {
+    const i = nodes.findIndex((n) => n.wf.id === wf.id)
+    if (i >= 0) return { prev: nodes[i - 1]?.wf, next: nodes[i + 1]?.wf }
+    for (const n of nodes) { const r = findSibs(n.kids); if (r) return r }
+    return null
+  }
+  const sibs = findSibs(tree) || {}
+  const moveUp = () => { dispatch({ type: 'MOVE_WIREFRAME', id: wf.id, parentId: wf.parentId || null, beforeId: sibs.prev.id }); onClose() }
+  const moveDown = () => { dispatch({ type: 'MOVE_WIREFRAME', id: wf.id, parentId: wf.parentId || null, afterId: sibs.next.id }); onClose() }
   return createPortal(
     <div className="as-backdrop" onClick={onClose}>
       <div className="as-sheet" onClick={(e) => e.stopPropagation()}>
@@ -146,6 +168,18 @@ function NodeSheet({ wf, project, onClose, dispatch }) {
               <span className="as-ic"><Pencil size={18} /></span>
               <span><b>改名</b><small>{wf.name}</small></span>
             </button>
+            {(sibs.prev || sibs.next) && (
+              <div className="as-pair">
+                <button className="as-row" disabled={!sibs.prev} onClick={moveUp}>
+                  <span className="as-ic"><ArrowUp size={18} /></span>
+                  <span><b>上移</b><small>{sibs.prev ? `排到「${sibs.prev.name}」前面` : '已在最前'}</small></span>
+                </button>
+                <button className="as-row" disabled={!sibs.next} onClick={moveDown}>
+                  <span className="as-ic"><ArrowDown size={18} /></span>
+                  <span><b>下移</b><small>{sibs.next ? `排到「${sibs.next.name}」後面` : '已在最後'}</small></span>
+                </button>
+              </div>
+            )}
             <button className="as-row" onClick={() => setMoving(true)}>
               <span className="as-ic"><GripVertical size={18} /></span>
               <span><b>移到…</b><small>掛到單元最上層或其他頁面底下</small></span>

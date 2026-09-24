@@ -1939,6 +1939,15 @@ input[type="date"].rd-input { -webkit-appearance: none; appearance: none; }
   transform: rotate(1.5deg);
 }
 .uw-drophint { background: rgba(198,220,106,0.35) !important; box-shadow: inset 0 0 0 2px #9CBD48; border-radius: 10px; }
+/* 放在上緣／下緣＝同層排到它前後：畫一條綠線，不是整列亮起 */
+.uw-dropbefore { box-shadow: inset 0 3px 0 #9CBD48; }
+.uw-dropafter { box-shadow: inset 0 -3px 0 #9CBD48; }
+.uw-ghost[data-zone="before"]::before, .uw-ghost[data-zone="after"]::before, .uw-ghost[data-zone="into"]::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 8px; vertical-align: 2px; background: #9CBD48;
+}
+.uw-ghost[data-zone="into"]::before { background: #3A5D25; }
+.as-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.as-pair .as-row[disabled] { opacity: .4; cursor: default; }
 .uw-newrow { display: flex; gap: 6px; padding: 2px 2px 9px 22px; }
 .uw-newrow input {
   flex: 1; min-width: 0; border: 1px solid rgba(58,93,37,0.2); border-radius: 10px;

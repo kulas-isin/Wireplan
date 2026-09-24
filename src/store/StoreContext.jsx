@@ -185,6 +185,20 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
 
+    case 'MOVE_WIREFRAME': {
+      // 頁面樹搬家：改 parentId，並把它插到 beforeId 之前／afterId 之後（同層順序 = 陣列順序）
+      const me = cur.wireframes.find((w) => w.id === action.id)
+      if (!me) return state
+      const rest = cur.wireframes.filter((w) => w.id !== action.id)
+      const moved = { ...me, parentId: action.parentId ?? null }
+      const refId = action.beforeId || action.afterId
+      let at = refId ? rest.findIndex((w) => w.id === refId) : -1
+      if (at < 0) return replaceCurrent(touch({ ...cur, wireframes: [...rest, moved] }))
+      if (action.afterId) at += 1
+      const wireframes = [...rest.slice(0, at), moved, ...rest.slice(at)]
+      return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
     case 'UPDATE_COMPONENT': {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeUpdate(w.components, action.componentId, action.patch) } : w,
