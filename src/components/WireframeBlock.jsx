@@ -366,7 +366,7 @@ export function Visual({ cmp }) {
       const { sortable, fixedCols, hoverActions } = cmp
       const actW = actStyle === 'icon' ? 96 : 120
       const cols = titles.map((c, i) => {
-        const role = colRole(c)
+        const role = colRole(c, titles)
         const col = { title: c, dataIndex: `c${i}`, key: i }
         if (role === 'actions') {
           col.render = () => renderActions(cmp.actions, actStyle, hoverActions)

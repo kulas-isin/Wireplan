@@ -50,10 +50,12 @@ const pool = (d) => POOLS[d] || POOLS.generic
 const pick = (arr, i) => arr[i % arr.length]
 const n2 = (x) => String(x).padStart(2, '0')
 
-// 由欄位標題判斷角色
-export function colRole(title = '') {
+// 由欄位標題判斷角色；siblings 是同一張表的其他欄名，用來分辨「狀態」是哪一種狀態
+export function colRole(title = '', siblings = []) {
   const t = String(title).toLowerCase()
   if (/操作|action|管理|編輯/.test(t)) return 'actions'
+  // 商品類列表（旁邊有主圖／商品名稱／售價）的「狀態」是上下架＋隱藏，不是審核中／已封存那組
+  if (/^狀態$/.test(t) && siblings.some((s) => /主圖|商品名稱|商品編號|售價|貨號/.test(String(s)))) return 'pubstatus'
   if (/^(刪除|移除)$/.test(t)) return 'rowdel'   // 明細表最後一欄常只有一顆刪除鈕
   if (/評分|星等|評價|rating|rate/.test(t)) return 'rate'
   if (/進度|完成度|達成度|progress/.test(t)) return 'progress'
@@ -111,6 +113,15 @@ export function cellContent(role, i, domain = 'generic') {
     case 'status': {
       const [label, color] = pick(STATUS, i * 3 + (i % 2))
       return React.createElement(Tag, { color, style: { marginInlineEnd: 0 } }, label)
+    }
+    case 'pubstatus': {
+      // 三態：上架（開）、隱藏（開＋標籤）、下架（關）
+      const on = i % 5 !== 3
+      const hidden = on && i % 4 === 1
+      return React.createElement(Space, { size: 6 },
+        React.createElement(Switch, { size: 'small', defaultChecked: on }),
+        hidden ? React.createElement(Tag, { color: 'gold', style: { marginInlineEnd: 0 } }, '隱藏') : null,
+      )
     }
     case 'rowdel':
       return React.createElement(Button, { type: 'link', size: 'small', danger: true, style: { padding: 0 } }, '刪除')
