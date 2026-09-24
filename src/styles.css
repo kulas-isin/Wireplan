@@ -2308,3 +2308,11 @@ button.qm-chip { cursor: pointer; }
 .td-head.slim { min-height: 0; margin-top: -2px; }
 .td-head.slim:empty { display: none; }
 .td-pasted { font-size: 12px; color: #3E5C22; background: #EAF2D4; border-radius: 999px; padding: 4px 12px; align-self: flex-start; }
+
+/* 規則圖那一軌：用資訊藍跟流程（橄欖）分開，磁磚上一眼看得出是另一種東西 */
+.uw-editbtn.rule { color: #2E5F96; background: #E1EDF9; }
+.uw-editbtn.rule:hover { background: #d3e4f6; }
+.uf-track { display: inline-flex; gap: 2px; background: rgba(60,80,40,.08); border-radius: 999px; padding: 2px; }
+.uf-track button { border: none; background: none; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; color: #56684C; cursor: pointer; }
+.uf-track button.on { background: #fff; color: #22301F; box-shadow: 0 1px 3px rgba(40,60,20,.15); }
+.uf-track button.on.rule { color: #2E5F96; }

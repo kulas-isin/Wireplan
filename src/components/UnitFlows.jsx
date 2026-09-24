@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
+import { isRule, procFlows, ruleFlows } from '../lib/flowTracks.js'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
 import QuoteText from './QuoteText.jsx'
@@ -21,6 +22,7 @@ export const FLOW_KINDS = [
   ['state', '狀態機'],
   ['edge', '系統邊界'],
   ['sched', '排程作業'],
+  ['rule', '規則／關係圖'],   // 資料模型、欄位層級、計算規則——講「東西之間的關係」，不講先後
   ['other', '其他'],
 ]
 const KIND_LABEL = Object.fromEntries(FLOW_KINDS)
@@ -64,17 +66,28 @@ const TEMPLATES = {
   A -->|"成功"| L["寫入作業記錄"]
   A -->|"失敗"| R["自動重試"] -->|"仍失敗"| N["通知"]
 `,
+  rule: (scope) => `flowchart LR
+  %% ${scope}：規則／關係圖（實線＝隸屬 1:N，虛線＝綁定，帶數量寫在邊上）
+  A["上層物件<br/>編號：xxx"] --> B["下層物件 1<br/>編號：xxx-01"]
+  A --> C["下層物件 2<br/>編號：xxx-02"]
+  X["另一邊的物件"] -.->|"綁定 ×1"| B
+  B --- R["規則寫在這裡：<br/>庫存／條碼掛在哪一層"]
+`,
   other: (scope) => TEMPLATES.main(scope),
 }
 
 // 流程圖檢視器：scope 由 unit 決定（'' ＝ 專案級，字串＝單元級；頁面級預留 pageId 欄位）。
 // 每張圖：kind 分類、版本履歷（變更原因＋時間）、定稿標記；左右滑切換上下張。
-export default function UnitFlows({ unit, onClose, focusId }) {
+export default function UnitFlows({ unit, onClose, focusId, track: initTrack = 'flow' }) {
   const { current, dispatch } = useStore()
   const isProject = !unit
   const scopeName = isProject ? '專案級' : unit
   const all = current.unitFlows || []
-  const scoped = all.filter((f) => (f.unit || '') === (unit || ''))
+  const scopedAll = all.filter((f) => (f.unit || '') === (unit || ''))
+  // 兩軌：流程（先後）／規則圖（關係）。各自計數、各自定稿；缺口盤點只看流程軌
+  const [track, setTrack] = useState(initTrack)
+  const scoped = track === 'rule' ? ruleFlows(scopedAll) : procFlows(scopedAll)
+  const hasRules = ruleFlows(scopedAll).length > 0
   const [kindTab, setKindTab] = useState('all')
   const [reqTab, setReqTab] = useState('all') // 單元層級改依「需求」分籤（'all' | 'none' | reqId）；專案級仍依圖型
   const flows = isProject
@@ -87,7 +100,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
   const [viewVer, setViewVer] = useState({})
   const [idx, setIdx] = useState(() => { // focusId：從需求卡/規格頁的流程 chip 直達指定圖
     if (!focusId) return 0
-    const i = all.filter((f) => (f.unit || '') === (unit || '')).findIndex((f) => f.id === focusId)
+    const i = (isRule(all.find((f) => f.id === focusId)) ? ruleFlows : procFlows)(all.filter((f) => (f.unit || '') === (unit || ''))).findIndex((f) => f.id === focusId)
     return i >= 0 ? i : 0
   })
   const cur = Math.min(idx, Math.max(0, flows.length - 1))
@@ -127,7 +140,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
   }, [editing?.code]) // eslint-disable-line
 
   const openNew = () => {
-    const kind = kindTab !== 'all' ? kindTab : 'main'
+    const kind = track === 'rule' ? 'rule' : kindTab !== 'all' ? kindTab : 'main'
     setPreview('')
     setEditing({ flowId: null, name: '', code: TEMPLATES[kind](scopeName), note: '', kind, pristine: true })
   }
@@ -206,7 +219,7 @@ export default function UnitFlows({ unit, onClose, focusId }) {
 
   // 需求涵蓋盤點（單元級才有）：flow.covers = 需求 id 陣列；盤點是記錄不是規格，定稿後仍可勾
   const unitReqs = isProject ? [] : (current.requirements || []).filter((r) => (r.unit || '').trim() === unit)
-  const coveredAnywhere = new Set(scoped.flatMap((f) => f.covers || []))
+  const coveredAnywhere = new Set(procFlows(scopedAll).flatMap((f) => f.covers || [])) // 缺口只看流程軌
   const orphans = unitReqs.filter((r) => !coveredAnywhere.has(r.id))
   const isDesk = typeof window !== 'undefined' && window.matchMedia('(min-width: 1280px)').matches
   // 桌機側欄可收合（收起時圖吃滿整寬），偏好記在裝置
@@ -227,7 +240,13 @@ export default function UnitFlows({ unit, onClose, focusId }) {
     <div className="uf-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
       <div className="uf-head">
         <GitBranch size={18} />
-        <strong>{isProject ? '專案級流程圖' : scopeName + ' · 單元流程'}（{scoped.length}）</strong>
+        <strong>{isProject ? (track === 'rule' ? '專案級規則圖' : '專案級流程圖') : scopeName + (track === 'rule' ? ' · 規則圖' : ' · 單元流程')}（{scoped.length}）</strong>
+        {(hasRules || track === 'rule') && (
+          <span className="uf-track" title="流程講先後；規則圖講關係（資料模型、欄位層級、計算規則），不算進流程數與缺口">
+            <button className={track === 'flow' ? 'on' : ''} onClick={() => { setTrack('flow'); setIdx(0); setReqTab('all'); setKindTab('all') }}>流程 {procFlows(scopedAll).length}</button>
+            <button className={'rule' + (track === 'rule' ? ' on' : '')} onClick={() => { setTrack('rule'); setIdx(0); setReqTab('all'); setKindTab('all') }}>規則圖 {ruleFlows(scopedAll).length}</button>
+          </span>
+        )}
         <div className="spacer" />
         <input ref={flowFileRef} type="file" accept=".json" style={{ display: 'none' }}
           onChange={(e) => { importFlows(e.target.files?.[0]); e.target.value = '' }} />
@@ -272,7 +291,9 @@ export default function UnitFlows({ unit, onClose, focusId }) {
           <div className="uf-empty">
             {isProject
               ? <>還沒有專案級流程圖。建議三張：<b>全站架構</b>、<b>核心價值流</b>（錢和貨的端到端主線）、<b>系統邊界</b>（我們 vs 外部系統）。</>
-              : <>這個單元還沒有流程圖。建議 1~3 張：<b>主流程</b>＋必要的<b>例外情境</b>；有多狀態單據的單元補一張<b>狀態機</b>。<br />流程「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。</>}
+              : track === 'rule'
+                ? <>這個單元還沒有規則圖。規則圖畫的是<b>關係</b>不是先後：資料模型（誰屬於誰、編號在哪一層）、欄位層級、計算規則。<br />通常線稿走完一輪、開始盤細節時才需要；不算進流程數與缺口。</>
+                : <>這個單元還沒有流程圖。建議 1~3 張：<b>主流程</b>＋必要的<b>例外情境</b>；有多狀態單據的單元補一張<b>狀態機</b>。<br />流程「定稿」後再開始長頁面；頁面級細流留到 wireframe 階段。</>}
           </div>
         )}
         {flows.filter((_, i) => i === cur).map((f) => {
