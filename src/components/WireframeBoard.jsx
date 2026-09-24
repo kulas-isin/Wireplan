@@ -1178,6 +1178,8 @@ export default function WireframeBoard() {
       } else toAdd.push(w)
     }
     if (toAdd.length) dispatch({ type: 'ADD_WIREFRAME', wireframes: toAdd })
+    // 匯入的頁有編號 → 該單元依編號排好，不必再手動拖
+    for (const u of new Set(wfs.filter((w) => w.code).map((w) => (w.unit || '').trim()))) dispatch({ type: 'SORT_WIREFRAMES_BY_CODE', unit: u })
     if (merged) message.success(`已把 ${merged} 頁併入同名既有頁`)
     // JSON 帶 flows → 一併鋪成業務流程圖（在剛匯入的頁面上綁定）
     if (Array.isArray(json.flows) && json.flows.length) dispatch({ type: 'IMPORT_FLOWS', flows: json.flows })

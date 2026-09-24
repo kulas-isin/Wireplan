@@ -5,6 +5,7 @@ import { generateWireframe, regenerateComponents } from '../lib/wireframeTemplat
 import { generateFlow, generateFlowFromWireframes } from '../lib/flowGenerator.js'
 import { buildFlowsGraph } from '../lib/flowPatterns.js'
 import { detectCategory } from '../lib/categories.js'
+import { sortWireframesByCode } from '../lib/units.js'
 
 const StoreContext = createContext(null)
 
@@ -183,6 +184,11 @@ function reducer(state, action) {
         w.id === action.id ? { ...w, ...action.patch } : w,
       )
       return replaceCurrent(touch({ ...cur, wireframes }))
+    }
+
+    case 'SORT_WIREFRAMES_BY_CODE': {
+      // 依頁面編號自然排序（P3-01、P3-02…，頁面在彈窗前）；unit 不給就每個單元各自排
+      return replaceCurrent(touch({ ...cur, wireframes: sortWireframesByCode(cur.wireframes, action.unit ?? null) }))
     }
 
     case 'MOVE_WIREFRAME': {
