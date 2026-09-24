@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { loadGhConfig, saveGhConfig, ghPull, ghPush } from '../lib/github.js'
+import { useSyncStatus, SYNC_LABEL, fmt } from '../lib/ghSync.js'
 import { X, UploadCloud, DownloadCloud, ShieldCheck } from 'lucide-react'
 
 // GitHub 同步面板：把所有專案存進使用者自己的私人 repo（wireplan-data.json），
@@ -12,19 +13,22 @@ export default function GithubSync({ onClose }) {
   const [repo, setRepo] = useState(saved.repo || '')
   const [token, setToken] = useState(saved.token || '')
   const [busy, setBusy] = useState(false)
+  const [auto, setAuto] = useState(saved.auto !== false)
+  const sync = useSyncStatus()
   const [msg, setMsg] = useState(saved.lastSyncAt ? `上次同步：${new Date(saved.lastSyncAt).toLocaleString('zh-TW')}` : '')
 
   const cfg = () => {
-    const c = { ...saved, repo: repo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, ''), token: token.trim() }
+    const c = { ...saved, repo: repo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, ''), token: token.trim(), auto }
     saveGhConfig(c)
+    window.dispatchEvent(new Event('wp-gh-config')) // 叫引擎重新看一次
     return c
   }
   const push = async () => {
     setBusy(true); setMsg('上傳中…')
     try {
       const c = cfg()
-      await ghPush(c, { app: 'wireplan', savedAt: Date.now(), projects: state.projects, library: state.library })
-      saveGhConfig({ ...c, lastSyncAt: Date.now() })
+      const sha = await ghPush(c, { app: 'wireplan', savedAt: Date.now(), projects: state.projects, library: state.library })
+      saveGhConfig({ ...c, baseSha: sha, lastSyncAt: Date.now(), lastError: '' })
       dispatch({ type: 'MARK_BACKUP' })
       setMsg(`已上傳 ${state.projects.length} 個專案 ✓`)
     } catch (e) { setMsg('上傳失敗：' + e.message) }
@@ -36,9 +40,8 @@ export default function GithubSync({ onClose }) {
       const c = cfg()
       const r = await ghPull(c)
       if (!r) { setMsg('repo 上還沒有資料檔 — 先按「上傳」建立'); setBusy(false); return }
-      for (const p of r.data.projects || []) dispatch({ type: 'LOAD_PROJECT', project: p })
-      for (const [field, value] of Object.entries(r.data.library || {})) dispatch({ type: 'UPDATE_LIBRARY', field, value })
-      saveGhConfig({ ...c, lastSyncAt: Date.now() })
+      dispatch({ type: 'APPLY_REMOTE', projects: r.data.projects || [], library: r.data.library || {} })
+      saveGhConfig({ ...c, baseSha: r.sha, lastSyncAt: Date.now(), lastError: '' })
       setMsg(`已拉回 ${(r.data.projects || []).length} 個專案（同 id 覆蓋、新 id 加入）✓`)
     } catch (e) { setMsg('拉回失敗：' + e.message) }
     setBusy(false)
@@ -60,10 +63,21 @@ export default function GithubSync({ onClose }) {
           <input type="password" value={token} placeholder="github_pat_…" onChange={(e) => setToken(e.target.value)} />
         </label>
         <div className="gh-note"><ShieldCheck size={13} /> token 只存這台裝置的瀏覽器，不會寫進專案資料或分享檔。請務必用「私人」repo — 需求資料含客戶內容。</div>
+        <label className="gh-auto">
+          <input type="checkbox" checked={auto} onChange={(e) => { setAuto(e.target.checked); saveGhConfig({ ...loadGhConfig(), auto: e.target.checked }); window.dispatchEvent(new Event('wp-gh-config')) }} />
+          <span><b>自動同步</b>　開啟 app／回到前景時拉雲端；改動後 3 秒推上去。兩邊都改過會停下來問你，不會自己決定。</span>
+        </label>
+        {ready && <div className={'gh-status ' + sync.status}>{SYNC_LABEL[sync.status]}{sync.at ? `・${fmt(sync.at)}` : ''}{sync.msg ? `｜${sync.msg}` : ''}</div>}
         <div className="gh-btns">
-          <button className="tg-big primary" disabled={!ready || busy} onClick={push}><UploadCloud size={15} /> 上傳到 GitHub</button>
-          <button className="tg-big" disabled={!ready || busy} onClick={pull}><DownloadCloud size={15} /> 從 GitHub 拉回</button>
+          <button className="tg-big primary" disabled={!ready || busy} onClick={() => { cfg(); setMsg('已儲存設定，自動同步會立刻檢查一次') }}>儲存設定</button>
         </div>
+        <details className="gh-manual">
+          <summary>手動強制（平常用不到）</summary>
+          <div className="gh-btns">
+            <button className="tg-big" disabled={!ready || busy} onClick={push}><UploadCloud size={15} /> 強制上傳，覆蓋雲端</button>
+            <button className="tg-big" disabled={!ready || busy} onClick={pull}><DownloadCloud size={15} /> 強制拉回，覆蓋本機</button>
+          </div>
+        </details>
         {msg && <div className="gh-msg">{msg}</div>}
         <div className="gh-help muted">
           第一次設定：GitHub → Settings → Developer settings → Fine-grained tokens → 新增，Repository access 只勾資料 repo，Permissions 給 Contents「Read and write」。

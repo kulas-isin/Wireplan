@@ -5,6 +5,8 @@ import { shareOrDownloadProject, daysSince } from '../lib/sync.js'
 import GithubSync from './GithubSync.jsx'
 import Todos from './Todos.jsx'
 import { openCount } from '../lib/todos.js'
+import { useSyncStatus, SYNC_LABEL } from '../lib/ghSync.js'
+import { ghAutoOn } from '../lib/github.js'
 import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw, CheckSquare, ChevronDown, ChevronUp } from 'lucide-react'
 
 // 目錄選單：進 app 先選「要做哪件事」— 手機一格一格點，訪談是獨立大入口
@@ -12,12 +14,15 @@ export default function LauncherMenu({ onGo }) {
   const { state, current, dispatch } = useStore()
   const [ghOpen, setGhOpen] = useState(false)
   const [tdOpen, setTdOpen] = useState(false)
+  const sync = useSyncStatus()
+  const autoSync = ghAutoOn()
   const s = sopStats(current)
   // 備份提醒：資料有東西、且從未備份或距上次備份 >3 天且其間有更動
   const days = daysSince(state.lastBackupAt)
   const dirty = state.projects.some((p) => (p.updatedAt || 0) > (state.lastBackupAt || 0))
   const hasData = state.projects.some((p) => (p.requirements?.length || 0) + (p.wireframes?.length || 0) > 0)
-  const needBackup = hasData && dirty && (days === null || days >= 3)
+  // 自動同步開著且沒出錯，就不用再提醒手動備份
+  const needBackup = hasData && dirty && (days === null || days >= 3) && !(autoSync && sync.status !== 'error')
   const doBackup = async () => {
     const r = await shareOrDownloadProject(current)
     if (r !== 'cancelled') dispatch({ type: 'MARK_BACKUP' })
@@ -42,7 +47,9 @@ export default function LauncherMenu({ onGo }) {
           {state.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <button className="ghost sm" title="新增專案" onClick={() => dispatch({ type: 'NEW_PROJECT' })}><Plus size={16} /></button>
-        <button className="ghost sm" title="GitHub 同步（跨裝置備份）" onClick={() => setGhOpen(true)}><RefreshCw size={15} /></button>
+        <button className={'ghost sm lm-sync ' + sync.status} title={'GitHub 同步：' + SYNC_LABEL[sync.status] + (sync.msg ? '｜' + sync.msg : '')} onClick={() => setGhOpen(true)}>
+          <RefreshCw size={15} />{(sync.status === 'pending' || sync.status === 'conflict' || sync.status === 'error') && <i className="lm-sync-dot" />}
+        </button>
       </div>
       <div className="lm-greet">今天，把需求<em>優雅收攏</em></div>
       {needBackup && (

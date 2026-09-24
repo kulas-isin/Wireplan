@@ -15,6 +15,7 @@ const FlowCanvas = lazy(() => import('./components/FlowCanvas.jsx'))
 import FieldSpec from './components/FieldSpec.jsx'
 import Todos from './components/Todos.jsx'
 import { openCount } from './lib/todos.js'
+import { useSyncStatus, SYNC_LABEL, fmt as fmtSync } from './lib/ghSync.js'
 import { downloadText, readFileAsText } from './lib/download.js'
 import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid, CheckSquare } from 'lucide-react'
 
@@ -31,6 +32,7 @@ export default function App() {
   const { current, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tab, setTab] = useState('import')
   const [todoOpen, setTodoOpen] = useState(false)
+  const sync = useSyncStatus()
   // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
   const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : window.location.hash === '#reqs' ? 'reqs' : 'menu'))
   const [focus, setFocus] = useState(false)
@@ -128,6 +130,11 @@ export default function App() {
             onChange={(e) => dispatch({ type: 'RENAME_PROJECT', name: e.target.value })}
           />
           <span className="meta">最後更新：{new Date(current.updatedAt).toLocaleString('zh-TW')}</span>
+          {sync.status !== 'off' && (
+            <span className={'meta sync-meta ' + sync.status} title={sync.msg || ''}>
+              {sync.status === 'idle' && sync.at ? `已同步 ${fmtSync(sync.at)}` : SYNC_LABEL[sync.status]}
+            </span>
+          )}
           <div className="spacer" />
           <button className="ghost sm" title="復原 (Ctrl/Cmd+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
           <button className="ghost sm" title="重做 (Ctrl/Cmd+Shift+Z)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
