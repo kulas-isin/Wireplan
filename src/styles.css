@@ -2316,3 +2316,30 @@ button.qm-chip { cursor: pointer; }
 .uf-track button { border: none; background: none; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 700; color: #56684C; cursor: pointer; }
 .uf-track button.on { background: #fff; color: #22301F; box-shadow: 0 1px 3px rgba(40,60,20,.15); }
 .uf-track button.on.rule { color: #2E5F96; }
+
+/* ── GitHub 自動同步：狀態燈、衝突視窗 ── */
+.lm-sync { position: relative; }
+.lm-sync.syncing svg { animation: wp-spin 1s linear infinite; }
+.lm-sync.error, .lm-sync.conflict { color: #B0691F; }
+.lm-sync-dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: #E0A55C; }
+.lm-sync.error .lm-sync-dot, .lm-sync.conflict .lm-sync-dot { background: #C0392B; }
+@keyframes wp-spin { to { transform: rotate(360deg); } }
+.sync-meta { padding-left: 10px; border-left: 1px solid rgba(60,80,40,.15); }
+.sync-meta.pending, .sync-meta.syncing { color: #7A8A70; }
+.sync-meta.error, .sync-meta.conflict { color: #B0691F; font-weight: 700; }
+.gh-auto { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.5; margin: 8px 0; }
+.gh-auto input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary); flex: 0 0 auto; }
+.gh-status { font-size: 12.5px; padding: 6px 10px; border-radius: 8px; background: #EAF2D4; color: #3E5C22; }
+.gh-status.error, .gh-status.conflict { background: #FBF0DC; color: #B0691F; }
+.gh-manual { margin-top: 10px; font-size: 12.5px; }
+.gh-manual summary { cursor: pointer; color: #7A8A70; }
+.gh-conflict { max-width: 560px; }
+.gh-conflict-lead { font-size: 13.5px; line-height: 1.6; margin: 6px 0 10px; }
+.gh-cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 12px; }
+.gh-cmp th, .gh-cmp td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(60,80,40,.12); vertical-align: top; }
+.gh-cmp th { color: #7A8A70; font-weight: 700; }
+.gh-cmp th svg { vertical-align: -2px; margin-right: 3px; }
+.gh-cmp td.newer { font-weight: 800; color: #3E5C22; }
+.gh-cmp .muted { font-size: 11px; }
+.gh-conflict-btns { display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 600px) { .gh-conflict { max-width: 100%; } }

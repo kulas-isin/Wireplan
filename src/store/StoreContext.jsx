@@ -363,6 +363,15 @@ function reducer(state, action) {
     case 'MARK_BACKUP':
       return { ...state, lastBackupAt: Date.now() }
 
+    case 'APPLY_REMOTE': {
+      // 自動同步套用雲端：同 id 取代、新 id 加入；本機獨有的專案留著（下一輪會推上去）
+      const byId = new Map(state.projects.map((p) => [p.id, p]))
+      for (const p of action.projects || []) if (p && p.id) byId.set(p.id, p)
+      const projects = [...byId.values()]
+      const currentId = projects.some((p) => p.id === state.currentId) ? state.currentId : projects[0]?.id
+      return { ...state, projects, currentId, library: { ...state.library, ...(action.library || {}) } }
+    }
+
     case 'REPLACE_STATE':
       return action.state
 
@@ -373,7 +382,7 @@ function reducer(state, action) {
 
 // ── Undo/Redo 歷史包裝 ──
 const HISTORY_LIMIT = 60
-const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT', 'UPDATE_LIBRARY', 'MARK_BACKUP'])
+const NO_HISTORY = new Set(['SET_CURRENT', 'UNDO', 'REDO', 'REPLACE_STATE', 'UPDATE_FLOW_SILENT', 'UPDATE_LIBRARY', 'MARK_BACKUP', 'APPLY_REMOTE'])
 
 function withHistory(baseReducer) {
   return (h, action) => {
