@@ -13,7 +13,7 @@ import {
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
-  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Sparkles, Wand2 } from 'lucide-react'
+  SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Sparkles, Wand2 , MoreHorizontal } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
 const COMP_ICON = {
@@ -1005,6 +1005,17 @@ function WireframeFrame({ wireframe, requirement, dark }) {
     (w) => (w.unit || '') === (wireframe.unit || '') && !isStub(w),
   )
 
+  const exportItems = [
+    { key: 'png', label: '匯出 PNG 圖片', icon: <Image size={14} /> },
+    { key: 'html', label: '匯出 HTML 快照', icon: <FileCode2 size={14} /> },
+    { type: 'divider' },
+    { key: 'ai', label: '複製 AI 提示詞（這頁）', icon: <Wand2 size={14} /> },
+    ...(unitPages.length > 1
+      ? [{ key: 'aiUnit', label: `複製 AI 提示詞（${wireframe.unit || '本單元'} ${unitPages.length} 頁）`, icon: <Wand2 size={14} /> }]
+      : []),
+  ]
+  const regenerate = () => { if (confirm('重新產生會覆蓋目前此畫面的調整，確定？')) dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: requirement.id }) }
+  const removePage = () => { if (confirm(`刪除畫面「${wireframe.name}」？`)) dispatch({ type: 'DELETE_WIREFRAME', id: wireframe.id }) }
   const doExport = async (kind) => {
     const elId = `wf-${wireframe.id}`
     const name = (wireframe.name || 'wireframe').replace(/[\\/:*?"<>|]/g, '_')
@@ -1044,24 +1055,16 @@ function WireframeFrame({ wireframe, requirement, dark }) {
           value={wireframe.name}
           onChange={(e) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: { name: e.target.value } })}
         />
-        <button className="ghost sm" title="復原 (⌘Z)" disabled={!canUndo} onClick={(e) => { e.stopPropagation(); undo() }}><Undo2 size={15} /></button>
-        <button className="ghost sm" title="重做 (⌘⇧Z)" disabled={!canRedo} onClick={(e) => { e.stopPropagation(); redo() }}><Redo2 size={15} /></button>
+        <button className="ghost sm tb-x" title="復原 (⌘Z)" disabled={!canUndo} onClick={(e) => { e.stopPropagation(); undo() }}><Undo2 size={15} /></button>
+        <button className="ghost sm tb-x" title="重做 (⌘⇧Z)" disabled={!canRedo} onClick={(e) => { e.stopPropagation(); redo() }}><Redo2 size={15} /></button>
         <Dropdown
           trigger={['click']}
           disabled={exporting}
-          menu={{ items: [
-            { key: 'png', label: '匯出 PNG 圖片', icon: <Image size={14} /> },
-            { key: 'html', label: '匯出 HTML 快照', icon: <FileCode2 size={14} /> },
-            { type: 'divider' },
-            { key: 'ai', label: '複製 AI 提示詞（這頁）', icon: <Wand2 size={14} /> },
-            ...(unitPages.length > 1
-              ? [{ key: 'aiUnit', label: `複製 AI 提示詞（${wireframe.unit || '本單元'} ${unitPages.length} 頁）`, icon: <Wand2 size={14} /> }]
-              : []),
-          ], onClick: ({ key }) => doExport(key) }}
+          menu={{ items: exportItems, onClick: ({ key }) => doExport(key) }}
         >
-          <button className="ghost sm" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
+          <button className="ghost sm tb-x" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
         </Dropdown>
-        <button className="ghost sm" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
+        <button className="ghost sm tb-x" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
           {layout === 'sidebar' ? <Columns2 size={15} /> : <PanelLeft size={15} />}
         </button>
         <div className="device-toggle">
@@ -1069,15 +1072,41 @@ function WireframeFrame({ wireframe, requirement, dark }) {
           <button title="平板（860px）" className={wireframe.device === 'tablet' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('tablet') }}><Tablet size={15} /></button>
           <button title="手機（420px）" className={wireframe.device === 'mobile' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('mobile') }}><Smartphone size={15} /></button>
         </div>
-        <button className="ghost sm" title="複製整頁" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'DUPLICATE_WIREFRAME', id: wireframe.id }) }}><Copy size={14} /></button>
+        <button className="ghost sm tb-x" title="複製整頁" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'DUPLICATE_WIREFRAME', id: wireframe.id }) }}><Copy size={14} /></button>
         {requirement && (
-          <button className="ghost sm" title="依需求分類重新產生版面"
-            onClick={(e) => { e.stopPropagation(); if (confirm('重新產生會覆蓋目前此畫面的調整，確定？')) dispatch({ type: 'REGENERATE_WIREFRAME', requirementId: requirement.id }) }}
+          <button className="ghost sm tb-x" title="依需求分類重新產生版面"
+            onClick={(e) => { e.stopPropagation(); regenerate() }}
           ><RotateCw size={14} /></button>
         )}
-        <button className="ghost sm danger" title="刪除畫面"
-          onClick={(e) => { e.stopPropagation(); if (confirm(`刪除畫面「${wireframe.name}」？`)) dispatch({ type: 'DELETE_WIREFRAME', id: wireframe.id }) }}
+        <button className="ghost sm danger tb-x" title="刪除畫面"
+          onClick={(e) => { e.stopPropagation(); removePage() }}
         ><Trash2 size={14} /></button>
+        {/* 手機：上面那排收進一顆 ⋯（CSS 決定誰顯示），標題列只剩名稱＋裝置切換 */}
+        <Dropdown
+          trigger={['click']}
+          menu={{ items: [
+            { key: 'undo', label: '復原', icon: <Undo2 size={14} />, disabled: !canUndo },
+            { key: 'redo', label: '重做', icon: <Redo2 size={14} />, disabled: !canRedo },
+            { type: 'divider' },
+            ...exportItems,
+            { type: 'divider' },
+            { key: 'layout', label: layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面', icon: layout === 'sidebar' ? <Columns2 size={14} /> : <PanelLeft size={14} /> },
+            { key: 'dup', label: '複製整頁', icon: <Copy size={14} /> },
+            ...(requirement ? [{ key: 'regen', label: '依需求重新產生版面', icon: <RotateCw size={14} /> }] : []),
+            { type: 'divider' },
+            { key: 'del', label: '刪除畫面', icon: <Trash2 size={14} />, danger: true },
+          ], onClick: ({ key }) => {
+            if (key === 'undo') undo()
+            else if (key === 'redo') redo()
+            else if (key === 'layout') toggleLayout()
+            else if (key === 'dup') dispatch({ type: 'DUPLICATE_WIREFRAME', id: wireframe.id })
+            else if (key === 'regen') regenerate()
+            else if (key === 'del') removePage()
+            else doExport(key)
+          } }}
+        >
+          <button className="ghost sm wf-more" title="更多" onClick={(e) => e.stopPropagation()}><MoreHorizontal size={16} /></button>
+        </Dropdown>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={() => { setActiveNew(null); setDropOverId(null) }}>
