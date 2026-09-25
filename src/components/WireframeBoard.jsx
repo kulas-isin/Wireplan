@@ -526,7 +526,7 @@ function ComponentEditor({ wireframe, cmp, layout, onClose, labelRef }) {
               <button key={n} className={(cmp.cols ?? 2) === n ? 'active' : ''} onClick={() => update({ cols: n })}>{n}</button>
             ))}
           </div>
-          <p className="field-hint">欄位名稱可加後綴：<b>*</b> = 必填、<b>:select / :date / :number / :textarea</b> = 指定型別。例：<code>生日:date</code>、<code>Email*</code></p>
+          <p className="field-hint">欄位名稱可加後綴：<b>*</b> = 必填、<b>:select / :date / :daterange / :number / :textarea / :checkbox / :switch / :radio / :upload</b> = 指定型別。例：<code>生日:date</code>、<code>預購:checkbox</code>、<code>Email*</code></p>
         </label>
       )}
 
