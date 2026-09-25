@@ -289,7 +289,8 @@ export function Visual({ cmp }) {
       return <Space wrap>{fields.map((f, i) => <Select key={i} placeholder={f} style={{ minWidth: 130 }} options={[]} />)}</Space>
     }
     case 'toolbar': {
-      const filters = cmp.filters && cmp.filters.length ? cmp.filters : ['狀態', '分類']
+      // 明確給空陣列＝這頁沒有常用篩選（只有關鍵字），不要補預設的狀態／分類
+      const filters = Array.isArray(cmp.filters) ? cmp.filters : ['狀態', '分類']
       const acts = cmp.actions && cmp.actions.length ? cmp.actions : []
       const showSearch = cmp.showSearch ?? true
       return (
