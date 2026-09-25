@@ -66,6 +66,8 @@ export function colRole(title = '', siblings = []) {
   if (/貨況|貨態|配送狀態|配貨狀態|出貨狀態|到貨狀態/.test(t)) return 'shipstatus'
   if (/儲位/.test(t)) return 'slot'
   // 商品列表的數量欄：是數字、可點連到庫存列表；「倉庫庫存」是數量不是倉別，要排在倉庫規則前
+  if (/^斷貨/.test(t)) return 'outstock'   // 斷貨規格數／總規格數
+  if (/^預購|^是否|可退回|不可採購/.test(t)) return 'yesno'
   if (/倉庫庫存/.test(t)) return 'stocklink'
   if (/待出貨量|缺貨量|待收量|可銷量/.test(t)) return 'qtylink'
   if (/倉庫|倉別/.test(t)) return 'warehouse'
@@ -126,6 +128,13 @@ export function cellContent(role, i, domain = 'generic') {
         hidden ? React.createElement(Tag, { color: 'gold', style: { marginInlineEnd: 0 } }, '隱藏') : null,
       )
     }
+    case 'outstock': {
+      // 現行系統的格式：斷貨規格數／總規格數，方框；有斷貨的用紅字
+      const tot = [4, 8, 3, 6, 2, 9, 2, 6, 10, 3][i % 10], out = [0, 0, 1, 0, 0, 2, 0, 3, 1, 0][i % 10]
+      return React.createElement('span', { style: { display: 'inline-block', border: '1px solid #d0d5dd', borderRadius: 4, padding: '0 6px', fontVariantNumeric: 'tabular-nums', color: out ? '#cf1322' : '#667085', fontWeight: out ? 600 : 400 } }, `${out} / ${tot}`)
+    }
+    case 'yesno':
+      return React.createElement('span', { style: { color: i % 3 === 0 ? '#1f2733' : '#98a2b3', fontWeight: i % 3 === 0 ? 600 : 400 } }, i % 3 === 0 ? 'YES' : 'NO')
     case 'qtylink':
     case 'stocklink': {
       // 數字＋底線＝可點連到庫存列表；倉庫庫存預設顯示總倉並標示倉別
@@ -154,7 +163,10 @@ export function cellContent(role, i, domain = 'generic') {
     case 'link':
       return React.createElement('a', { style: { color: '#2563eb' } }, '檢視詳情')
     case 'id':
-      return `${P.ID}-${String(10231 + i * 7).padStart(5, '0')}`
+      // 服飾電商用客戶現行編號格式：年月＋品類代號＋流水（26093t398），其他領域維持前綴＋流水
+      return domain === 'ecommerce'
+        ? `2609${3 + (i % 2)}${pick(['t', 'b', 'c', 'd', 's'], i)}${String(302 + i * 7).slice(-3)}`
+        : `${P.ID}-${String(10231 + i * 7).padStart(5, '0')}`
     case 'order':
       return `SO-26${n2(1 + (i % 9))}-${String(1043 + i * 3).padStart(5, '0')}`
     case 'tracking':
