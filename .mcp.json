@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shopline-open-api": {
+      "type": "http",
+      "url": "https://open-api.docs.shoplineapp.com/mcp"
+    }
+  }
+}
