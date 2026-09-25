@@ -589,6 +589,10 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .hifi.glass .wb-ad .ant-card .ant-table-wrapper { background: transparent; border: none; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .hifi.glass .wb-ad .ant-table-thead > tr > th { background: rgba(255,255,255,0.45); }
 .hifi.glass .wb-ad .ant-table-tbody > tr > td { background: transparent; }
+/* 固定欄要不透明，捲動時底下的欄位才不會透出來疊字 */
+.hifi.glass .wb-ad .ant-table-cell-fix-left, .hifi.glass .wb-ad .ant-table-cell-fix-right,
+.hifi.glass .wb-ad .ant-table-tbody > tr > td.ant-table-cell-fix-left, .hifi.glass .wb-ad .ant-table-tbody > tr > td.ant-table-cell-fix-right { background: #FBFAF8; }
+.hifi.glass .wb-ad .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left, .hifi.glass .wb-ad .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right { background: #F3F4EE; }
 .hifi.glass .wb-ad .ant-table-tbody > tr:hover > td { background: rgba(255,255,255,0.6); }
 .hifi.glass .wb-ad .ant-btn-primary { background: linear-gradient(180deg, color-mix(in srgb, var(--wf-ink) 88%, #fff), var(--wf-ink)); box-shadow: 0 4px 12px color-mix(in srgb, var(--wf-ink) 28%, transparent); border: none; }
 .hifi.glass .wb-ad .ant-btn-default { background: rgba(255,255,255,0.6); border-color: rgba(43,42,39,0.14); }
