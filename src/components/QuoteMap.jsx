@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { statusOfReq } from '../lib/units.js'
 import QuoteText from './QuoteText.jsx'
-import { X, ScrollText, Link2, ChevronDown, ChevronUp, UploadCloud } from 'lucide-react'
+import { X, ScrollText, Link2, ChevronDown, ChevronUp, UploadCloud, Gavel, Download } from 'lucide-react'
+import { DecisionCard } from './QuotePanel.jsx'
+import { decisionsMarkdown } from '../lib/decisions.js'
+import { downloadText } from '../lib/download.js'
 
 // 報價對照：報價單原始條目 ↔ 需求卡 的雙向追溯。
 // project.quote = { source: '來源說明', items: [{ id, section, text, reqIds: [] }] }
@@ -18,6 +21,8 @@ export default function QuoteMap({ onClose }) {
   const [linking, setLinking] = useState(null) // 展開對應選單的條目 id
   const [expanded, setExpanded] = useState({}) // 條目原文展開（預設收合）
   const [qOnly, setQOnly] = useState(false) // 只看疑問條目
+  const [showDec, setShowDec] = useState(false) // 決議清單
+  const decisions = current.decisions || []
   useEffect(() => { // 桌機鍵盤：Esc 關閉
     const onKey = (e) => { if (e.key === 'Escape' && !e.target.closest?.('input, textarea')) onClose() }
     window.addEventListener('keydown', onKey)
@@ -39,6 +44,7 @@ export default function QuoteMap({ onClose }) {
         const prev = Object.fromEntries(items.map((it) => [it.id, it]))
         const merged = { ...q, items: q.items.map((it) => ({ ...it, marks: prev[it.id]?.marks || it.marks || [], notes: prev[it.id]?.notes || it.notes || [] })) }
         dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'quote', value: merged })
+        if (Array.isArray(parsed.decisions) && parsed.decisions.length) dispatch({ type: 'IMPORT_DECISIONS', decisions: parsed.decisions })
       } catch { alert('不是有效的 JSON 檔') }
     }
     rd.readAsText(file)
@@ -97,6 +103,7 @@ export default function QuoteMap({ onClose }) {
           </div>
         ) : (<>
           <div className="qm-sum">
+            <button className={'qm-chip info' + (showDec ? ' qm-filter-on' : '')} onClick={() => setShowDec(!showDec)}><Gavel size={12} /> 決議 {decisions.length}{showDec ? ' ✕' : ''}</button>
             <span className="qm-chip ok">已對應 {items.length - unmappedCount}</span>
             {unmappedCount > 0 && <span className="qm-chip warn">未對應 {unmappedCount}</span>}
             {extraReqs.length > 0 && <span className="qm-chip info">報價外需求 {extraReqs.length}</span>}
@@ -106,6 +113,22 @@ export default function QuoteMap({ onClose }) {
                 return k > 0 && <button className={'qm-chip warn' + (qOnly ? ' qm-filter-on' : '')} onClick={() => setQOnly(!qOnly)}>疑問 {k}{qOnly ? ' ✕' : ''}</button> })()}
             </>)}
           </div>
+          {showDec && (
+            <div className="uf-card qm-sec dc-all">
+              <div className="qm-sec-name" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                決議清單 {decisions.length}
+                <div className="spacer" />
+                <button className="sm" onClick={() => downloadText(`${current.name || '專案'}-決議清單-${new Date().toISOString().slice(0, 10)}.md`, decisionsMarkdown(current), 'text/markdown')}><Download size={13} /> 匯出 md</button>
+              </div>
+              {decisions.length === 0 && <div className="wf-quote-empty">還沒有決議。在 Wireframe 的報價原文面板，每條原文底下按「記決議」。</div>}
+              {[...decisions].sort((a, b) => (Number(String(a.code).slice(1)) || 0) - (Number(String(b.code).slice(1)) || 0)).map((d) => (
+                <div key={d.id} className="dc-allrow">
+                  <DecisionCard d={d} dispatch={dispatch} />
+                  <button className="dc-lnk danger" onClick={() => confirm(`刪除 ${d.code}「${d.title}」？連歷史版本一起刪。`) && dispatch({ type: 'DELETE_DECISION', id: d.id })}>刪除</button>
+                </div>
+              ))}
+            </div>
+          )}
           {sections.map((sec) => (
             <div key={sec.name} className="uf-card qm-sec">
               <div className="qm-sec-name">{sec.name}</div>
