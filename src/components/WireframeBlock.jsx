@@ -396,7 +396,7 @@ export function Visual({ cmp }) {
         } else {
           if (sortable) { col.sorter = () => 0; col.showSorterTooltip = false }
           // 攙入欄索引：同一列的「待出貨量／可銷量／庫存」才不會三欄都是同一個數字；狀態欄只看列索引，操作欄才對得上
-          if (hifi) col.render = (_v, _r, ri) => cellContent(role, role === 'pubstatus' ? ri : ri + i * 3, sampleDomain)
+          if (hifi) col.render = (_v, _r, ri) => cellContent(role, (role === 'pubstatus' || role === 'extlink') ? ri : ri + i * 3, sampleDomain)
           if (fixedCols && i === 0) { col.fixed = 'left'; col.width = 160 }
         }
         return col

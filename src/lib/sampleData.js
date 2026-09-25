@@ -1,7 +1,7 @@
 // 擬真模式用的示意資料產生器：依欄位標題推斷型別，輸出穩定（依列索引）且像真的內容。
 import React from 'react'
 import { Tag, Button, Space, Avatar, Progress, Rate, Switch, Tooltip } from 'antd'
-import { Clock, CalendarDays } from 'lucide-react'
+import { Clock, CalendarDays, ExternalLink } from 'lucide-react'
 
 const PEOPLE = ['王小明', '陳怡君', '林志豪', '張雅婷', '李俊宏', '黃淑芬', '吳建德', '劉美玲', '蔡承翰', '鄭家豪', '許文彥', '周品妧']
 const STATUS = [['上架', 'green'], ['下架', 'default'], ['審核中', 'gold'], ['草稿', 'default'], ['已封存', 'red'], ['啟用', 'green'], ['停用', 'red']]
@@ -72,6 +72,7 @@ export function colRole(title = '', siblings = []) {
   // 商品列表的數量欄：是數字、可點連到庫存列表；「倉庫庫存」是數量不是倉別，要排在倉庫規則前
   if (/^斷貨/.test(t)) return 'outstock'   // 斷貨規格數／總規格數
   if (/設定圖示|^設定$/.test(t)) return 'schedule'   // 上架時間＋開始銷售時間兩顆圖示
+  if (/^連結$|通路連結|前台連結|官網連結/.test(t)) return 'extlink'   // 到官網商品頁的圖示鈕，下架列停用
   if (/賣場分類|前台分類/.test(t)) return 'mall'      // 多個以「/」串接，截斷＋滑入看完整
   if (/^預購|^是否|可退回|不可採購/.test(t)) return 'yesno'
   if (/倉庫庫存/.test(t)) return 'stocklink'
@@ -133,6 +134,11 @@ export function cellContent(role, i, domain = 'generic') {
         React.createElement(Switch, { size: 'small', defaultChecked: on }),
         hidden ? React.createElement(Tag, { color: 'gold', style: { marginInlineEnd: 0 } }, '隱藏') : null,
       )
+    }
+    case 'extlink': {
+      const on = i % 5 !== 3   // 跟 pubstatus 同一條規則（同列索引）
+      return React.createElement(Tooltip, { title: on ? '到官網商品頁' : '已下架，前台無連結' },
+        React.createElement('span', { style: { display: 'inline-flex', width: 26, height: 26, borderRadius: 999, alignItems: 'center', justifyContent: 'center', background: on ? '#E1EDF9' : '#f0f0f0', color: on ? '#2E5F96' : '#bfbfbf', cursor: on ? 'pointer' : 'not-allowed' } }, React.createElement(ExternalLink, { size: 14 })))
     }
     case 'schedule': {
       const d = 22 + (i % 5)
