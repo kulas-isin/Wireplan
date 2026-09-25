@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { loadGhConfig, saveGhConfig, ghAutoOn, ghFetch, ghWrite } from '../lib/github.js'
-import { setSyncStatus, localDirty, hasAnyData, payloadOf, summarize, fmt } from '../lib/ghSync.js'
+import { setSyncStatus, useSyncStatus, localDirty, hasAnyData, payloadOf, summarize, fmt } from '../lib/ghSync.js'
 import { downloadText } from '../lib/download.js'
 import { CloudOff, Download, Smartphone, Cloud } from 'lucide-react'
 
@@ -22,6 +22,7 @@ export default function GithubAutoSync() {
   const timer = useRef(null)
   const pendingPush = useRef(false)
   const [conflict, setConflict] = useState(null) // { remote:{data,sha,savedAt}, reason }
+  const sync = useSyncStatus()
   const conflictRef = useRef(null); conflictRef.current = conflict
 
   const cfg = () => loadGhConfig()
@@ -38,15 +39,27 @@ export default function GithubAutoSync() {
     if ((stateRef.current.projects || []).some((p) => !remoteIds.has(p.id))) schedulePush()
   }
 
+  // 兩邊內容其實一樣（同一台的 PWA 與 Safari、或上次推成功但 sha 沒存到）→ 不算衝突，直接接受雲端的 sha
+  const sameContent = (remote) => {
+    const strip = (list) => (list || []).map(({ updatedAt, ...p }) => p)   // 只差 updatedAt 也算一樣
+    try { return JSON.stringify(strip(remote?.data?.projects)) === JSON.stringify(strip(stateRef.current.projects)) } catch { return false }
+  }
+
+  const pendingForce = useRef(false)
   const push = async (force = false) => {
-    if (!enabled() || busy.current) { if (busy.current) pendingPush.current = true; return }
+    if (!enabled() || busy.current) { if (busy.current) { pendingPush.current = true; if (force) pendingForce.current = true } return }
     if (conflictRef.current && !force) return
     busy.current = true
-    setSyncStatus({ status: 'syncing' })
+    setSyncStatus({ status: 'syncing', msg: '' })
     try {
       const c = cfg()
       const head = await ghFetch(c)
       if (!force && head && c.baseSha && head.sha !== c.baseSha) {
+        if (sameContent(head)) {
+          saveGhConfig({ ...c, baseSha: head.sha, lastSyncAt: Date.now(), lastError: '' })
+          setSyncStatus({ status: 'idle', at: Date.now(), msg: '' })
+          return
+        }
         // 我以為的現況不是現況：別台推過。本機也改過（不然不會走到 push）→ 問人
         setConflict({ remote: head, reason: 'push' })
         setSyncStatus({ status: 'conflict', msg: '' })
@@ -62,7 +75,9 @@ export default function GithubAutoSync() {
       setSyncStatus({ status: 'error', msg: e.message })
     } finally {
       busy.current = false
-      if (pendingPush.current) { pendingPush.current = false; schedulePush() }
+      // 衝突視窗按「用這台的」時若剛好在忙，不能丟掉：忙完立刻補推（保留 force）
+      if (pendingForce.current) { pendingForce.current = false; pendingPush.current = false; push(true) }
+      else if (pendingPush.current) { pendingPush.current = false; schedulePush() }
     }
   }
 
@@ -99,6 +114,11 @@ export default function GithubAutoSync() {
       // 遠端變了
       if (!c.baseSha && !hasAnyData(stateRef.current)) { applyRemote(remote); return }   // 新裝置第一次：直接拿雲端的
       if (!dirty) { applyRemote(remote); return }
+      if (sameContent(remote)) {   // 內容一樣只是 sha 沒對上：接受，不問人
+        saveGhConfig({ ...c, baseSha: remote.sha, lastSyncAt: Date.now(), lastError: '' })
+        setSyncStatus({ status: 'idle', at: Date.now(), msg: '' })
+        return
+      }
       setConflict({ remote, reason: 'open' })
       setSyncStatus({ status: 'conflict', msg: '' })
     } catch (e) {
@@ -146,6 +166,7 @@ export default function GithubAutoSync() {
 
   const useLocal = async () => { await push(true) }
   const useRemote = () => { applyRemote(conflict.remote); setConflict(null) }
+  const working = sync.status === 'syncing'
   const exportLocal = () => downloadText(`wireplan-本機備份-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(payloadOf(state), null, 2), 'application/json')
 
   return createPortal(
@@ -169,10 +190,11 @@ export default function GithubAutoSync() {
           </tbody>
         </table>
         <div className="gh-conflict-btns">
-          <button className="tg-big primary" onClick={useLocal}><Smartphone size={15} /> 用這台的，覆蓋雲端</button>
-          <button className="tg-big" onClick={useRemote}><Cloud size={15} /> 用雲端的，丟掉這台的改動</button>
+          <button className="tg-big primary" disabled={working} onClick={useLocal}><Smartphone size={15} /> {working ? '上傳中…' : '用這台的，覆蓋雲端'}</button>
+          <button className="tg-big" disabled={working} onClick={useRemote}><Cloud size={15} /> 用雲端的，丟掉這台的改動</button>
           <button className="ghost sm" onClick={exportLocal}><Download size={14} /> 先把這台匯出備份</button>
         </div>
+        {sync.status === 'error' && <div className="gh-conflict-err">上傳失敗：{sync.msg || '未知錯誤'}。可以再按一次，或先匯出備份。</div>}
         <div className="gh-help muted">「覆蓋雲端」會把另一台的改動蓋掉，那台下次開啟會拿到這台的版本。不確定就先匯出備份再選。</div>
       </div>
     </div>,
