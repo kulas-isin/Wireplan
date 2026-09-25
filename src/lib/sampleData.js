@@ -1,6 +1,7 @@
 // 擬真模式用的示意資料產生器：依欄位標題推斷型別，輸出穩定（依列索引）且像真的內容。
 import React from 'react'
-import { Tag, Button, Space, Avatar, Progress, Rate, Switch } from 'antd'
+import { Tag, Button, Space, Avatar, Progress, Rate, Switch, Tooltip } from 'antd'
+import { Clock, CalendarDays } from 'lucide-react'
 
 const PEOPLE = ['王小明', '陳怡君', '林志豪', '張雅婷', '李俊宏', '黃淑芬', '吳建德', '劉美玲', '蔡承翰', '鄭家豪', '許文彥', '周品妧']
 const STATUS = [['上架', 'green'], ['下架', 'default'], ['審核中', 'gold'], ['草稿', 'default'], ['已封存', 'red'], ['啟用', 'green'], ['停用', 'red']]
@@ -67,6 +68,7 @@ export function colRole(title = '', siblings = []) {
   if (/儲位/.test(t)) return 'slot'
   // 商品列表的數量欄：是數字、可點連到庫存列表；「倉庫庫存」是數量不是倉別，要排在倉庫規則前
   if (/^斷貨/.test(t)) return 'outstock'   // 斷貨規格數／總規格數
+  if (/設定圖示|^設定$/.test(t)) return 'schedule'   // 上架時間＋開始銷售時間兩顆圖示
   if (/^預購|^是否|可退回|不可採購/.test(t)) return 'yesno'
   if (/倉庫庫存/.test(t)) return 'stocklink'
   if (/待出貨量|缺貨量|待收量|可銷量/.test(t)) return 'qtylink'
@@ -127,6 +129,11 @@ export function cellContent(role, i, domain = 'generic') {
         React.createElement(Switch, { size: 'small', defaultChecked: on }),
         hidden ? React.createElement(Tag, { color: 'gold', style: { marginInlineEnd: 0 } }, '隱藏') : null,
       )
+    }
+    case 'schedule': {
+      const d = 22 + (i % 5)
+      const ic = (Ic, tip) => React.createElement(Tooltip, { title: tip }, React.createElement('span', { style: { display: 'inline-flex', color: '#667085', cursor: 'help' } }, React.createElement(Ic, { size: 15 })))
+      return React.createElement(Space, { size: 6 }, ic(Clock, `上架時間：2026-09-${d} 20:00`), ic(CalendarDays, `開始銷售：2026-09-${d + 1} 20:00`))
     }
     case 'outstock': {
       // 現行系統的格式：斷貨規格數／總規格數，方框；有斷貨的用紅字
