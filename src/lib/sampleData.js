@@ -65,6 +65,9 @@ export function colRole(title = '', siblings = []) {
   if (/訂單編號|訂單號|採購單號|進貨單號|退貨單號|單號/.test(t)) return 'order'
   if (/貨況|貨態|配送狀態|配貨狀態|出貨狀態|到貨狀態/.test(t)) return 'shipstatus'
   if (/儲位/.test(t)) return 'slot'
+  // 商品列表的數量欄：是數字、可點連到庫存列表；「倉庫庫存」是數量不是倉別，要排在倉庫規則前
+  if (/倉庫庫存/.test(t)) return 'stocklink'
+  if (/待出貨量|缺貨量|待收量|可銷量/.test(t)) return 'qtylink'
   if (/倉庫|倉別/.test(t)) return 'warehouse'
   if (/物流|宅配|貨運/.test(t)) return 'carrier'
   if (/通路|來源|商店/.test(t)) return 'channel'
@@ -121,6 +124,15 @@ export function cellContent(role, i, domain = 'generic') {
       return React.createElement(Space, { size: 6 },
         React.createElement(Switch, { size: 'small', defaultChecked: on }),
         hidden ? React.createElement(Tag, { color: 'gold', style: { marginInlineEnd: 0 } }, '隱藏') : null,
+      )
+    }
+    case 'qtylink':
+    case 'stocklink': {
+      // 數字＋底線＝可點連到庫存列表；倉庫庫存預設顯示總倉並標示倉別
+      const n = role === 'stocklink' ? [86, 24, 0, 52, 118, 40, 203, 11, 77, 64][i % 10] : [0, 3, 12, 0, 48, 7, 118, 0, 24, 1][i % 10]
+      return React.createElement('span', null,
+        React.createElement('a', { style: { color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 3, textDecorationColor: 'rgba(0,0,0,0.25)' } }, n.toLocaleString()),
+        role === 'stocklink' ? React.createElement('span', { style: { color: '#98a2b3', fontSize: 11, marginLeft: 4 } }, '總倉') : null,
       )
     }
     case 'rowdel':
