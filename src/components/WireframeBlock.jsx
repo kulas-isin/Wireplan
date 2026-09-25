@@ -249,10 +249,23 @@ export function Visual({ cmp }) {
             let kind = 'input'
             const m = name.match(/:(\w+)\s*$/)
             if (m) { kind = m[1]; name = name.replace(/:\w+\s*$/, '') }
+            // checkbox 沒有另外的標籤列：勾選框本身帶名稱，跟真後台一樣
+            if (kind === 'checkbox') {
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-end', minHeight: 44, paddingBottom: 6 }}>
+                  <Checkbox defaultChecked={i % 2 === 1}>{name}{req && <span style={{ color: '#cf1322' }}> *</span>}</Checkbox>
+                </div>
+              )
+            }
             const inp = kind === 'select' ? <Select style={{ width: '100%' }} variant="underlined" placeholder={name} options={[]} />
               : kind === 'date' ? <DatePicker style={{ width: '100%' }} variant="underlined" placeholder={name} />
+              : kind === 'daterange' ? <RangePicker style={{ width: '100%' }} variant="underlined" />
               : kind === 'textarea' ? <Input.TextArea rows={2} variant="underlined" placeholder={name} />
               : kind === 'number' ? <InputNumber style={{ width: '100%' }} variant="underlined" placeholder={name} />
+              : kind === 'switch' ? <div style={{ paddingTop: 4 }}><Switch size="small" defaultChecked={i % 2 === 0} /></div>
+              : kind === 'radio' ? <Radio.Group size="small" defaultValue="y" options={[{ label: '是', value: 'y' }, { label: '否', value: 'n' }]} />
+              : kind === 'upload' ? <div style={{ border: '1px dashed #c9d1cc', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: '#98a2b3', textAlign: 'center' }}>拖曳或點擊上傳</div>
+              : kind === 'password' ? <Input.Password variant="underlined" placeholder={name} />
               : <Input variant="underlined" placeholder={name} />
             return (
               <div key={i}>

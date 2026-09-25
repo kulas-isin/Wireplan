@@ -10,7 +10,7 @@ const list = (a) => (a || []).map(clean).filter(Boolean).join('、')
 // 表單欄位字串（「售價*:select」）→ 人看得懂的描述
 const FIELD_TYPE = {
   select: '下拉', date: '日期', upload: '上傳', switch: '開關',
-  number: '數字', textarea: '多行', radio: '單選', checkbox: '多選',
+  number: '數字', textarea: '多行', radio: '單選', checkbox: '勾選框', daterange: '日期區間', password: '密碼',
 }
 function fieldDesc(f) {
   const [rawName, type] = String(f).split(':')
