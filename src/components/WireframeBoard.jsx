@@ -33,6 +33,7 @@ import { normalizeField } from '../lib/fieldSpec.js'
 import { applyRequirementPatches } from '../lib/reqPatches.js'
 import { requirementCoverage } from '../lib/sop.js'
 import { generateWireframe } from '../lib/wireframeTemplates.js'
+import QuotePanel, { QuoteFab, quoteItemsFor } from './QuotePanel.jsx'
 
 // 頁名比對（去編號/括號/空白）
 const flowCore = (l) => String(l || '')
@@ -1176,6 +1177,9 @@ export default function WireframeBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [demo, setDemo] = useState(false)
+  // 報價原文對照欄：記住上次開關（對照通常是一整輪都要開著）
+  const [quoteOpen, setQuoteOpen] = useState(() => { try { return localStorage.getItem('wp-wf-quote') === 'on' } catch { return false } })
+  const toggleQuote = () => setQuoteOpen((o) => { try { localStorage.setItem('wp-wf-quote', o ? 'off' : 'on') } catch {} return !o })
   const [navOpen, setNavOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth > 820 : true))
   const [importOpen, setImportOpen] = useState(false)
   const [importText, setImportText] = useState('')
@@ -1349,6 +1353,8 @@ export default function WireframeBoard() {
         <main className="wf-stage" onClickCapture={demo ? onDemoClick : undefined}>
           <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} dark={pal.dark} />
         </main>
+        {quoteOpen && !demo && <QuotePanel project={current} wf={selected} onClose={toggleQuote} />}
+        {!demo && <QuoteFab open={quoteOpen} onToggle={toggleQuote} count={quoteItemsFor(current, selected, 'page').length} />}
         {demo && (
           <div className="demo-bar">
             <span className="demo-title"><Play size={14} /> Demo：{selected.name}</span>
