@@ -14,6 +14,9 @@ const POOLS = {
     NAME: ['純棉寬版 T 恤', '高腰直筒牛仔褲', '法式碎花洋裝', '羊毛混紡大衣', '寬鬆針織上衣', '抽繩運動短褲', '真皮樂福鞋', '亞麻長袖襯衫', '百褶中長裙', '機能防風外套', '無鋼圈舒適內衣', '厚底帆布鞋'],
     CAT: ['上身', '下身', '洋裝', '外套', '套裝', '鞋子', '配件', '內衣'],
     GROUP: ['新品上市', '人氣熱銷', '折扣出清', '春夏新款', '經典必備', '限時特惠'],
+    // 賣場分類（Shopline 前台分類，可複數，以「/」串接）與商品分類（ERP 內部）是兩個池，不共用
+    MALL: ['秋冬新品 / 全部商品 All Products / 上身 Tops', '全部商品 All Products / 下身 Bottoms', '港澳專區 HK & Macau / 全部商品 All Products / 下身 Bottoms / 新品 New Arrivals',
+      '新品 New Arrivals / 洋裝 Dresses', '經典款 / 全部商品 All Products / 外套 Outerwear', '折扣出清 / 鞋子 Shoes', '顯瘦單品 / 全部商品 All Products / 下身 Bottoms', '全部商品 All Products / 配件 Accessories'],
     ID: 'SKU', PRICE: [390, 690, 890, 1280, 1580, 2180, 2980, 3680],
   },
   logistics: {
@@ -69,6 +72,7 @@ export function colRole(title = '', siblings = []) {
   // 商品列表的數量欄：是數字、可點連到庫存列表；「倉庫庫存」是數量不是倉別，要排在倉庫規則前
   if (/^斷貨/.test(t)) return 'outstock'   // 斷貨規格數／總規格數
   if (/設定圖示|^設定$/.test(t)) return 'schedule'   // 上架時間＋開始銷售時間兩顆圖示
+  if (/賣場分類|前台分類/.test(t)) return 'mall'      // 多個以「/」串接，截斷＋滑入看完整
   if (/^預購|^是否|可退回|不可採購/.test(t)) return 'yesno'
   if (/倉庫庫存/.test(t)) return 'stocklink'
   if (/待出貨量|缺貨量|待收量|可銷量/.test(t)) return 'qtylink'
@@ -222,6 +226,10 @@ export function cellContent(role, i, domain = 'generic') {
       return `09${n2((i * 7) % 100)}-${String(100 + (i * 37) % 900)}-${String(100 + (i * 53) % 900)}`
     case 'category':
       return pick(P.CAT, i)
+    case 'mall': {
+      const v = pick(P.MALL || P.GROUP, i)
+      return React.createElement(Tooltip, { title: v }, React.createElement('span', { style: { display: 'inline-block', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', verticalAlign: 'middle', cursor: 'help' } }, v))
+    }
     case 'person':
       return React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
         React.createElement(Avatar, { size: 20, style: { background: '#dfe7f5', color: '#3a5a9b', fontSize: 10, flexShrink: 0 } }, pick(PEOPLE, i).slice(0, 1)),
