@@ -1338,6 +1338,7 @@ export default function WireframeBoard() {
                   onClick={() => { setSelectedId(wf.id); if (isMobile()) setNavOpen(false) }}
                 >
                   <span className="dot" style={{ background: cat ? cat.color : '#cbd2cd' }} />
+                  {wf.code && <span className="wf-code">{wf.code}</span>}
                   <span className="nm">{wf.name || '未命名'}</span>
                 </div>
               )
