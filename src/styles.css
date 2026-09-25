@@ -593,6 +593,7 @@ label.field.sm > span { margin-bottom: 2px; font-size: 11px; }
 .hifi.glass .wb-ad [class*="ant-table-cell-fix-"],
 .hifi.glass .wb-ad .ant-table-tbody > tr > td[class*="ant-table-cell-fix-"] { background: #FBFAF8; }
 .hifi.glass .wb-ad .ant-table-tbody > tr:hover > td[class*="ant-table-cell-fix-"] { background: #F3F4EE; }
+.hifi.glass .wb-ad .ant-table-thead > tr > th[class*="ant-table-cell-fix-"] { background: #F5F4F0; }
 .hifi.glass .wb-ad .ant-table-tbody > tr:hover > td { background: rgba(255,255,255,0.6); }
 .hifi.glass .wb-ad .ant-btn-primary { background: linear-gradient(180deg, color-mix(in srgb, var(--wf-ink) 88%, #fff), var(--wf-ink)); box-shadow: 0 4px 12px color-mix(in srgb, var(--wf-ink) 28%, transparent); border: none; }
 .hifi.glass .wb-ad .ant-btn-default { background: rgba(255,255,255,0.6); border-color: rgba(43,42,39,0.14); }
