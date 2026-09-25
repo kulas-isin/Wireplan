@@ -5,7 +5,7 @@ import { useStore } from '../store/StoreContext.jsx'
 import { colRole, cellContent, detectDomain } from '../lib/sampleData.js'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal, Play, MapPin, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Copy, X, Image as ImageIcon, Check, LayoutDashboard, Music2, Users, ListMusic, FileText, Settings, BarChart3, Bell, CreditCard, ShieldCheck, Pencil, Trash2, Eye, ArrowDownToLine, ArrowUpToLine, MoreHorizontal, Play, MapPin, ExternalLink, ChevronLeft, ChevronRight, RefreshCw, ToggleRight, Printer, Download } from 'lucide-react'
 import {
   Button, Input, Select, Table, Tabs, Steps, Breadcrumb, Menu, Card, Statistic,
   List, Pagination, Divider, Typography, Space, Switch, Avatar, Badge,
@@ -73,19 +73,24 @@ const NAV_ICONS = [LayoutDashboard, BarChart3, Music2, Users, ListMusic, FileTex
 
 // 操作欄按鈕：自動把破壞性動作標紅、可選文字連結 / 按鈕 / 圖示樣式
 const DANGER_RE = /刪除|移除|刪掉|停用|封存|下架|清除|撤銷|delete|remove/i
-const ACTION_ICON = { 編輯: Pencil, 修改: Pencil, 刪除: Trash2, 移除: Trash2, 查看: Eye, 檢視: Eye, 詳情: Eye, 下架: ArrowDownToLine, 上架: ArrowUpToLine, 審核: Check, 通過: Check, 複製: Copy, 設定: Settings }
-export function renderActions(labels, style = 'link', hover = false) {
+const ACTION_ICON = { 編輯: Pencil, 修改: Pencil, 刪除: Trash2, 移除: Trash2, 查看: Eye, 檢視: Eye, 詳情: Eye, 下架: ArrowDownToLine, 上架: ArrowUpToLine, 審核: Check, 通過: Check, 複製: Copy, 設定: Settings,
+  通路連結: ExternalLink, 前台連結: ExternalLink, 單品同步: RefreshCw, 同步: RefreshCw, 同步可銷: ToggleRight, 可銷切換: ToggleRight, 列印: Printer, 匯出: Download }
+// pubOn（商品類列表才有）：該列是上架中 → 刪除停用；已下架 → 通路連結停用。跟真後台一樣依狀態啟停
+export function renderActions(labels, style = 'link', hover = false, pubOn = null) {
   const items = (labels && labels.length) ? labels : ['編輯', '刪除']
+  const disabledOf = (l) => pubOn === null ? false : (/刪除/.test(l) ? pubOn : /通路連結|前台連結/.test(l) ? !pubOn : false)
+  const tipOf = (l) => disabledOf(l) ? (/刪除/.test(l) ? '請先下架再刪除' : '已下架，前台無連結') : l
   return (
     <Space className={hover ? 'wb-rowact' : undefined} size={style === 'icon' ? 4 : 2}>
       {items.map((l, i) => {
         const danger = DANGER_RE.test(l)
+        const disabled = disabledOf(l)
         if (style === 'icon') {
           const Ic = ACTION_ICON[l] || MoreHorizontal
-          return <Button key={i} type="text" size="small" danger={danger} title={l} icon={<Ic size={14} />} style={{ padding: '0 4px' }} />
+          return <Button key={i} type="text" size="small" danger={danger} disabled={disabled} title={tipOf(l)} icon={<Ic size={14} />} style={{ padding: '0 4px' }} />
         }
-        if (style === 'button') return <Button key={i} size="small" danger={danger} style={{ padding: '0 8px' }}>{l}</Button>
-        return <Button key={i} type="link" size="small" danger={danger} style={{ padding: '0 4px', height: 'auto' }}>{l}</Button>
+        if (style === 'button') return <Button key={i} size="small" danger={danger} disabled={disabled} title={tipOf(l)} style={{ padding: '0 8px' }}>{l}</Button>
+        return <Button key={i} type="link" size="small" danger={danger} disabled={disabled} title={tipOf(l)} style={{ padding: '0 4px', height: 'auto' }}>{l}</Button>
       })}
     </Space>
   )
@@ -378,24 +383,27 @@ export function Visual({ cmp }) {
       const actStyle = cmp.actionStyle || 'link'
       const { sortable, fixedCols, hoverActions } = cmp
       const actW = actStyle === 'icon' ? 96 : 120
+      // 商品類列表（狀態欄是上下架開關）：操作欄依該列狀態啟停，上架／隱藏中不可刪、下架沒有前台連結
+      const hasPub = hifi && titles.some((t) => colRole(t, titles) === 'pubstatus')
+      const pubOnAt = (ri) => (hasPub ? ri % 5 !== 3 : null)
       const cols = titles.map((c, i) => {
         const role = colRole(c, titles)
         const col = { title: c, dataIndex: `c${i}`, key: i }
         if (role === 'actions') {
-          col.render = () => renderActions(cmp.actions, actStyle, hoverActions)
+          col.render = (_v, _r, ri) => renderActions(cmp.actions, actStyle, hoverActions, pubOnAt(ri))
           col.width = actW
           if (fixedCols) col.fixed = 'right'
         } else {
           if (sortable) { col.sorter = () => 0; col.showSorterTooltip = false }
-          // 攙入欄索引：同一列的「待出貨量／可銷量／庫存」才不會三欄都是同一個數字
-          if (hifi) col.render = (_v, _r, ri) => cellContent(role, ri + i * 3, sampleDomain)
+          // 攙入欄索引：同一列的「待出貨量／可銷量／庫存」才不會三欄都是同一個數字；狀態欄只看列索引，操作欄才對得上
+          if (hifi) col.render = (_v, _r, ri) => cellContent(role, role === 'pubstatus' ? ri : ri + i * 3, sampleDomain)
           if (fixedCols && i === 0) { col.fixed = 'left'; col.width = 160 }
         }
         return col
       })
       // 開啟「顯示操作欄」且欄位中沒有操作欄 → 自動補一欄
       if (cmp.showActions && !titles.some((t) => colRole(t) === 'actions')) {
-        cols.push({ title: '操作', dataIndex: '__act', key: '__act', width: actW, fixed: fixedCols ? 'right' : undefined, render: () => renderActions(cmp.actions, actStyle, hoverActions) })
+        cols.push({ title: '操作', dataIndex: '__act', key: '__act', width: actW, fixed: fixedCols ? 'right' : undefined, render: (_v, _r, ri) => renderActions(cmp.actions, actStyle, hoverActions, pubOnAt(ri)) })
       }
       const rowN = Math.max(0, Math.min(12, cmp.rows ?? (hifi ? 6 : 3)))
       const rows = Array.from({ length: rowN }, (_, r) => r).map((r) => {
