@@ -1220,6 +1220,8 @@ export default function WireframeBoard() {
     if (Array.isArray(json.fields) && json.fields.length) {
       dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'fields', value: [...(current.fields || []), ...json.fields.map(normalizeField)] })
     }
+    // JSON 帶 decisions → 併入決議清單（同 code 取代）
+    if (Array.isArray(json.decisions) && json.decisions.length) dispatch({ type: 'IMPORT_DECISIONS', decisions: json.decisions })
     // JSON 帶 requirementPatches（AI 展開細節）→ 共用套用邏輯
     if (Array.isArray(json.requirementPatches) && json.requirementPatches.length) {
       applyRequirementPatches(current.requirements, json.requirementPatches, dispatch)
@@ -1353,7 +1355,7 @@ export default function WireframeBoard() {
         <main className="wf-stage" onClickCapture={demo ? onDemoClick : undefined}>
           <WireframeFrame key={selected.id} wireframe={selected} requirement={reqById.get(selected.requirementId)} dark={pal.dark} />
         </main>
-        {quoteOpen && !demo && <QuotePanel project={current} wf={selected} onClose={toggleQuote} />}
+        {quoteOpen && !demo && <QuotePanel project={current} wf={selected} onClose={toggleQuote} dispatch={dispatch} />}
         {!demo && <QuoteFab open={quoteOpen} onToggle={toggleQuote} count={quoteItemsFor(current, selected, 'page').length} />}
         {demo && (
           <div className="demo-bar">
