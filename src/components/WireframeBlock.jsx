@@ -76,6 +76,16 @@ const DANGER_RE = /刪除|移除|刪掉|停用|封存|下架|清除|撤銷|delet
 const ACTION_ICON = { 編輯: Pencil, 修改: Pencil, 刪除: Trash2, 移除: Trash2, 查看: Eye, 檢視: Eye, 詳情: Eye, 下架: ArrowDownToLine, 上架: ArrowUpToLine, 審核: Check, 通過: Check, 複製: Copy, 設定: Settings,
   通路連結: ExternalLink, 前台連結: ExternalLink, 單品同步: RefreshCw, 同步: RefreshCw, 同步可銷: ToggleRight, 可銷切換: ToggleRight, 列印: Printer, 匯出: Download }
 // pubOn（商品類列表才有）：該列是上架中 → 刪除停用；已下架 → 通路連結停用。跟真後台一樣依狀態啟停
+// 可編輯表格的儲存格（欄名後綴決定元件）
+function editCell(kind, ri) {
+  if (kind === 'switch') return <Switch size="small" defaultChecked={ri % 3 !== 1} />
+  if (kind === 'select') return <Select size="small" style={{ minWidth: 96 }} defaultValue="請選擇" options={[{ value: '請選擇' }]} />
+  if (kind === 'date') return <Input size="small" style={{ minWidth: 140 }} placeholder="請選擇日期與時間" />
+  if (kind === 'textarea') return <Input.TextArea size="small" rows={2} style={{ minWidth: 160 }} placeholder="請輸入" />
+  if (kind === 'number') return <Input size="small" style={{ width: 96 }} placeholder="請輸入" />
+  return <Input size="small" style={{ minWidth: 120 }} placeholder="請輸入" />
+}
+
 export function renderActions(labels, style = 'link', hover = false, pubOn = null) {
   const items = (labels && labels.length) ? labels : ['編輯', '刪除']
   const disabledOf = (l) => pubOn === null ? false : (/刪除/.test(l) ? pubOn : /通路連結|前台連結/.test(l) ? !pubOn : false)
@@ -387,9 +397,14 @@ export function Visual({ cmp }) {
       // 商品類列表（狀態欄是上下架開關）：操作欄依該列狀態啟停，上架／隱藏中不可刪、下架沒有前台連結
       const hasPub = hifi && titles.some((t) => colRole(t, titles) === 'pubstatus')
       const pubOnAt = (ri) => (hasPub ? ri % 5 !== 3 : null)
-      const cols = titles.map((c, i) => {
+      const editTable = titles.some((t) => /:(switch|input|number|select|date|textarea)$/.test(String(t)))
+      const cols = titles.map((raw, i) => {
+        // 欄名後綴＝可編輯表格的輸入元件（批次編輯等）：「預購:switch」「售價:number」「溫層:select」「上架時間:date」
+        const m = String(raw).match(/^(.*):(switch|input|number|select|date|textarea)$/)
+        const c = m ? m[1] : raw
         const role = colRole(c, titles)
         const col = { title: c, dataIndex: `c${i}`, key: i }
+        if (m) { const kind = m[2]; col.render = (_v, _r, ri) => editCell(kind, ri); if (kind === 'switch') col.width = 72; return col }
         if (role === 'actions') {
           col.render = (_v, _r, ri) => renderActions(cmp.actions, actStyle, hoverActions, pubOnAt(ri))
           col.width = actW
@@ -413,14 +428,14 @@ export function Visual({ cmp }) {
         return row
       })
       return (
-        <div className={hoverActions ? 'wb-hoveract' : undefined}>
+        <div className={[hoverActions ? 'wb-hoveract' : '', editTable ? 'wb-edittable' : ''].filter(Boolean).join(' ') || undefined}>
           <Table
             size={cmp.size || 'small'}
             pagination={cmp.pager ? { pageSize: rowN, total: cmp.total ?? 128, showSizeChanger: !!cmp.pageSizer, pageSizeOptions: ['20', '50', '100'], showTotal: cmp.pageSizer ? (t) => `共 ${t} 筆` : undefined } : false}
             rowSelection={cmp.selectable ? {} : undefined}
             columns={cols}
             dataSource={rows}
-            scroll={fixedCols ? { x: 'max-content' } : undefined}
+            scroll={fixedCols || editTable ? { x: 'max-content' } : undefined}
           />
         </div>
       )
@@ -526,8 +541,10 @@ export function Visual({ cmp }) {
     }
     case 'descriptions': {
       const items = arr(cmp, ['姓名:王小明', '狀態:啟用', '建立日:2026-01-01']).map((kv, i) => {
-        const [k, ...v] = String(kv).split(':')
-        return { key: i, label: k, children: v.join(':') || '—' }
+        // 先認全形「：」（中文內容常見，且時間 14:32 不會被切開），沒有才用半形「:」切第一個
+        const str = String(kv); const sep = str.includes('：') ? '：' : ':'
+        const at = str.indexOf(sep)
+        return { key: i, label: at < 0 ? str : str.slice(0, at), children: at < 0 ? '—' : (str.slice(at + 1) || '—') }
       })
       return <Descriptions bordered size="small" column={1} items={items} title={cmp.label || null} />
     }
