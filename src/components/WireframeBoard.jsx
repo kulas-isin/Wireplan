@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson,
+import { Monitor, Smartphone, Tablet, RotateCw, Copy, Trash2, Plus, LayoutTemplate, Columns2, PanelLeft, PanelLeftClose, ChevronUp, ChevronDown, ChevronRight, X, GripVertical, Save, Layers, Menu, FileJson, FolderOpen,
   SquareStack, Heading, PanelTop, Minus, Type, Image, Link, Play, MapPin, ListTree, SquareMenu, ArrowRightLeft, ListOrdered, Ellipsis, MousePointerClick, TextCursorInput, LayoutGrid, Search, Filter, SlidersHorizontal, SquareCheck, CircleDot, ToggleLeft, Calendar, CalendarRange, Hash, Star, Upload, Table, BarChart3, GalleryHorizontalEnd, List, TableProperties, Tags, CircleUser, Activity, CircleGauge, ChevronsUpDown, Inbox, TriangleAlert, AppWindow, PanelRight, CircleCheck, LoaderCircle, Square, LayoutDashboard, Undo2, Redo2, Download, FileCode2, Sparkles, Wand2 , MoreHorizontal } from 'lucide-react'
 
 // 元件 → 圖示（讓元件面板看得出長相，類似 GrapesJS block manager）
@@ -1184,6 +1184,16 @@ export default function WireframeBoard() {
   const [importOpen, setImportOpen] = useState(false)
   const [importText, setImportText] = useState('')
   const [importErr, setImportErr] = useState('')
+  const [importFile, setImportFile] = useState('')
+  const importFileRef = useRef(null)
+  // 選檔或拖進輸入框：讀成文字放進輸入框，按「匯入」照舊處理（手機上也能從「檔案」App 選）
+  const readImportFile = (f) => {
+    if (!f) return
+    const r = new FileReader()
+    r.onload = () => { setImportText(String(r.result || '')); setImportFile(f.name); setImportErr('') }
+    r.onerror = () => setImportErr('讀取檔案失敗')
+    r.readAsText(f, 'utf-8')
+  }
   const isMobile = () => typeof window !== 'undefined' && window.innerWidth <= 820
 
   const doImport = () => {
@@ -1231,17 +1241,25 @@ export default function WireframeBoard() {
       const norm = json.formRules.map((r) => ({ _k: uid('fr'), kind: r.kind || 'custom', a: r.a || '', b: r.b || '', text: r.text || '' }))
       dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'formRules', value: [...(current.formRules || []), ...norm] })
     }
-    setImportOpen(false); setImportText(''); setImportErr('')
+    setImportOpen(false); setImportText(''); setImportFile(''); setImportErr('')
   }
 
   const importModal = (
     <Modal title="匯入畫面 JSON" open={importOpen} onOk={doImport} okText="匯入"
       cancelText="取消" onCancel={() => { setImportOpen(false); setImportErr('') }} width={640}>
       <p style={{ fontSize: 12, color: '#888', margin: '0 0 8px' }}>
-        貼上符合 schema 的 JSON（單一畫面、陣列、或 {'{ wireframes:[...] }'} 皆可），未支援的元件會自動降級成文字佔位。
+        選擇 .json 檔、把檔案拖進下方輸入框，或直接貼上內容（單一畫面、陣列、或 {'{ wireframes:[...] }'} 皆可），未支援的元件會自動降級成文字佔位。
       </p>
-      <button className="sm" style={{ marginBottom: 8 }} onClick={() => { setImportText(JSON.stringify(SAMPLE_WIREFRAME, null, 2)); setImportErr('') }}>填入範例（歌曲管理）</button>
-      <Input.TextArea value={importText} onChange={(e) => { setImportText(e.target.value); setImportErr('') }}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8, flexWrap: 'wrap' }}>
+        <button className="sm primary" onClick={() => importFileRef.current?.click()}><FolderOpen size={14} /> 選擇檔案</button>
+        <button className="sm" onClick={() => { setImportText(JSON.stringify(SAMPLE_WIREFRAME, null, 2)); setImportFile(''); setImportErr('') }}>填入範例（歌曲管理）</button>
+        {importFile && <span style={{ fontSize: 12, color: '#3A5D25' }}>已載入：{importFile}</span>}
+        <input ref={importFileRef} type="file" accept=".json,application/json" style={{ display: 'none' }}
+          onChange={(e) => { readImportFile(e.target.files?.[0]); e.target.value = '' }} />
+      </div>
+      <Input.TextArea value={importText} onChange={(e) => { setImportText(e.target.value); setImportFile(''); setImportErr('') }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { const f = e.dataTransfer?.files?.[0]; if (f) { e.preventDefault(); readImportFile(f) } }}
         rows={14} placeholder='{ "name": "...", "layout": "sidebar", "components": [ ... ] }'
         style={{ fontFamily: 'monospace', fontSize: 12 }} />
       {importErr && <div style={{ color: '#d4380d', fontSize: 12, marginTop: 8 }}>{importErr}</div>}
