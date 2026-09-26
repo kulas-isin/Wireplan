@@ -65,7 +65,7 @@ export function normalizeWireframe(spec) {
   }
 }
 
-export const SHELLS = ['modal', 'drawer', 'fulldrawer']
+export const SHELLS = ['modal', 'drawer', 'fulldrawer', 'page']
 
 export function normalizeWireframes(json) {
   const list = Array.isArray(json) ? json : (Array.isArray(json?.wireframes) ? json.wireframes : [json])
