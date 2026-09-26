@@ -8,6 +8,7 @@ import { COMPONENT_TYPES } from './wireframeTemplates.js'
 //   device: 'desktop'|'tablet'|'mobile'  預設 desktop
 //   theme:  'music'                      深色音樂主題（深底+金色），省略=預設淺色
 //   layout: 'sidebar'|'stack'            sidebar = 左側欄+內容兩欄
+//   shell:  'modal'|'drawer'|'fulldrawer' 頁面外框：整頁畫成置中彈窗／右側抽屜／全寬抽屜（背後遮罩），省略=一般頁面
 //   components: Component[]              元件樹
 // }
 // Component = {
@@ -58,10 +59,13 @@ export function normalizeWireframe(spec) {
     template: w.template || 'imported',
     theme: w.theme === 'music' ? 'music' : undefined,
     layout: w.layout === 'sidebar' ? 'sidebar' : undefined,
+    shell: SHELLS.includes(w.shell) ? w.shell : undefined, // 頁面外框：彈窗／抽屜／全寬抽屜（M 頁用）
     components: Array.isArray(w.components) ? w.components.map(normNode).filter(Boolean) : [],
     spec: w.spec && Array.isArray(w.spec.sections) ? w.spec : undefined, // 頁面規格（區段＋項目）
   }
 }
+
+export const SHELLS = ['modal', 'drawer', 'fulldrawer']
 
 export function normalizeWireframes(json) {
   const list = Array.isArray(json) ? json : (Array.isArray(json?.wireframes) ? json.wireframes : [json])

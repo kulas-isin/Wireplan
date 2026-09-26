@@ -28,6 +28,7 @@ description: 從文字需求產生 Wireplan 可直接匯入的 wireframe JSON。
       "device": "desktop",                // desktop | tablet | mobile（預設 desktop）
       "theme": "music",                   // music = 深色金色音樂主題；省略 = 預設淺色
       "layout": "sidebar",                // sidebar | 省略(=單欄)
+      "shell": "modal",                   // 選填：modal（置中彈窗）| drawer（右側抽屜）| fulldrawer（全寬抽屜）；M 頁用，整頁畫在外框裡、背後遮罩
       "components": [ /* 元件樹 */ ]
     }
   ]
@@ -78,7 +79,8 @@ description: 從文字需求產生 Wireplan 可直接匯入的 wireframe JSON。
 - **`pageHeader`**：`sub`(麵包屑，逗號分隔)、`showActions:true` + `primaryText`/`secondaryText`，或 `actions:[...]`。
 - **`topbar`**：`showSearch` `showNotify` `showAvatar`（皆 boolean）。
 - **`toolbar`**：`showSearch` `searchText` `filters:[...]` `actions:[...]`。
-- **`table`**：`rows`(列數) `size:"small"` `selectable` `pager` `sortable`；操作鈕：欄位含「操作」欄或 `showActions:true`，搭配 `actions:[...]` 與 `actionStyle` = `link`｜`button`｜`icon`。儲存格樣式依欄名自動對應（進度/評分/啟用/縮圖/連結/狀態/創作者…）。
+- **`table`**：欄名可加後綴變成可編輯表格（批次編輯用）：`"預購:switch"`、`"售價:number"`、`"溫層:select"`、`"上架時間:date"`、`"摘要:textarea"`、`"備註:input"`；有後綴時表格自動可橫向捲動。`rows`(列數) `size:"small"` `selectable` `pager` `sortable`；操作鈕：欄位含「操作」欄或 `showActions:true`，搭配 `actions:[...]` 與 `actionStyle` = `link`｜`button`｜`icon`。儲存格樣式依欄名自動對應（進度/評分/啟用/縮圖/連結/狀態/創作者…）。
+- **`descriptions`**：items 寫成 `"標籤：值"`（全形冒號優先，時間 14:32 不會被切開）。
 - **`chart`**：`chartType` = `bar`(預設)｜`line`｜`area`｜`pie`。
 - **`progress`**：`percent`(0~100)。
 - **`alert`**：`alertType` = `info`｜`success`｜`warning`｜`error`。
