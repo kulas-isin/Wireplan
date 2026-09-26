@@ -718,6 +718,17 @@ function Palette({ onPick, blocks = [], onPickBlock, onDeleteBlock }) {
 }
 
 const SHELL_LABEL = { modal: '彈窗', drawer: '抽屜', fulldrawer: '全寬抽屜' }
+// 沒設外框的頁，依頁名「（彈窗）」「（抽屜）」「（全寬抽屜）」自動套（舊版匯入會丟掉 shell 欄位）
+function effectiveShell(w) {
+  if (w.shell === 'page') return null
+  if (SHELL_LABEL[w.shell]) return w.shell
+  if ((w.layout || '') === 'sidebar') return null
+  const n = w.name || ''
+  if (/全寬抽屜/.test(n)) return 'fulldrawer'
+  if (/（抽屜）|\(抽屜\)/.test(n)) return 'drawer'
+  if (/（彈窗）|\(彈窗\)/.test(n)) return 'modal'
+  return null
+}
 const SHELL_ITEMS = [
   { key: 'page', label: '一般頁面' },
   { key: 'modal', label: '彈窗（置中，確認類）' },
@@ -1046,7 +1057,9 @@ function WireframeFrame({ wireframe, requirement, dark }) {
 
   const selectedComp = findById(wireframe.components, selectedCmp)
   // 彈窗／抽屜用堆疊版面畫；切過去時順手把兩欄版面關掉
-  const setShell = (key) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: key === 'page' ? { shell: undefined } : { shell: key, layout: undefined } })
+  // 'page' 也存下來：頁名帶「（彈窗）」卻想畫成一般頁時，才不會又被自動判回彈窗
+  const setShell = (key) => dispatch({ type: 'UPDATE_WIREFRAME', id: wireframe.id, patch: key === 'page' ? { shell: 'page' } : { shell: key, layout: undefined } })
+  const shell = effectiveShell(wireframe)
 
   return (
     <div className="wf-edit-row">
@@ -1075,10 +1088,10 @@ function WireframeFrame({ wireframe, requirement, dark }) {
         >
           <button className="ghost sm tb-x" title="匯出此畫面" onClick={(e) => e.stopPropagation()}><Download size={15} /></button>
         </Dropdown>
-        <Dropdown trigger={['click']} menu={{ items: SHELL_ITEMS, selectable: true, selectedKeys: [wireframe.shell || 'page'], onClick: ({ key }) => setShell(key) }}>
-          <button className={'ghost sm tb-x' + (wireframe.shell ? ' wf-shell-on' : '')} title="頁面外框：一般頁面／彈窗／抽屜" onClick={(e) => e.stopPropagation()}>
-            {wireframe.shell === 'modal' ? <AppWindow size={15} /> : wireframe.shell ? <PanelRight size={15} /> : <Square size={15} />}
-            {wireframe.shell && <span className="wf-shell-lbl">{SHELL_LABEL[wireframe.shell]}</span>}
+        <Dropdown trigger={['click']} menu={{ items: SHELL_ITEMS, selectable: true, selectedKeys: [shell || 'page'], onClick: ({ key }) => setShell(key) }}>
+          <button className={'ghost sm tb-x' + (shell ? ' wf-shell-on' : '')} title="頁面外框：一般頁面／彈窗／抽屜" onClick={(e) => e.stopPropagation()}>
+            {shell === 'modal' ? <AppWindow size={15} /> : shell ? <PanelRight size={15} /> : <Square size={15} />}
+            {shell && <span className="wf-shell-lbl">{SHELL_LABEL[shell]}</span>}
           </button>
         </Dropdown>
         <button className="ghost sm tb-x" title={layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面(側邊欄+內容)'} onClick={(e) => { e.stopPropagation(); toggleLayout() }}>
@@ -1108,7 +1121,7 @@ function WireframeFrame({ wireframe, requirement, dark }) {
             ...exportItems,
             { type: 'divider' },
             { key: 'layout', label: layout === 'sidebar' ? '切換為堆疊版面' : '切換為兩欄版面', icon: layout === 'sidebar' ? <Columns2 size={14} /> : <PanelLeft size={14} /> },
-            { key: 'shellmenu', label: '頁面外框：' + (SHELL_LABEL[wireframe.shell] || '一般頁面'), icon: <AppWindow size={14} />, children: SHELL_ITEMS.map((it) => ({ ...it, key: 'shell:' + it.key })) },
+            { key: 'shellmenu', label: '頁面外框：' + (SHELL_LABEL[shell] || '一般頁面'), icon: <AppWindow size={14} />, children: SHELL_ITEMS.map((it) => ({ ...it, key: 'shell:' + it.key })) },
             { key: 'dup', label: '複製整頁', icon: <Copy size={14} /> },
             ...(requirement ? [{ key: 'regen', label: '依需求重新產生版面', icon: <RotateCw size={14} /> }] : []),
             { type: 'divider' },
@@ -1154,9 +1167,9 @@ function WireframeFrame({ wireframe, requirement, dark }) {
               <div className="wf-content-col">{column(contentItems, 'content', false)}</div>
             </div>
           )
-        ) : wireframe.shell ? (
+        ) : shell ? (
           // M 頁：整頁畫成彈窗／抽屜，背後灰色遮罩＝原頁面還在
-          <div className={'wf-shell wf-shell-' + wireframe.shell}>
+          <div className={'wf-shell wf-shell-' + shell}>
             <div className="wf-shell-box">{column(wireframe.components, 'content', wireframe.device === 'mobile')}</div>
           </div>
         ) : (
