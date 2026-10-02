@@ -2504,8 +2504,12 @@ button.qm-chip { cursor: pointer; }
 
 /* 歸單元：翻卡決定單元 */
 .us-stage { justify-content: flex-start; overflow-y: auto; padding-top: 14px; }
-.us-stage .tg-deck { height: 270px; }
-.us-stage .tg-note { max-height: 76px; }
+/* 歸單元的卡不疊牌、不定高：描述要能整段看完 */
+.us-stage .tg-deck { height: auto; width: min(560px, 94vw); }
+.us-stage .tg-deck .tg-under { display: none; }
+.us-stage .tg-deck .tg-card { position: relative; inset: auto; padding: 18px 20px; gap: 10px; }
+.us-stage .tg-name { font-size: 17px; }
+.us-stage .tg-note { max-height: 40vh; overflow-y: auto; text-align: left; font-size: 13px; line-height: 1.55; white-space: pre-wrap; -webkit-overflow-scrolling: touch; }
 .us-cur { color: var(--primary); }
 .us-units { width: min(560px, 94vw); display: flex; flex-direction: column; gap: 8px; padding-bottom: 24px; }
 .us-gt { font-size: 12px; font-weight: 800; color: var(--muted); margin: 4px 2px; }
