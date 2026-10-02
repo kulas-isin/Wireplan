@@ -1,14 +1,13 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useStore } from '../store/StoreContext.jsx'
 import { sopStats } from '../lib/sop.js'
 import { shareOrDownloadProject, daysSince } from '../lib/sync.js'
 import GithubSync from './GithubSync.jsx'
 import Todos from './Todos.jsx'
 import { openCount } from '../lib/todos.js'
-import { readFileAsText } from '../lib/download.js'
 import { useSyncStatus, SYNC_LABEL } from '../lib/ghSync.js'
 import { ghAutoOn } from '../lib/github.js'
-import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw, CheckSquare, ChevronDown, ChevronUp, Upload } from 'lucide-react'
+import { PencilRuler, Mic, ListChecks, LayoutTemplate, Table2, FileText, Workflow, FileInput, Plus, TriangleAlert, DownloadCloud, RefreshCw, CheckSquare, ChevronDown, ChevronUp } from 'lucide-react'
 
 // 目錄選單：進 app 先選「要做哪件事」— 手機一格一格點，訪談是獨立大入口
 export default function LauncherMenu({ onGo }) {
@@ -28,22 +27,6 @@ export default function LauncherMenu({ onGo }) {
     const r = await shareOrDownloadProject(current)
     if (r !== 'cancelled') dispatch({ type: 'MARK_BACKUP' })
   }
-  // 匯入專案檔：手機也能從目錄頁匯入（工作區工具列的那顆在手機上是收起來的）
-  const importRef = useRef(null)
-  const [importMsg, setImportMsg] = useState('')
-  const importProject = async (file) => {
-    if (!file) return
-    try {
-      const proj = JSON.parse(await readFileAsText(file))
-      if (!proj || typeof proj !== 'object' || !Array.isArray(proj.requirements)) throw new Error('bad')
-      dispatch({ type: 'LOAD_PROJECT', project: proj })
-      setImportMsg(`已匯入「${proj.name || '未命名專案'}」`)
-    } catch {
-      setImportMsg('專案檔解析失敗：請確認是 Wireplan 匯出的 JSON')
-    }
-    setTimeout(() => setImportMsg(''), 4000)
-  }
-
   const tiles = [
     { key: 'interview', name: '訪談記卡', desc: '客戶面前快速記需求（語音 / chips）', Icon: Mic, stat: `${s.reqs} 卡`, primary: true },
     { key: 'requirements', name: '需求整理', desc: '清單、分類、覆蓋檢查', Icon: ListChecks, stat: `${s.reqs} 項`, warn: s.missingPages ? `${s.missingPages} 需求無頁` : '' },
@@ -63,14 +46,11 @@ export default function LauncherMenu({ onGo }) {
           {state.projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <button className="ghost sm" title="新增專案" onClick={() => dispatch({ type: 'NEW_PROJECT' })}><Plus size={16} /></button>
-        <button className="ghost sm" title="匯入專案檔（JSON）" onClick={() => importRef.current?.click()}><Upload size={16} /></button>
-        <input ref={importRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={(e) => { importProject(e.target.files[0]); e.target.value = '' }} />
         <button className={'ghost sm lm-sync ' + sync.status} title={'GitHub 同步：' + SYNC_LABEL[sync.status] + (sync.msg ? '｜' + sync.msg : '')} onClick={() => setGhOpen(true)}>
           <RefreshCw size={15} />{(sync.status === 'pending' || sync.status === 'conflict' || sync.status === 'error') && <i className="lm-sync-dot" />}
         </button>
       </div>
       <div className="lm-greet">今天，把需求<em>優雅收攏</em></div>
-      {importMsg && <div className="lm-backup"><Upload size={15} /><span>{importMsg}</span></div>}
       {needBackup && (
         <div className="lm-backup">
           <TriangleAlert size={15} />

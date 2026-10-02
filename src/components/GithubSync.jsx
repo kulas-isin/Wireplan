@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { loadGhConfig, saveGhConfig, ghPull, ghPush } from '../lib/github.js'
 import { useSyncStatus, SYNC_LABEL, fmt } from '../lib/ghSync.js'
-import { X, UploadCloud, DownloadCloud, ShieldCheck } from 'lucide-react'
+import { X, UploadCloud, DownloadCloud, ShieldCheck, FileUp, FileDown } from 'lucide-react'
+import { readFileAsText } from '../lib/download.js'
+import { shareOrDownloadProject } from '../lib/sync.js'
 
 // GitHub 同步面板：把所有專案存進使用者自己的私人 repo（wireplan-data.json），
 // 換裝置 / 手機↔電腦 都能推上去、拉回來。token 只存本機 localStorage。
 export default function GithubSync({ onClose }) {
-  const { state, dispatch } = useStore()
+  const { state, current, dispatch } = useStore()
   const saved = loadGhConfig()
   const [repo, setRepo] = useState(saved.repo || '')
   const [token, setToken] = useState(saved.token || '')
@@ -16,6 +18,22 @@ export default function GithubSync({ onClose }) {
   const [auto, setAuto] = useState(saved.auto !== false)
   const sync = useSyncStatus()
   const [msg, setMsg] = useState(saved.lastSyncAt ? `上次同步：${new Date(saved.lastSyncAt).toLocaleString('zh-TW')}` : '')
+
+  // 專案檔匯入／匯出：手機沒有工作區工具列，收在這裡
+  const fileRef = useRef(null)
+  const importFile = async (file) => {
+    if (!file) return
+    try {
+      const proj = JSON.parse(await readFileAsText(file))
+      if (!proj || typeof proj !== 'object' || !Array.isArray(proj.requirements)) throw new Error('bad')
+      dispatch({ type: 'LOAD_PROJECT', project: proj })
+      setMsg(`已匯入「${proj.name || '未命名專案'}」（${proj.requirements.length} 張需求卡）`)
+    } catch { setMsg('專案檔解析失敗：請確認是 Wireplan 匯出的 JSON') }
+  }
+  const exportFile = async () => {
+    const r = await shareOrDownloadProject(current)
+    if (r !== 'cancelled') { dispatch({ type: 'MARK_BACKUP' }); setMsg(`已匯出「${current.name}」`) }
+  }
 
   const cfg = () => {
     const c = { ...saved, repo: repo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, ''), token: token.trim(), auto }
@@ -77,6 +95,14 @@ export default function GithubSync({ onClose }) {
             <button className="tg-big" disabled={!ready || busy} onClick={push}><UploadCloud size={15} /> 強制上傳，覆蓋雲端</button>
             <button className="tg-big" disabled={!ready || busy} onClick={pull}><DownloadCloud size={15} /> 強制拉回，覆蓋本機</button>
           </div>
+        </details>
+        <details className="gh-manual">
+          <summary>專案檔匯入／匯出（單一專案 JSON）</summary>
+          <div className="gh-btns">
+            <button className="tg-big" onClick={() => fileRef.current?.click()}><FileUp size={15} /> 匯入專案檔</button>
+            <button className="tg-big" onClick={exportFile}><FileDown size={15} /> 匯出目前專案</button>
+          </div>
+          <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={(e) => { importFile(e.target.files[0]); e.target.value = '' }} />
         </details>
         {msg && <div className="gh-msg">{msg}</div>}
         <div className="gh-help muted">
