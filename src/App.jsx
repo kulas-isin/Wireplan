@@ -5,6 +5,7 @@ import SopBar from './components/SopBar.jsx'
 import LauncherMenu from './components/LauncherMenu.jsx'
 import InterviewMode from './components/InterviewMode.jsx'
 import TriageGame from './components/TriageGame.jsx'
+import UnitSort from './components/UnitSort.jsx'
 import ImportPanel from './components/ImportPanel.jsx'
 import RequirementsEditor from './components/RequirementsEditor.jsx'
 import SpecView from './components/SpecView.jsx'
@@ -17,7 +18,7 @@ import Todos from './components/Todos.jsx'
 import { openCount } from './lib/todos.js'
 import { useSyncStatus, SYNC_LABEL, fmt as fmtSync } from './lib/ghSync.js'
 import { downloadText, readFileAsText } from './lib/download.js'
-import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid, CheckSquare } from 'lucide-react'
+import { Upload, Download, FileInput, ListChecks, LayoutTemplate, FileText, Workflow, Undo2, Redo2, Maximize2, Minimize2, Table2, LayoutGrid, CheckSquare, Boxes } from 'lucide-react'
 
 const TABS = [
   { key: 'import', label: '匯入', Icon: FileInput },
@@ -34,7 +35,7 @@ export default function App() {
   const [todoOpen, setTodoOpen] = useState(false)
   const sync = useSyncStatus()
   // 目錄選單為預設入口；#interview 直達訪談（手機加入主畫面可當獨立 App 用）
-  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : window.location.hash === '#reqs' ? 'reqs' : 'menu'))
+  const [view, setView] = useState(() => (window.location.hash === '#interview' ? 'interview' : window.location.hash === '#triage' ? 'triage' : window.location.hash === '#reqs' ? 'reqs' : window.location.hash === '#units' ? 'unitsort' : 'menu'))
   const [focus, setFocus] = useState(false)
   const [toast, setToast] = useState('')
   const importRef = useRef(null)
@@ -49,6 +50,7 @@ export default function App() {
       if (window.location.hash === '#interview') setView('interview')
       else if (window.location.hash === '#triage') setView('triage')
       else if (window.location.hash === '#reqs') setView('reqs')
+      else if (window.location.hash === '#units') setView('unitsort')
       else if (window.location.hash === '#wf') { setTab('wireframe'); setView('workspace'); history.replaceState(null, '', ' ') }
     }
     window.addEventListener('hashchange', onHash)
@@ -111,6 +113,7 @@ export default function App() {
         <strong>需求整理</strong>
         <span className="muted" style={{ fontSize: 12 }}>{current.name}</span>
         <div className="spacer" />
+        <button className="ghost sm" onClick={() => { window.location.hash = 'units'; setView('unitsort') }}><Boxes size={15} /> 歸單元</button>
         <button className="ghost sm" onClick={() => { setTab('requirements'); setView('workspace'); if (window.location.hash) history.replaceState(null, '', ' ') }}>完整工作區 ›</button>
       </div>
       <div className="rp-body"><RequirementsEditor /></div>
@@ -118,6 +121,7 @@ export default function App() {
   )
   if (view === 'interview') return <InterviewMode onClose={() => ((current.requirements || []).length >= 2 ? (setView('triage'), window.location.hash = 'triage') : backToMenu())} />
   if (view === 'triage') return <TriageGame onExit={exitTriage} />
+  if (view === 'unitsort') return <UnitSort onExit={exitTriage} />
 
   return (
     <div className={'app' + (focus ? ' focus' : '')}>
