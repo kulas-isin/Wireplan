@@ -2501,3 +2501,16 @@ button.qm-chip { cursor: pointer; }
 
 /* 可編輯表格（欄名帶 :switch 等後綴）：不換行、可橫向捲動 */
 .wb-edittable .ant-table th, .wb-edittable .ant-table td { white-space: nowrap; }
+
+/* 歸單元：翻卡決定單元 */
+.us-stage { justify-content: flex-start; overflow-y: auto; padding-top: 14px; }
+.us-stage .tg-deck { height: 270px; }
+.us-stage .tg-note { max-height: 76px; }
+.us-cur { color: var(--primary); }
+.us-units { width: min(560px, 94vw); display: flex; flex-direction: column; gap: 8px; padding-bottom: 24px; }
+.us-gt { font-size: 12px; font-weight: 800; color: var(--muted); margin: 4px 2px; }
+.us-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.us-chip { border: 1.5px solid var(--border); background: #fff; border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #2A3B24; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.us-chip.cur { background: var(--primary); border-color: var(--primary); color: #fff; }
+.us-chip.add { border-style: dashed; color: var(--muted); }
+.us-new { width: 100%; border: 1.5px solid var(--primary); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
