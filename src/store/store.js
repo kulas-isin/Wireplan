@@ -36,6 +36,10 @@ export function loadState() {
           seen.add(w.id); return true
         })
       }
+      // 自癒：手動塞進來的問題若沒有 id，補一個（沒 id 會讓展開／編輯對不到題）
+      if (Array.isArray(p.questions)) {
+        p.questions = p.questions.map((q) => (q && !q.id ? { ...q, id: 'qs_' + (q.code || '') + '_' + Math.random().toString(36).slice(2, 8) } : q))
+      }
     }
     return parsed
   } catch {
