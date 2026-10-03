@@ -234,9 +234,10 @@ function QuestionCard({ q, open, units, flows, showUnit, onToggle, dispatch }) {
         <span className="qs-go" aria-hidden="true">{open ? <ChevronUp size={15} /> : <ArrowUpRight size={15} />}</span>
         {!open && cur?.answer && <div className="qs-ans1">{cur.answer}</div>}
         <div className="qs-foot">
-          {showUnit && q.unit && <span className="qs-unit">{q.unit}</span>}
-          {flowName && <span className="qs-flow"><GitBranch size={11} /> {flowName}</span>}
-          <span className="spacer" />
+          <span className="qs-where" title={[showUnit && q.unit, flowName].filter(Boolean).join(' · ')}>
+            {showUnit && q.unit && <span className="qs-unit">{q.unit}</span>}
+            {flowName && <span className="qs-flow"><GitBranch size={11} /> {flowName}</span>}
+          </span>
           {who && <span className="qs-chip">{who}</span>}
         </div>
         <span className="qs-tab">{q.code}{cur ? ` · v${cur.v}` : ''}{q.basis === 'guess' && <i className="qs-dot" title="我方推測，未經確認" />}</span>
