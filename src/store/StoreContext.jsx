@@ -7,6 +7,7 @@ import { buildFlowsGraph } from '../lib/flowPatterns.js'
 import { detectCategory } from '../lib/categories.js'
 import { sortWireframesByCode } from '../lib/units.js'
 import { normalizeDecision, mergeDecisions } from '../lib/decisions.js'
+import { normalizeQuestion, mergeQuestions } from '../lib/questions.js'
 
 const StoreContext = createContext(null)
 
@@ -206,6 +207,26 @@ function reducer(state, action) {
       return replaceCurrent(touch({ ...cur, decisions: (cur.decisions || []).filter((d) => d.id !== action.id) }))
     case 'IMPORT_DECISIONS':
       return replaceCurrent(touch({ ...cur, decisions: mergeDecisions(cur.decisions || [], action.decisions || []) }))
+
+    // 待釐清問題：題目欄位直接改；答覆每次加一版
+    case 'ADD_QUESTION': {
+      const list = cur.questions || []
+      return replaceCurrent(touch({ ...cur, questions: [...list, normalizeQuestion(action.question, list)] }))
+    }
+    case 'UPDATE_QUESTION':
+      return replaceCurrent(touch({ ...cur, questions: (cur.questions || []).map((q) => (q.id === action.id ? { ...q, ...action.patch } : q)) }))
+    case 'ANSWER_QUESTION': {
+      const questions = (cur.questions || []).map((q) => {
+        if (q.id !== action.id) return q
+        const v = action.version || {}
+        return { ...q, versions: [...q.versions, { v: q.versions.length + 1, at: Date.now(), source: String(v.source || ''), status: v.status || 'answered', answer: String(v.answer || '') }] }
+      })
+      return replaceCurrent(touch({ ...cur, questions }))
+    }
+    case 'DELETE_QUESTION':
+      return replaceCurrent(touch({ ...cur, questions: (cur.questions || []).filter((q) => q.id !== action.id) }))
+    case 'IMPORT_QUESTIONS':
+      return replaceCurrent(touch({ ...cur, questions: mergeQuestions(cur.questions || [], action.questions || []).list }))
 
     case 'SORT_WIREFRAMES_BY_CODE': {
       // 依頁面編號自然排序（P3-01、P3-02…，頁面在彈窗前）；unit 不給就每個單元各自排
