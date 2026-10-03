@@ -219,7 +219,8 @@ function reducer(state, action) {
       const questions = (cur.questions || []).map((q) => {
         if (q.id !== action.id) return q
         const v = action.version || {}
-        return { ...q, versions: [...q.versions, { v: q.versions.length + 1, at: Date.now(), source: String(v.source || ''), status: v.status || 'answered', answer: String(v.answer || '') }] }
+        const vs = q.versions || []
+        return { ...q, versions: [...vs, { v: vs.length + 1, at: Date.now(), source: String(v.source || ''), status: v.status || 'answered', answer: String(v.answer || '') }] }
       })
       return replaceCurrent(touch({ ...cur, questions }))
     }

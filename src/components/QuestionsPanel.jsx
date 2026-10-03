@@ -6,7 +6,7 @@ import {
   Q_STATUS, Q_BASIS, Q_OWNER, statusLabel, basisLabel, ownerLabel,
   latest, statusOf, groupByFlow, sortQuestions, mergeQuestions, nextCode, questionsMarkdown,
 } from '../lib/questions.js'
-import { X, Plus, Pencil, Trash2, HelpCircle, Upload, Download, FileText, ChevronDown, ChevronUp, GitBranch } from 'lucide-react'
+import { X, Plus, Pencil, Trash2, HelpCircle, Upload, Download, FileText, ChevronUp, ArrowUpRight, GitBranch } from 'lucide-react'
 
 // 待釐清問題清單：unit＝null 看全專案、字串＝只看該單元；flowId 給定時先只看那張流程圖的題目。
 // 依流程分組，一眼看出哪張圖還有懸念；答覆每存一次加一版。
@@ -84,11 +84,11 @@ export default function QuestionsPanel({ unit = null, flowId = null, focusId = n
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body qs-body">
-        <div className="uw-modes">
+        <div className="qs-pills">
           {[['open', '待釐清'], ['answered', '已答覆'], ['closed', '已結案'], ['dropped', '不處理']].map(([k, l]) => (
-            (k === 'open' || count(k) > 0) && <button key={k} className={st === k ? 'on' : ''} onClick={() => setSt(k)}>{l} {count(k)}</button>
+            (k === 'open' || count(k) > 0) && <button key={k} className={'qs-pill' + (st === k ? ' on' : '')} onClick={() => setSt(k)}>{l}<i>{count(k)}</i></button>
           ))}
-          <button className={st === 'all' ? 'on' : ''} onClick={() => setSt('all')}>全部 {inScope.length}</button>
+          <button className={'qs-pill' + (st === 'all' ? ' on' : '')} onClick={() => setSt('all')}>全部<i>{inScope.length}</i></button>
         </div>
         {(unit === null || flowPick) && (
           <div className="qs-scope">
@@ -162,7 +162,7 @@ function QuestionForm({ init, units, flows, onSave, onCancel }) {
     onSave({ ...f, title: f.title.trim(), code: f.code.trim() || init.code })
   }
   return (
-    <div className="qs-card qs-form">
+    <div className="qs-form">
       <div className="qs-row">
         <input className="qs-code-in" value={f.code} onChange={(e) => set({ code: e.target.value })} aria-label="編號" />
         <input className="qs-title-in" autoFocus value={f.title} placeholder="要釐清的問題（一句話）" onChange={(e) => set({ title: e.target.value })}
@@ -200,6 +200,7 @@ function QuestionForm({ init, units, flows, onSave, onCancel }) {
 function QuestionCard({ q, open, units, flows, showUnit, onToggle, dispatch }) {
   const cur = latest(q)
   const status = statusOf(q)
+  const vers = q.versions || []
   const flowName = flows.find((f) => f.id === q.flowId)?.name
   const [editing, setEditing] = useState(false)
   const [ans, setAns] = useState('')
@@ -219,30 +220,35 @@ function QuestionCard({ q, open, units, flows, showUnit, onToggle, dispatch }) {
     setAns(''); setSrc('')
   }
   const remove = () => {
-    if (!confirm(`刪除問題「${q.code} ${q.title}」${q.versions.length ? `與 ${q.versions.length} 個答覆版本` : ''}？`)) return
+    if (!confirm(`刪除問題「${q.code} ${q.title}」${vers.length ? `與 ${vers.length} 個答覆版本` : ''}？`)) return
     dispatch({ type: 'DELETE_QUESTION', id: q.id })
   }
+  // 底部 pill 右側：已答過就標版本；誰來解用卡片右下 chip；依據只有「推測」要被看見（pill 旁一點）
+  const who = status === 'open' ? ownerLabel(q.owner) : statusLabel(status)
 
   return (
-    <div id={'qs-' + q.id} className={'qs-card st-' + status + (open ? ' open' : '')}>
-      <button className="qs-top" onClick={onToggle}>
-        <span className="qs-code">{q.code}</span>
-        <span className="qs-title">{q.title}</span>
-        <span className={'qs-st st-' + status}>{statusLabel(status)}</span>
-        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-      </button>
-      <div className="qs-tags">
-        {showUnit && q.unit && <i>{q.unit}</i>}
-        {!open && flowName && <i className="flow"><GitBranch size={10} /> {flowName}</i>}
-        {q.basis && <i className={'b-' + q.basis}>{basisLabel(q.basis)}</i>}
-        {q.owner && <i>{ownerLabel(q.owner)}</i>}
-        {cur && <i className="ver">v{cur.v}</i>}
+    <div id={'qs-' + q.id} className={'qs-item' + (open ? ' open' : '')}>
+      <div className={'qs-c st-' + status} onClick={onToggle} role="button" tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}>
+        <h3>{q.title}</h3>
+        <span className="qs-go" aria-hidden="true">{open ? <ChevronUp size={15} /> : <ArrowUpRight size={15} />}</span>
+        {!open && cur?.answer && <div className="qs-ans1">{cur.answer}</div>}
+        <div className="qs-foot">
+          {showUnit && q.unit && <span className="qs-unit">{q.unit}</span>}
+          {flowName && <span className="qs-flow"><GitBranch size={11} /> {flowName}</span>}
+          <span className="spacer" />
+          {who && <span className="qs-chip">{who}</span>}
+        </div>
+        <span className="qs-tab">{q.code}{cur ? ` · v${cur.v}` : ''}{q.basis === 'guess' && <i className="qs-dot" title="我方推測，未經確認" />}</span>
       </div>
-      {!open && cur?.answer && <div className="qs-ans1">{cur.answer}</div>}
       {open && (
-        <div className="qs-detail">
+        <div className="qs-sub">
           {q.detail && <div className="qs-desc">{q.detail}</div>}
-          {flowName && <div className="qs-flowref"><GitBranch size={11} /> {flowName}</div>}
+          <div className="qs-meta qs-metaline">
+            {q.basis && <span className={'qs-mini b-' + q.basis}>依據：{basisLabel(q.basis)}</span>}
+            {q.owner && <span className="qs-mini">{ownerLabel(q.owner)}</span>}
+            {flowName && <span className="qs-mini"><GitBranch size={10} /> {flowName}</span>}
+          </div>
           {cur && (
             <div className="qs-cur">
               <div className="qs-cur-h">目前結論・v{cur.v}{cur.source ? `・${cur.source}` : ''}<span>{new Date(cur.at).toLocaleDateString('zh-TW')}</span></div>
@@ -252,9 +258,7 @@ function QuestionCard({ q, open, units, flows, showUnit, onToggle, dispatch }) {
           <div className="qs-answer">
             <textarea rows={3} value={ans} placeholder={cur ? '結論有變？寫下新的答覆（會存成新版本，舊版保留）' : '答覆或結論…'}
               onChange={(e) => setAns(e.target.value)} />
-            <div className="qs-meta">
-              <input className="qs-src" value={src} placeholder="出處（如：第 3 場、LINE 9/30）" onChange={(e) => setSrc(e.target.value)} />
-            </div>
+            <input className="qs-src" value={src} placeholder="出處（如：第 3 場、LINE 9/30）" onChange={(e) => setSrc(e.target.value)} />
             <div className="qs-meta">
               <Seg list={Q_STATUS.filter(([k]) => k !== 'open').concat([['open', '仍待釐清']])} value={ansSt} onChange={setAnsSt} />
             </div>
@@ -262,13 +266,13 @@ function QuestionCard({ q, open, units, flows, showUnit, onToggle, dispatch }) {
               <button className="uw-mini" title="編輯題目" onClick={() => setEditing(true)}><Pencil size={13} /></button>
               <button className="uw-mini uf-del" title="刪除" onClick={remove}><Trash2 size={13} /></button>
               <div className="spacer" />
-              <button className="uf-sealgo" onClick={saveAnswer}>存為 v{q.versions.length + 1}</button>
+              <button className="uf-sealgo" onClick={saveAnswer}>存為 v{vers.length + 1}</button>
             </div>
           </div>
-          {q.versions.length > 0 && (
+          {vers.length > 0 && (
             <div className="ht-wrap">
               <span className="ht-title">答覆履歷</span>
-              {[...q.versions].reverse().map((v) => (
+              {[...vers].reverse().map((v) => (
                 <div key={v.v} className="ht-row ht-seal">
                   <span className="ht-dot" style={{ fontSize: 10, fontWeight: 800 }}>v{v.v}</span>
                   <span className="ht-txt"><b className={'qs-st st-' + v.status}>{statusLabel(v.status)}</b> {v.answer}{v.source ? `（${v.source}）` : ''}</span>
