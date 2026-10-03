@@ -5,7 +5,9 @@ import { isRule, procFlows, ruleFlows } from '../lib/flowTracks.js'
 import { statusOfReq } from '../lib/units.js'
 import Mermaid from './Mermaid.jsx'
 import QuoteText from './QuoteText.jsx'
-import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText, PanelRightClose, PanelRightOpen, Upload } from 'lucide-react'
+import QuestionsPanel from './QuestionsPanel.jsx'
+import { isOpen, statusOf, sortQuestions } from '../lib/questions.js'
+import { X, Plus, Pencil, Trash2, GitBranch, Stamp, ListChecks, ChevronDown, ChevronUp, ScrollText, PanelRightClose, PanelRightOpen, Upload, HelpCircle } from 'lucide-react'
 
 // 定稿前檢查清單：把防漏心法變成強制動作（全勾才能蓋章）
 const SEAL_CHECKS = [
@@ -111,6 +113,7 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
     const onKey = (e) => {
       if (e.target.closest?.('input, textarea, select, [contenteditable="true"]')) return
       const k = keyRef.current
+      if (k.qsPanel) return // 問題清單開著時鍵盤交給它
       if (e.key === 'Escape') { k.editing ? k.setEditing(null) : onClose() }
       else if (!k.editing && e.key === 'ArrowLeft') k.go(-1)
       else if (!k.editing && e.key === 'ArrowRight') k.go(1)
@@ -119,7 +122,7 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
     return () => window.removeEventListener('keydown', onKey)
   }, []) // eslint-disable-line
   const onTS = (e) => {
-    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, .uf-rev, input, textarea, button')) { window.__ufTouch = null; return }
+    if (e.target.closest && e.target.closest('.mermaid-box, .uf-code, .uf-check, .uf-cov, .uf-sealask, .uf-rev, .qs-wrap, input, textarea, button')) { window.__ufTouch = null; return }
     window.__ufTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY }
   }
   const onTE = (e) => {
@@ -131,7 +134,6 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
     if (Math.abs(dx) > 64 && Math.abs(dx) > Math.abs(dy) * 2) go(dx < 0 ? 1 : -1)
   }
   const [editing, setEditing] = useState(null) // { flowId|null, name, code, note, kind, pristine }
-  keyRef.current = { go, editing, setEditing }
   const [preview, setPreview] = useState('')
   useEffect(() => {
     if (!editing) return
@@ -236,6 +238,18 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
   }
   const ST_COLOR = ['#2E5F96', '#4E7A2E', '#B0691F'] // 待確認/已蓋章/異動中
 
+  // 待釐清問題：掛在這張圖上的題目；完整清單（答覆、版本、匯入匯出）在 QuestionsPanel
+  const questions = current.questions || []
+  const qsOf = (fid) => sortQuestions(questions.filter((q) => q.flowId === fid))
+  const [qsAdd, setQsAdd] = useState('')
+  const [qsPanel, setQsPanel] = useState(null) // { flowId, focusId }
+  keyRef.current = { go, editing, setEditing, qsPanel }
+  const addQuestion = (f) => {
+    if (!qsAdd.trim()) return
+    dispatch({ type: 'ADD_QUESTION', question: { title: qsAdd.trim(), unit: f.unit || '', flowId: f.id, owner: 'client' } })
+    setQsAdd('')
+  }
+
   return createPortal(
     <div className="uf-wrap" onTouchStart={onTS} onTouchEnd={onTE}>
       <div className="uf-head">
@@ -316,6 +330,10 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
                       onClick={() => { setSealChecks([]); setSealAsk(sealAsk === f.id ? null : f.id) }}>
                       <Stamp size={11} /> 定稿此版</button>}
                 <div className="spacer" />
+                {qsOf(f.id).filter(isOpen).length > 0 && (
+                  <button className="uf-qschip" title="這張圖待釐清的問題" onClick={() => setQsPanel({ flowId: f.id })}>
+                    <HelpCircle size={11} /> 待釐清 {qsOf(f.id).filter(isOpen).length}</button>
+                )}
                 <button className="uw-mini uf-sidebtn" title={sideOpen ? '收起側欄，圖吃滿整寬' : '展開盤點側欄'} onClick={toggleSide}>
                   {sideOpen ? <PanelRightClose size={13} /> : <PanelRightOpen size={13} />}</button>
                 <button className="uw-mini" title="改一版（保留舊版；已定稿改版後回到未定稿）" onClick={() => openEdit(f)}><Pencil size={13} /></button>
@@ -342,6 +360,25 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
               <div className={'uf-cols' + (sideOpen ? '' : ' side-off')}>{/* 桌機雙欄：左圖、右盤點＋履歷；手機維持直排 */}
               <div className="uf-main"><Mermaid code={ver.code} /></div>
               <div className="uf-side">
+              <div className="uf-rev uf-qs">
+                <div className="uf-rev-head"><HelpCircle size={12} /> 待釐清問題
+                  <span className="ps-kind">{qsOf(f.id).filter(isOpen).length} 題待答</span>
+                  <div className="spacer" />
+                  {qsOf(f.id).length > 0 && <button className="uf-qsall" onClick={() => setQsPanel({ flowId: f.id })}>全部・答覆 ›</button>}
+                </div>
+                {qsOf(f.id).map((q) => (
+                  <button key={q.id} className={'uf-qsrow st-' + statusOf(q)} onClick={() => setQsPanel({ flowId: f.id, focusId: q.id })}>
+                    <i className="uf-qsdot" />
+                    <span className="uf-qscode">{q.code}</span>
+                    <span className="uf-rev-text">{q.title}</span>
+                  </button>
+                ))}
+                <div className="uf-rev-add">
+                  <input value={qsAdd} placeholder="這張圖還有什麼要問…" onChange={(e) => setQsAdd(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && !e.nativeEvent.isComposing && addQuestion(f)} />
+                  <button className="uw-mini" onClick={() => addQuestion(f)}><Plus size={13} /></button>
+                </div>
+              </div>
               <div className="uf-rev">
                 <div className="uf-rev-head"><Pencil size={12} /> 修改備註<span className="ps-kind">先記方向，改好再存新版</span></div>
                 {(f.revNotes || []).map((n) => (
@@ -425,6 +462,8 @@ export default function UnitFlows({ unit, onClose, focusId, track: initTrack = '
           )
         })}
       </div>
+
+      {qsPanel && <QuestionsPanel unit={unit || ''} flowId={qsPanel.flowId} focusId={qsPanel.focusId || null} onClose={() => setQsPanel(null)} />}
 
       {editing && (
         <div className="uf-editor">

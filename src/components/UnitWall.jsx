@@ -11,6 +11,8 @@ import QuoteText from './QuoteText.jsx'
 import { ReqDetailSheet } from './MobileReqCard.jsx'
 import SpecSheet from './SpecSheet.jsx'
 import MeetingDoc from './MeetingDoc.jsx'
+import QuestionsPanel from './QuestionsPanel.jsx'
+import { isOpen } from '../lib/questions.js'
 import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, ArrowDownAZ, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
@@ -293,6 +295,8 @@ export default function UnitWall() {
   const [specWf, setSpecWf] = useState(null) // 磁磚內點頁名 → 開頁面規格清單
   const [showMeeting, setShowMeeting] = useState(false)
   const [jumpFlow, setJumpFlow] = useState(null) // 樹上 ⑂ 直達指定流程
+  const [qsUnit, setQsUnit] = useState(undefined) // undefined＝關；null＝全專案；字串＝單元
+  const qsOpen = (u) => (current.questions || []).filter((q) => isOpen(q) && (u === null || (q.unit || '') === u)).length
   const [noteMode, setNoteMode] = useState(false) // 筆記模式：檢視模式下看不到任何標記工具
   // 報價條目的標記/筆記更新（存回 quote.items）
   const patchQuoteItem = (id, p) => {
@@ -331,6 +335,9 @@ export default function UnitWall() {
         ))}
         <div className="spacer" />
         <button className="uw-editbtn" onClick={() => setShowMeeting(true)}>會議記錄</button>
+        <button className={'uw-editbtn' + (qsOpen(null) ? ' qs-hot' : '')} onClick={() => setQsUnit(null)}>
+          待釐清 {qsOpen(null) || ((current.questions || []).length ? '✓' : '')}
+        </button>
         <button className="uw-editbtn" onClick={() => setShowQuote(true)}>
           報價對照{quoteItems.length === 0 ? '' : quoteGaps > 0 ? ` ${quoteGaps}!` : ' ✓'}
         </button>
@@ -367,6 +374,7 @@ export default function UnitWall() {
               <div className="uw-tcount"><b>{s.total}</b> 張需求卡</div>
               <div className="uw-bar">{seg(s.draft, 'uw-b0')}{seg(s.ok, 'uw-b1')}{seg(s.chg, 'uw-b2')}</div>
               <div className="uw-flags">
+                {qsOpen(u) > 0 && <span className="uw-flag warn">待釐清 {qsOpen(u)}</span>}
                 {s.miss > 0 && <span className="uw-flag warn">缺頁 {s.miss}</span>}
                 {s.chg > 0 && <span className="uw-flag warn">異動 {s.chg}</span>}
                 {!hot && s.total > 0 && s.draft === 0 && <span className="uw-flag ok">全數蓋章 ✓</span>}
@@ -429,6 +437,9 @@ export default function UnitWall() {
                         規則圖 {ruleFlows(current.unitFlows).filter((f) => f.unit === u).length}
                       </button>
                     )}
+                    <button className={'uw-editbtn' + (qsOpen(u) ? ' qs-hot' : '')} title="這個單元待釐清的問題" onClick={() => setQsUnit(u)}>
+                      待釐清 {qsOpen(u)}
+                    </button>
                     {editStruct && current.wireframes.some((w) => (w.unit || '').trim() === u && w.code) && (
                       <button className="uw-mini" title="依頁面編號排序（P3-01、P3-02…，頁面在彈窗前；沒編號的排最後）"
                         onClick={() => dispatch({ type: 'SORT_WIREFRAMES_BY_CODE', unit: u })}><ArrowDownAZ size={13} /></button>
@@ -490,6 +501,7 @@ export default function UnitWall() {
       {showQuote && <QuoteMap onClose={() => setShowQuote(false)} />}
       {specWf && <SpecSheet wfId={specWf} onClose={() => setSpecWf(null)} />}
       {showMeeting && <MeetingDoc onClose={() => setShowMeeting(false)} />}
+      {qsUnit !== undefined && <QuestionsPanel unit={qsUnit} onClose={() => setQsUnit(undefined)} />}
       {jumpFlow && <UnitFlows unit={jumpFlow.unit || ''} focusId={jumpFlow.id} track={(jumpFlow.kind || 'main') === 'rule' ? 'rule' : 'flow'} onClose={() => setJumpFlow(null)} />}
       {openReq && (() => {
         const r = (current.requirements || []).find((x) => x.id === openReq)
