@@ -1,7 +1,9 @@
 // 頁面規格 Excel：一本一專案、一頁一工作表，從規格清單直接產（不經文字版）。
 // 工作表「目錄」列全部頁面（可點跳到該頁）；每頁由上往下：頁面資訊 → 跳轉規則 → 畫面元件清單（A–E 各一欄）→ 資料來源（可不含）→ 邊界情境。
 // 樣式用 exceljs（Nuviq 配色：橄欖標題列、檸檬表頭、資訊類用藍）。
-import { buildSpecData } from './specText.js'
+import { buildSpecData, BASIS_LABEL } from './specText.js'
+const bl = (b) => BASIS_LABEL[b] || ''
+const tag = (i) => (i.basis && i.basis !== 'quote' ? `〔${bl(i.basis)}〕` : '') + i.label
 
 const sheetName = (s, used) => {
   let n = String(s || '頁面').replace(/[\\/?*[\]:]/g, ' ').trim().slice(0, 28) || '頁面'
@@ -25,33 +27,34 @@ export function specWorkbookRows(project, { withSource = true } = {}) {
     R.push({ t: 'title', cells: [`${d.code ? d.code + '　' : ''}${d.name}`] })
     if (d.unit) R.push({ t: 'kv', cells: ['單元', d.unit] })
     if (d.intro || !d.groups.length) R.push({ t: 'kv', cells: ['製作說明', d.intro || '（這頁做什麼、給誰用、進入方式）'] })
-    for (const g of d.groups) R.push({ t: 'kv', cells: [g.title, g.items.map((n) => '• ' + n).join('\n')] })
+    for (const g of d.groups) R.push({ t: 'kv', cells: [g.title, g.items.map((n) => '• ' + tag(n)).join('\n')] })
+    R.push({ t: 'kv', cells: ['依據標記', '未標＝報價單原文；〔客戶確認〕＝會議決議或客戶補充；〔現行系統〕＝照現行做法；〔推測〕＝我們補的合理規則，客戶尚未確認'] })
     if (d.flows.length) R.push({ t: 'kv', cells: ['相關流程', d.flows.join('、')] })
     R.push({ t: 'blank' })
     R.push({ t: 'section', cells: ['跳轉規則'] })
-    R.push({ t: 'head', cells: ['元素', '點擊行為'], span: [2, 6] })
-    if (d.jumps.length) for (const [a, b] of d.jumps) R.push({ t: 'row', cells: [a, b], span: [2, 6], name: 0 })
-    else R.push({ t: 'row', cells: ['（無）', ''], span: [2, 6] })
+    R.push({ t: 'head', cells: ['元素', '點擊行為', '依據'], span: [2, 6, 1] })
+    if (d.jumps.length) for (const [a, b, bs] of d.jumps) R.push({ t: 'row', cells: [a, b, bl(bs)], span: [2, 6, 1], name: 0 })
+    else R.push({ t: 'row', cells: ['（無）', '', ''], span: [2, 6, 1] })
     R.push({ t: 'blank' })
     R.push({ t: 'section', cells: ['畫面元件清單'] })
-    R.push({ t: 'head', cells: ['#', '元件', '區', 'A. 操作', 'B. 預設', 'C. 規則', 'D. 狀態', 'E. 選項'] })
-    for (const e of d.elements) R.push({ t: 'row', cells: [e.n, e.name, e.kind, e.op, e.def, e.rule, e.state, e.opt], name: 1 })
+    R.push({ t: 'head', cells: ['#', '元件', '區', '依據', 'A. 操作', 'B. 預設', 'C. 規則', 'D. 狀態', 'E. 選項'] })
+    for (const e of d.elements) R.push({ t: 'row', cells: [e.n, e.name, e.kind, bl(e.basis), e.op, e.def, e.rule, e.state, e.opt], name: 1 })
     if (!d.elements.length) R.push({ t: 'row', cells: ['', '（尚無元件）'] })
     if (withSource) {
       R.push({ t: 'blank' })
       R.push({ t: 'section', cells: ['資料來源', '方向：ERP→SL（推送 Shopline）、SL→ERP（從 Shopline 回寫）、雙向、僅 ERP（不同步）'], tone: 'info' })
-      R.push({ t: 'head', cells: ['欄位', 'ERP 來源', 'Shopline 欄位', '方向', '備註'], span: [2, 2, 2, 1, 1], tone: 'info' })
-      for (const s of d.sources) R.push({ t: 'row', cells: [s.name, s.erp, s.sl, s.dir, s.memo], span: [2, 2, 2, 1, 1], name: 0 })
-      if (!d.sources.length) R.push({ t: 'row', cells: ['（無資料欄位）'], span: [8] })
+      R.push({ t: 'head', cells: ['欄位', 'ERP 來源', 'Shopline 欄位', '方向', '備註', '依據'], span: [2, 2, 2, 1, 1, 1], tone: 'info' })
+      for (const s of d.sources) R.push({ t: 'row', cells: [s.name, s.erp, s.sl, s.dir, s.memo, bl(s.basis)], span: [2, 2, 2, 1, 1, 1], name: 0 })
+      if (!d.sources.length) R.push({ t: 'row', cells: ['（無資料欄位）'], span: [9] })
     }
     R.push({ t: 'blank' })
     R.push({ t: 'section', cells: ['邊界情境'] })
-    if (d.edges.length) for (const e of d.edges) R.push({ t: 'bullet', cells: [e] })
+    if (d.edges.length) for (const e of d.edges) R.push({ t: 'bullet', cells: [tag(e)] })
     else R.push({ t: 'bullet', cells: ['（無資料／失敗／權限不足時怎麼呈現）'] })
     if (d.accept.length) {
       R.push({ t: 'blank' })
       R.push({ t: 'section', cells: ['驗收條件'] })
-      for (const a of d.accept) R.push({ t: 'bullet', cells: [a] })
+      for (const a of d.accept) R.push({ t: 'bullet', cells: [tag(a)] })
     }
     sheets.push({ name, rows: R })
   }
@@ -59,8 +62,8 @@ export function specWorkbookRows(project, { withSource = true } = {}) {
 }
 
 // ── 樣式 ──
-const C = { olive: '3A5D25', ink: '22301F', lemon1: 'F7FAEC', lemon2: 'EAF2D8', lemon3: 'DCEBC7', lime: 'C6DC6A', blue: '2E5F96', blue2: 'E1EDF9', grey: '7A8A70', white: 'FFFFFF', line: 'D5E1C3' }
-const NCOL = 8
+const C = { olive: '3A5D25', ink: '22301F', lemon1: 'F7FAEC', lemon2: 'EAF2D8', lemon3: 'DCEBC7', lime: 'C6DC6A', blue: '2E5F96', blue2: 'E1EDF9', grey: '7A8A70', white: 'FFFFFF', line: 'D5E1C3', warn: 'B0691F', warn2: 'FBF0DC' }
+const NCOL = 9
 const fill = (hex) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + hex } })
 const font = (o = {}) => ({ name: 'Microsoft JhengHei', size: 10, color: { argb: 'FF' + C.ink }, ...o })
 const thin = (hex = C.line) => ({ style: 'thin', color: { argb: 'FF' + hex } })
@@ -68,7 +71,7 @@ const box = (hex) => ({ top: thin(hex), left: thin(hex), bottom: thin(hex), righ
 const WRAP = { wrapText: true, vertical: 'top' }
 
 function styleSheet(ws, rows) {
-  ws.columns = [{ width: 6 }, { width: 22 }, { width: 9 }, { width: 38 }, { width: 22 }, { width: 38 }, { width: 22 }, { width: 26 }]
+  ws.columns = [{ width: 6 }, { width: 22 }, { width: 9 }, { width: 9 }, { width: 38 }, { width: 22 }, { width: 38 }, { width: 22 }, { width: 26 }]
   ws.views = [{ showGridLines: false }]
   ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9, margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 } }
   let r = 0
@@ -130,6 +133,7 @@ function styleSheet(ws, rows) {
         if (row.t === 'row' && z % 2 === 1) c.fill = fill(C.lemon1)
         c.border = box()
         if (row.t === 'row' && row.name === i) c.font = font({ bold: true })
+        if (cells[i] === '推測') { c.font = font({ bold: true, color: { argb: 'FF' + C.warn } }); c.fill = fill(C.warn2) } // 推測用提醒色，一眼看出哪些客戶還沒確認
       }
       col += w
     }
