@@ -24,7 +24,8 @@ export function specWorkbookRows(project, { withSource = true } = {}) {
     const R = []
     R.push({ t: 'title', cells: [`${d.code ? d.code + '　' : ''}${d.name}`] })
     if (d.unit) R.push({ t: 'kv', cells: ['單元', d.unit] })
-    R.push({ t: 'kv', cells: ['製作說明', [d.intro, ...d.notes].filter(Boolean).join('\n')] })
+    if (d.intro || !d.groups.length) R.push({ t: 'kv', cells: ['製作說明', d.intro || '（這頁做什麼、給誰用、進入方式）'] })
+    for (const g of d.groups) R.push({ t: 'kv', cells: [g.title, g.items.map((n) => '• ' + n).join('\n')] })
     if (d.flows.length) R.push({ t: 'kv', cells: ['相關流程', d.flows.join('、')] })
     R.push({ t: 'blank' })
     R.push({ t: 'section', cells: ['跳轉規則'] })
@@ -47,6 +48,11 @@ export function specWorkbookRows(project, { withSource = true } = {}) {
     R.push({ t: 'section', cells: ['邊界情境'] })
     if (d.edges.length) for (const e of d.edges) R.push({ t: 'bullet', cells: [e] })
     else R.push({ t: 'bullet', cells: ['（無資料／失敗／權限不足時怎麼呈現）'] })
+    if (d.accept.length) {
+      R.push({ t: 'blank' })
+      R.push({ t: 'section', cells: ['驗收條件'] })
+      for (const a of d.accept) R.push({ t: 'bullet', cells: [a] })
+    }
     sheets.push({ name, rows: R })
   }
   return { index, sheets }
@@ -87,8 +93,8 @@ function styleSheet(ws, rows) {
       k.font = font({ bold: true, color: { argb: 'FF' + C.olive } }); k.fill = fill(C.lemon2); k.alignment = { ...WRAP, indent: 1 }; k.border = box()
       const v = xr.getCell(3); ws.mergeCells(r, 3, r, NCOL); v.value = cells[1]
       v.font = font(); v.alignment = WRAP; v.border = box()
-      const lines = String(cells[1] || '').split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 70)), 0)
-      xr.height = Math.min(300, Math.max(20, lines * 15 + 6))
+      const lines = String(cells[1] || '').split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 86)), 0)
+      xr.height = Math.min(300, Math.max(20, lines * 14 + 6))
       continue
     }
     if (row.t === 'section') {
