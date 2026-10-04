@@ -84,6 +84,9 @@ function treeReorder(list, parentId, orderedIds) {
   })
 }
 
+// 改到頁面內容就記時間（定案圖「規格已在定案後修改」靠這個）
+const stampWf = (wfs, id) => wfs.map((w) => (w.id === id ? { ...w, updatedAt: Date.now() } : w))
+
 function reducer(state, action) {
   const cur = state.projects.find((p) => p.id === state.currentId)
   const replaceCurrent = (next) => ({
@@ -182,8 +185,9 @@ function reducer(state, action) {
     }
 
     case 'UPDATE_WIREFRAME': {
+      const touches = 'spec' in (action.patch || {}) || 'components' in (action.patch || {})
       const wireframes = cur.wireframes.map((w) =>
-        w.id === action.id ? { ...w, ...action.patch } : w,
+        w.id === action.id ? { ...w, ...action.patch, ...(touches ? { updatedAt: Date.now() } : {}) } : w,
       )
       return replaceCurrent(touch({ ...cur, wireframes }))
     }
@@ -252,28 +256,28 @@ function reducer(state, action) {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeUpdate(w.components, action.componentId, action.patch) } : w,
       )
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'ADD_COMPONENT': {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeAddChild(w.components, action.parentId || null, action.component) } : w,
       )
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'DELETE_COMPONENT': {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeRemove(w.components, action.componentId) } : w,
       )
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'REORDER_COMPONENTS': {
       const wireframes = cur.wireframes.map((w) =>
         w.id === action.wireframeId ? { ...w, components: treeReorder(w.components, action.parentId || null, action.orderedIds) } : w,
       )
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'MOVE_COMPONENT': {
@@ -286,7 +290,7 @@ function reducer(state, action) {
         const moved = { ...node, region: action.region }
         return { ...w, components: treeInsertBefore(removed, action.overId, moved) }
       })
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'DUPLICATE_COMPONENT': {
@@ -296,7 +300,7 @@ function reducer(state, action) {
         if (!src) return w
         return { ...w, components: treeInsertAfter(w.components, action.componentId, treeClone(src)) }
       })
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'WRAP_IN_ROW': {
@@ -309,7 +313,7 @@ function reducer(state, action) {
         const replaced = treeInsertAfter(w.components, action.componentId, row)
         return { ...w, components: treeRemove(replaced, action.componentId) }
       })
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'DUPLICATE_WIREFRAME': {
@@ -352,7 +356,7 @@ function reducer(state, action) {
         if (action.beforeId) return { ...w, components: treeInsertBefore(w.components, action.beforeId, action.component) }
         return { ...w, components: treeAddChild(w.components, action.parentId || null, action.component) }
       })
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'PASTE_COMPONENT': {
@@ -363,7 +367,7 @@ function reducer(state, action) {
         if (action.afterId) return { ...w, components: treeInsertAfter(w.components, action.afterId, node) }
         return { ...w, components: treeAddChild(w.components, null, node) }
       })
-      return replaceCurrent(touch({ ...cur, wireframes }))
+      return replaceCurrent(touch({ ...cur, wireframes: stampWf(wireframes, action.wireframeId) }))
     }
 
     case 'ADD_WIREFRAME': {
