@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
@@ -6,7 +6,9 @@ import QuoteText from './QuoteText.jsx'
 import UnitFlows from './UnitFlows.jsx'
 import { FinalArtPanel } from './FinalArt.jsx'
 import { artItems } from '../lib/finalArt.js'
-import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText } from 'lucide-react'
+import { buildSpecText } from '../lib/specText.js'
+import { downloadText } from '../lib/download.js'
+import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText, FileText, Copy, RefreshCw, Download } from 'lucide-react'
 
 // 頁面規格清單：頁面的真相來源是「區段＋項目」，線稿由規格自動渲染。
 // 檢視模式＝膠囊掃視＋示意預覽（無任何編輯鈕）；編輯模式＝一行一項大列表（手機友善）＋貼上多行批次。
@@ -189,6 +191,7 @@ export default function SpecSheet({ wfId, onClose }) {
   }
 
   const isCustom = !spec && (wf.components || []).length > 0
+  const textStale = !!(wf.specText && wf.updatedAt && (wf.specTextAt || 0) < wf.updatedAt)
   const hasArt = artItems(current, wf.code).length > 0
   return createPortal(
     <div className="uf-wrap">
@@ -197,9 +200,13 @@ export default function SpecSheet({ wfId, onClose }) {
         <strong>{wf.name}</strong>
         {spec?.template && <span className="ps-type">{TPL_LABEL[spec.template] || spec.template}</span>}
         <div className="spacer" />
-        {spec && (mode === 'view'
-          ? <button className="uf-new" onClick={() => setMode('edit')}><Pencil size={14} /> 編輯</button>
-          : <button className="uf-new" onClick={() => setMode('view')}><Eye size={14} /> 完成</button>)}
+        {(spec || isCustom) && (
+          <span className="ps-modes">
+            <button className={mode === 'view' ? 'on' : ''} title="規格清單" onClick={() => setMode('view')}><Eye size={14} /></button>
+            {spec && <button className={mode === 'edit' ? 'on' : ''} title="編輯規格清單" onClick={() => setMode('edit')}><Pencil size={14} /></button>}
+            <button className={mode === 'text' ? 'on' : ''} title="文字版：可複製、可編輯的規格書" onClick={() => setMode('text')}><FileText size={14} /></button>
+          </span>
+        )}
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
@@ -261,6 +268,7 @@ export default function SpecSheet({ wfId, onClose }) {
           </div>
           </div>
         )}
+        {mode === 'text' && <SpecTextPane wf={wf} project={current} onPatch={patch} />}
         {spec && mode === 'edit' && (
           <div className="uf-card" style={{ gap: 10 }}>
             {spec.sections.map((s) => (
@@ -287,5 +295,33 @@ export default function SpecSheet({ wfId, onClose }) {
       {openFlow && <UnitFlows unit={openFlow.unit || ''} focusId={openFlow.id} onClose={() => setOpenFlow(null)} />}
     </div>,
     document.body
+  )
+}
+
+// 文字版規格：Markdown 一整份，可直接改、複製、下載。第一次開時從規格清單長出來；之後規格清單再改，提示可重新產生
+function SpecTextPane({ wf, project, onPatch }) {
+  const generated = buildSpecText(project, wf)
+  const [text, setText] = useState(wf.specText || generated)
+  const [copied, setCopied] = useState(false)
+  const ref = useRef(null)
+  const stale = !!(wf.specText && wf.updatedAt && (wf.specTextAt || 0) < wf.updatedAt)
+  useEffect(() => { setText(wf.specText || generated) }, [wf.id]) // eslint-disable-line
+  useEffect(() => { const el = ref.current; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }, [text])
+  const save = (t) => { setText(t); onPatch({ specText: t, specTextAt: Date.now() }) }
+  const copy = async () => { try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { ref.current?.select() } }
+  const regen = () => { if (wf.specText && !confirm('用目前的規格清單重新產生，會蓋掉文字版裡手改的內容。確定？')) return; save(generated) }
+  return (
+    <div className="uf-card ps-text">
+      <div className="ps-text-bar">
+        <span className="ps-kind">Markdown・{wf.specText ? '已手改' : '自規格清單產生'}</span>
+        {stale && <span className="fa-stale">規格清單在文字版之後改過</span>}
+        <div className="spacer" />
+        <button className="uf-sealbtn" onClick={regen}><RefreshCw size={11} /> 重新產生</button>
+        <button className="uf-sealbtn" onClick={() => downloadText(`${wf.code || ''}${wf.code ? ' ' : ''}${wf.name}.md`, text, 'text/markdown')}><Download size={11} /> 下載</button>
+        <button className="uf-sealgo" onClick={copy}><Copy size={12} /> {copied ? '已複製' : '複製全文'}</button>
+      </div>
+      <textarea ref={ref} className="ps-text-area" value={text} spellCheck={false} onChange={(e) => save(e.target.value)} />
+      <div className="uf-tips">段落照規格書習慣：製作說明 → 跳轉規則 → 畫面元件清單（每個元件寫 A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項）→ 邊界情境。表格用 Markdown，貼進 Notion、Docs、Word 都會成表。</div>
+    </div>
   )
 }
