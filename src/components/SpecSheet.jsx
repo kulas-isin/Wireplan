@@ -348,8 +348,7 @@ export default function SpecSheet({ wfId, onClose }) {
 
 // 文字版規格：唯讀的 Markdown 預覽，永遠跟規格清單一致（要改內容回規格清單，點條目填細節）。可複製、下載。
 function SpecTextPane({ wf, project }) {
-  const [withSource, setWithSource] = useState(true)
-  const text = buildSpecText(project, wf, { withSource })
+  const text = buildSpecText(project, wf)
   const [copied, setCopied] = useState(false)
   const ref = useRef(null)
   useEffect(() => { const el = ref.current; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }, [text])
@@ -358,7 +357,6 @@ function SpecTextPane({ wf, project }) {
     <div className="uf-card ps-text">
       <div className="ps-text-bar">
         <span className="ps-kind">Markdown・自規格清單產生</span>
-        <label className="ps-chk"><input type="checkbox" checked={withSource} onChange={(e) => setWithSource(e.target.checked)} /> 含資料來源</label>
         <div className="spacer" />
         <button className="uf-sealbtn" onClick={() => downloadText(`${wf.code || ''}${wf.code ? ' ' : ''}${wf.name}.md`, text, 'text/markdown')}><Download size={11} /> 下載</button>
         <button className="uf-sealgo" onClick={copy}><Copy size={12} /> {copied ? '已複製' : '複製全文'}</button>

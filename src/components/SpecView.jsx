@@ -8,7 +8,6 @@ import { RotateCw, Pencil, Download, FileSpreadsheet, ChevronDown, ChevronRight 
 
 export default function SpecView() {
   const { current, dispatch } = useStore()
-  const [withSource, setWithSource] = useState(true)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [docOpen, setDocOpen] = useState(false)
@@ -21,7 +20,7 @@ export default function SpecView() {
 
   const doXlsx = async () => {
     setBusy(true); setMsg('')
-    try { const r = await exportSpecXlsx(current, { withSource }); setMsg(`已產生 ${r.pages} 頁：${r.name}`) }
+    try { const r = await exportSpecXlsx(current); setMsg(`已產生 ${r.pages} 頁：${r.name}`) }
     catch (e) { setMsg('匯出失敗：' + (e?.message || e)) }
     setBusy(false)
   }
@@ -36,13 +35,12 @@ export default function SpecView() {
           <span className="ps-kind">{pages.length} 頁，一頁一工作表</span>
         </div>
         <div className="muted" style={{ fontSize: 12 }}>
-          每張工作表由上往下：製作說明 → 跳轉規則 → 畫面元件清單（A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項各一欄）→ 資料來源 → 邊界情境。
-          內容來自各頁的規格清單（點條目填細節），這裡不另外編輯。
+          每張工作表由上往下：製作說明 → 跳轉規則 → 畫面元件清單（A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項各一欄）→ 資料來源 → 邊界情境 → 驗收條件。
+          只有一個版本：客戶簽的和工程師做的是同一本。內容來自各頁的規格清單（點條目填細節），這裡不另外編輯。
         </div>
         <div className="sx-bar">
-          <label className="ps-chk"><input type="checkbox" checked={withSource} onChange={(e) => setWithSource(e.target.checked)} /> 含資料來源（ERP 來源、Shopline 欄位）</label>
           <div className="spacer" />
-          <button className="primary" disabled={busy || !pages.length} onClick={doXlsx}><Download size={15} /> {busy ? '產生中…' : withSource ? '匯出 Excel' : '匯出 Excel（客戶版）'}</button>
+          <button className="primary" disabled={busy || !pages.length} onClick={doXlsx}><Download size={15} /> {busy ? '產生中…' : '匯出 Excel'}</button>
         </div>
         {msg && <div className="muted" style={{ fontSize: 12 }}>{msg}</div>}
       </div>
