@@ -39,12 +39,27 @@ const g = (it, k) => String(it?.det?.[k] || '').trim()
 export function buildSpecData(project, wf) {
   const sections = wf?.spec?.sections || []
   const req = (project.requirements || []).find((r) => r.id === wf.requirementId)
-  const notes = sections.filter((s) => s.kind === 'note').flatMap((s) => (s.items || []).map((i) => i.label))
   const flows = (project.unitFlows || []).filter((f) => req && (f.covers || []).includes(req.id)).map((f) => f.name)
   const intro = (wf.description || req?.description || '').trim()
-  const useNotes = notes.filter((n) => !/^(空狀態|錯誤狀態|邊界)/.test(n) && n.trim() !== intro)
+  // 備註區依標題分組：用途／規則／進入方式…各自一組；空狀態、錯誤、邊界 → 邊界情境；驗收 → 驗收條件
+  const groups = [] // [{ title, items }]
+  const edges = []
+  const accept = []
+  for (const s of sections) {
+    if (s.kind !== 'note') continue
+    const title = (s.title || '').trim()
+    const items = (s.items || []).map((i) => i.label).filter((n) => n.trim() && n.trim() !== intro)
+    if (!items.length) continue
+    if (/空狀態|錯誤|邊界/.test(title)) { edges.push(...items); continue }
+    if (/驗收/.test(title)) { accept.push(...items); continue }
+    const g = { title: title || '說明', items: [] }
+    for (const n of items) (/^(空狀態|錯誤狀態|邊界)/.test(n) ? edges : g.items).push(n)
+    if (g.items.length) groups.push(g)
+  }
   const layoutNotes = []
   for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isTag(it.label)) layoutNotes.push(`${SECTION_KINDS[s.kind] || s.kind}${it.label}`)
+  if (layoutNotes.length) groups.push({ title: '版面', items: layoutNotes })
+  const notes = groups.flatMap((g) => g.items)
   const jumps = []
   for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) {
     if (!isJump(it.label) || isTag(it.label)) continue
@@ -67,8 +82,7 @@ export function buildSpecData(project, wf) {
       if (DATA_KINDS.includes(s.kind) && name && !IS_ACTION_COL.test(name)) sources.push({ name, erp: g(it, 'erp'), sl: g(it, 'sl'), dir: g(it, 'dir'), memo: g(it, 'memo') })
     }
   }
-  const edges = notes.filter((x) => /^(空狀態|錯誤狀態|邊界)/.test(x))
-  return { code: wf.code || '', name: wf.name || '', unit: wf.unit || req?.unit || '', intro, notes: [...useNotes, ...layoutNotes], flows, jumps, elements, sources, edges }
+  return { code: wf.code || '', name: wf.name || '', unit: wf.unit || req?.unit || '', intro, notes, groups, accept, flows, jumps, elements, sources, edges }
 }
 
 export function buildSpecText(project, wf, { withSource = true } = {}) {
@@ -77,9 +91,13 @@ export function buildSpecText(project, wf, { withSource = true } = {}) {
   L.push(`# ${d.code ? d.code + ' ' : ''}${d.name}`, '')
   L.push('## 製作說明', '')
   if (d.intro) L.push(d.intro, '')
-  for (const n of d.notes) L.push(n, '')
+  for (const g of d.groups) {
+    L.push(`### ${g.title}`, '')
+    for (const n of g.items) L.push(`- ${n}`)
+    L.push('')
+  }
   if (d.flows.length) L.push(`相關流程：${d.flows.join('、')}`, '')
-  if (!d.intro && !d.notes.length) L.push('（這頁做什麼、給誰用、進入方式）', '')
+  if (!d.intro && !d.groups.length) L.push('（這頁做什麼、給誰用、進入方式）', '')
 
   L.push('## 跳轉規則', '', '| 元素 | 點擊行為 |', '|---|---|')
   if (d.jumps.length) for (const [a, b] of d.jumps) L.push(`| ${esc(a)} | ${esc(b)} |`)
@@ -106,5 +124,10 @@ export function buildSpecText(project, wf, { withSource = true } = {}) {
   if (d.edges.length) for (const e of d.edges) L.push(`- ${e}`)
   else L.push('- （無資料／失敗／權限不足時怎麼呈現）')
   L.push('')
+  if (d.accept.length) {
+    L.push('## 驗收條件', '')
+    for (const a of d.accept) L.push(`- ${a}`)
+    L.push('')
+  }
   return L.join('\n')
 }
