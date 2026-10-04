@@ -2663,3 +2663,19 @@ button.qm-chip { cursor: pointer; }
 .uw-art { display: inline-flex; align-items: center; color: #356C7C; margin-left: 2px; }
 .uw-art.stale { color: #B0691F; }
 .fa-btn-stale { color: #B0691F !important; }
+
+/* 定案圖：版本與批次 */
+.fa-vers { display: inline-flex; gap: 3px; margin-left: 2px; }
+.fa-vers .uf-vchip { padding: 2px 7px; font-size: 10px; }
+.fa-ver { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; font-size: 11.5px; color: #5A6B4E; padding: 5px 10px; background: #FAFBF5; border-top: 1px solid rgba(53,108,124,0.1); }
+.fa-ver.old { color: #B0691F; background: #FDF6EA; }
+.fa-ver .uf-sealbtn { margin-left: auto; }
+.fa-batch { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px dashed rgba(58,93,37,0.2); }
+.fa-batch .ht-title { display: flex; align-items: center; gap: 5px; }
+.fa-reason { width: 100%; border: 1px solid rgba(58,93,37,0.2); border-radius: 12px; padding: 9px 11px; font: inherit; font-size: 13px; background: #fff; box-sizing: border-box; }
+.fa-batches { display: flex; flex-direction: column; gap: 4px; }
+.fa-batch-row { background: #fff; border-radius: 12px; border: 1px solid rgba(58,93,37,0.12); overflow: hidden; }
+.fa-batch-head { display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: none; font: inherit; text-align: left; padding: 8px 10px; cursor: pointer; font-size: 12.5px; color: #22301F; }
+.fa-batch-reason { flex: 1; min-width: 0; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fa-batch-files { display: flex; flex-direction: column; gap: 3px; padding: 4px 10px 9px; font-size: 11.5px; color: #56684C; border-top: 1px solid rgba(58,93,37,0.1); }
+.fa-batch-files b { color: #3A5D25; margin-right: 4px; }
