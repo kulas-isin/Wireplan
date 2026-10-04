@@ -4,6 +4,8 @@ import { useStore } from '../store/StoreContext.jsx'
 import { uid } from '../lib/id.js'
 import QuoteText from './QuoteText.jsx'
 import UnitFlows from './UnitFlows.jsx'
+import { FinalArtPanel } from './FinalArt.jsx'
+import { artItems } from '../lib/finalArt.js'
 import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText } from 'lucide-react'
 
 // 頁面規格清單：頁面的真相來源是「區段＋項目」，線稿由規格自動渲染。
@@ -187,6 +189,7 @@ export default function SpecSheet({ wfId, onClose }) {
   }
 
   const isCustom = !spec && (wf.components || []).length > 0
+  const hasArt = artItems(current, wf.code).length > 0
   return createPortal(
     <div className="uf-wrap">
       <div className="uf-head">
@@ -200,10 +203,11 @@ export default function SpecSheet({ wfId, onClose }) {
         <button className="rd-back" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="uf-body">
-        {isCustom && (
+        {isCustom && (<>
+          {hasArt && <FinalArtPanel wf={wf} />}
           <div className="uf-empty">此頁已是自由編輯頁（由元件編輯器管理）。<br /><br />
             <button className="uf-new" onClick={jumpBoard}><ArrowUpRight size={14} /> 開啟 Wireframe 編輯器</button></div>
-        )}
+        </>)}
         {!spec && !isCustom && (
           <div className="uf-card" style={{ alignItems: 'stretch' }}>
             <div className="ht-title">這一頁要長什麼樣？選個頁型起手：</div>
@@ -219,6 +223,8 @@ export default function SpecSheet({ wfId, onClose }) {
           </div>
         )}
         {spec && mode === 'view' && (
+          <div className={'ps-cols' + (hasArt ? ' has-art' : '')}>
+          {hasArt && <div className="ps-art"><FinalArtPanel wf={wf} /></div>}
           <div className="uf-card" style={{ gap: 10 }}>
             {(req || relFlows.length > 0 || qItems.length > 0) && (
               <div className="ps-links">
@@ -250,8 +256,9 @@ export default function SpecSheet({ wfId, onClose }) {
                 )}
               </div>
             ))}
-            <div className="ht-title" style={{ padding: '2px 2px 0' }}>示意預覽</div>
-            <Sketch spec={spec} />
+            {!hasArt && <><div className="ht-title" style={{ padding: '2px 2px 0' }}>示意預覽</div>
+            <Sketch spec={spec} /></>}
+          </div>
           </div>
         )}
         {spec && mode === 'edit' && (

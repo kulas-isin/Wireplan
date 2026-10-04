@@ -1,5 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
+import { FinalArtLightbox, useFinalArt } from './FinalArt.jsx'
+import { variantOfFile } from '../lib/finalArt.js'
 import { uid } from '../lib/id.js'
 import { COMPONENT_TYPES, COMPONENT_GROUPS, PROP_SCHEMA, newComponent } from '../lib/wireframeTemplates.js'
 import { LAYOUT_PRESETS } from '../lib/layoutPresets.js'
@@ -1102,6 +1105,7 @@ function WireframeFrame({ wireframe, requirement, dark }) {
           <button title="平板（860px）" className={wireframe.device === 'tablet' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('tablet') }}><Tablet size={15} /></button>
           <button title="手機（420px）" className={wireframe.device === 'mobile' ? 'active' : ''} onClick={(e) => { e.stopPropagation(); setDevice('mobile') }}><Smartphone size={15} /></button>
         </div>
+        <FinalArtButton wf={wireframe} />
         <button className="ghost sm tb-x" title="複製整頁" onClick={(e) => { e.stopPropagation(); dispatch({ type: 'DUPLICATE_WIREFRAME', id: wireframe.id }) }}><Copy size={14} /></button>
         {requirement && (
           <button className="ghost sm tb-x" title="依需求分類重新產生版面"
@@ -1429,4 +1433,21 @@ export default function WireframeBoard() {
       </div>
     </ConfigProvider>
   )
+}
+
+// 工具列的定案圖鈕：有圖才出現，點開全螢幕對照；多張時先開第一張，標題列可換
+function FinalArtButton({ wf }) {
+  const { items, urls, stale } = useFinalArt(wf)
+  const [at, setAt] = useState(-1)
+  if (!items.length) return null
+  const it = items[at]
+  return (<>
+    <button className={'ghost sm tb-x' + (stale ? ' fa-btn-stale' : '')} title={stale ? '定案圖（規格在定案後改過）' : `定案圖（${items.length} 張）`} onClick={(e) => { e.stopPropagation(); setAt(0) }}><Image size={15} /></button>
+    {it && urls[it.sha] && (
+      <FinalArtLightbox src={urls[it.sha]} onClose={() => setAt(-1)}
+        label={`${wf.code || ''}　${variantOfFile(it.name) || wf.name}` + (items.length > 1 ? `　${at + 1}/${items.length}` : '')} />
+    )}
+    {it && items.length > 1 && urls[it.sha] && createPortal(
+      <div className="fa-lb-nav"><button onClick={() => setAt((at + items.length - 1) % items.length)}>‹</button><button onClick={() => setAt((at + 1) % items.length)}>›</button></div>, document.body)}
+  </>)
 }

@@ -6,6 +6,7 @@ import { useSyncStatus, SYNC_LABEL, fmt } from '../lib/ghSync.js'
 import { X, UploadCloud, DownloadCloud, ShieldCheck, FileUp, FileDown } from 'lucide-react'
 import { readFileAsText } from '../lib/download.js'
 import { shareOrDownloadProject } from '../lib/sync.js'
+import { FinalArtSettings } from './FinalArt.jsx'
 
 // GitHub 同步面板：把所有專案存進使用者自己的私人 repo（wireplan-data.json），
 // 換裝置 / 手機↔電腦 都能推上去、拉回來。token 只存本機 localStorage。
@@ -96,6 +97,7 @@ export default function GithubSync({ onClose }) {
             <button className="tg-big" disabled={!ready || busy} onClick={pull}><DownloadCloud size={15} /> 強制拉回，覆蓋本機</button>
           </div>
         </details>
+        <FinalArtSettings />
         <details className="gh-manual">
           <summary>專案檔匯入／匯出（單一專案 JSON）</summary>
           <div className="gh-btns">

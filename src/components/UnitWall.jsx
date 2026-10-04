@@ -13,7 +13,8 @@ import SpecSheet from './SpecSheet.jsx'
 import MeetingDoc from './MeetingDoc.jsx'
 import QuestionsPanel from './QuestionsPanel.jsx'
 import { isOpen } from '../lib/questions.js'
-import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, ArrowDownAZ, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch } from 'lucide-react'
+import { artItems, artStale } from '../lib/finalArt.js'
+import { Plus, X, ArrowUpRight, ArrowUp, ArrowDown, ArrowDownAZ, Stamp, Undo2, ChevronDown, ChevronRight, GripVertical, MoreHorizontal, Pencil, GitBranch, Image as ImageIcon } from 'lucide-react'
 
 const ST_CLASS = ['uw-st0', 'uw-st1', 'uw-st2'] // 待確認 / 已蓋章 / 異動
 
@@ -96,6 +97,7 @@ function TreeNode({ node, project, depth, edit, dispatch, onMore, subtreeIds, on
         {node.wf.code && <span className="wf-code">{node.wf.code}</span>}
         <span className="uw-nname" title="開頁面規格清單" onClick={(e) => { if (!edit) { e.stopPropagation(); onSpec?.(node.wf.id) } }}>{node.wf.name}</span>
         {reqs.length > 0 && <span className="uw-ncnt">{reqs.length} 需求</span>}
+        {(() => { const a = artItems(project, node.wf.code); return a.length > 0 && <span className={'uw-art' + (artStale(node.wf, a) ? ' stale' : '')} title={artStale(node.wf, a) ? '有定案圖，但規格在定案後改過' : `有定案圖（${a.length} 張）`}><ImageIcon size={11} /></span> })()}
         {edit ? (
           <>
             <button className="uw-mini" title="在此頁底下新增子頁" onClick={(e) => { e.stopPropagation(); setAdding(true); setOpen(true) }}><Plus size={13} /></button>
