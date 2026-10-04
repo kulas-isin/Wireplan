@@ -13,6 +13,7 @@ export const DET_FIELDS = [
   ['sl', 'Shopline 欄位', 'API 欄位名'],
   ['dir', '方向', 'ERP→SL、SL→ERP、雙向、僅 ERP'],
   ['memo', '備註', '給工程師的提醒'],
+  ['src', 'F. 來源（給客戶看的一句）', '例：ERP 設定資料，同步方向 ERP→SL'],
 ]
 export const DIR_OPTIONS = ['ERP→SL', 'SL→ERP', '雙向', '僅 ERP', '待定']
 export const hasDet = (it) => !!it?.det && Object.values(it.det).some((v) => String(v || '').trim())
@@ -88,7 +89,7 @@ export function buildSpecData(project, wf) {
       const act = rest && IS_ACTION.test(rest)
       elements.push({
         n: elements.length + 1, name, kind, label: it.label, basis: basisOf(it),
-        op: g(it, 'op') || (act ? rest : ''), def: g(it, 'def'), rule: g(it, 'rule') || (!act ? rest : ''), state: g(it, 'state'), opt: g(it, 'opt'),
+        op: g(it, 'op') || (act ? rest : ''), def: g(it, 'def'), rule: g(it, 'rule') || (!act ? rest : ''), state: g(it, 'state'), opt: g(it, 'opt'), src: g(it, 'src'),
       })
       if (DATA_KINDS.includes(s.kind) && name && !IS_ACTION_COL.test(name)) sources.push({ name, erp: g(it, 'erp'), sl: g(it, 'sl'), dir: g(it, 'dir'), memo: g(it, 'memo'), basis: basisOf(it) })
     }
