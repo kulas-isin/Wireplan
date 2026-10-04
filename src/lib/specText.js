@@ -19,6 +19,9 @@ const isJump = (label) => /→|跳至|跳轉|轉跳|另開|導向/.test(label ||
 const isTag = (label) => /^[（(][^）)]{1,8}[）)]/.test(String(label || '').trim()) // （版面）（共用機制）…
 // 說明裡有操作動詞（含「跳出標籤」＝滑入／點擊的原地提示）就放 A. 操作，否則放 C. 規則
 const IS_ACTION = /點|按|輸入|勾|拖|切換|選|跳出標籤|滑入/
+// 資料來源表要列的區（有資料欄位的），以及表格裡不是資料的操作欄
+const DATA_KINDS = ['table', 'form', 'stats', 'desc']
+const IS_ACTION_COL = /^(操作|動作|同步|複製|刪除|編輯)$/
 
 export function buildSpecText(project, wf) {
   const sections = wf?.spec?.sections || []
@@ -72,6 +75,23 @@ export function buildSpecText(project, wf) {
     }
   }
   if (!n) L.push('| 1 | （尚無元件） | A. 操作：<br>B. 預設：<br>C. 規則：<br>D. 狀態：<br>E. 選項： |')
+  L.push('')
+
+  // 資料來源：每個資料欄位（表格欄、表單欄、統計卡、描述）一列，來源與方向由人填
+  L.push('## 資料來源', '', '方向：ERP→SL（推送 Shopline）、SL→ERP（從 Shopline 回寫）、雙向、僅 ERP（不同步）', '')
+  L.push('| 欄位 | ERP 來源 | Shopline 欄位 | 方向 | 備註 |', '|---|---|---|---|---|')
+  let d = 0
+  for (const s of sections) {
+    if (!DATA_KINDS.includes(s.kind)) continue
+    for (const it of s.items || []) {
+      if (isTag(it.label)) continue
+      const { name } = splitLabel(it.label)
+      if (!name || IS_ACTION_COL.test(name)) continue
+      d++
+      L.push(`| ${esc(name)} | | | | |`)
+    }
+  }
+  if (!d) L.push('| （無資料欄位） | | | | |')
   L.push('')
 
   // 邊界情境：空狀態、錯誤狀態、邊界 開頭的備註
