@@ -6,7 +6,7 @@ import QuoteText from './QuoteText.jsx'
 import UnitFlows from './UnitFlows.jsx'
 import { FinalArtPanel } from './FinalArt.jsx'
 import { artItems } from '../lib/finalArt.js'
-import { buildSpecText, DET_FIELDS, DIR_OPTIONS, hasDet } from '../lib/specText.js'
+import { buildSpecText, DET_FIELDS, DIR_OPTIONS, hasDet, BASIS, BASIS_SHORT, BASIS_LABEL, basisOf } from '../lib/specText.js'
 import { downloadText } from '../lib/download.js'
 import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText, FileText, Copy, Download, SlidersHorizontal } from 'lucide-react'
 
@@ -106,10 +106,11 @@ function Sketch({ spec }) {
 }
 
 // 條目細節抽屜：A–E、ERP 來源、Shopline 欄位、方向、備註。規格清單是唯一主檔，文字版與 Excel 都從這些格子長
-function ItemDrawer({ item, kind, onSave, onClose }) {
+function ItemDrawer({ item, kind, isNote, onSave, onClose }) {
   const [det, setDet] = useState({ ...(item.det || {}) })
+  const [basis, setBasis] = useState(basisOf(item))
   const set = (k, v) => setDet((d) => ({ ...d, [k]: v }))
-  const save = () => { onSave(det); onClose() }
+  const save = () => { onSave(det, basis); onClose() }
   return (
     <div className="ps-det-wrap" onClick={onClose}>
       <div className="ps-det" onClick={(e) => e.stopPropagation()}>
@@ -120,7 +121,15 @@ function ItemDrawer({ item, kind, onSave, onClose }) {
           <button className="rd-back" onClick={onClose}><X size={16} /></button>
         </div>
         <div className="ps-det-body">
-          {DET_FIELDS.map(([k, label, hint]) => (
+          <div className="ps-det-f">
+            <span>依據（這條從哪來）</span>
+            <div className="ps-basis-pick">
+              {BASIS.map(([k, s, label, hint]) => (
+                <button key={k} className={'ps-basis-opt b-' + k + (basis === k ? ' on' : '')} title={hint} onClick={() => setBasis(basis === k ? '' : k)}><b>{s}</b> {label}</button>
+              ))}
+            </div>
+          </div>
+          {!isNote && DET_FIELDS.map(([k, label, hint]) => (
             <label key={k} className="ps-det-f">
               <span>{label}</span>
               {k === 'dir' ? (
@@ -172,8 +181,8 @@ function SectionEditor({ sec, onPatch, onRemove, onMove, onDetail }) {
         {items.map((it, i) => (
           <div key={it.id} className="ps-row">
             <input value={it.label} onChange={(e) => setItems(items.map((x) => x.id === it.id ? { ...x, label: e.target.value } : x))} />
-            {it.c && <span className="ps-row-c" title="報價合約來源">約</span>}
-            {!['note'].includes(sec.kind) && <button className={'uw-mini' + (hasDet(it) ? ' on' : '')} title="細節：A–E、資料來源" onClick={() => onDetail(it)}><SlidersHorizontal size={13} /></button>}
+            {basisOf(it) && <b className={'ps-basis b-' + basisOf(it)} title={'依據：' + BASIS_LABEL[basisOf(it)]}>{BASIS_SHORT[basisOf(it)]}</b>}
+            <button className={'uw-mini' + (hasDet(it) ? ' on' : '')} title={sec.kind === 'note' ? '依據' : '細節：A–E、資料來源、依據'} onClick={() => onDetail(it)}><SlidersHorizontal size={13} /></button>
             <button className="uw-mini" onClick={() => move(i, -1)}><ChevronUp size={13} /></button>
             <button className="uw-mini" onClick={() => move(i, 1)}><ChevronDown size={13} /></button>
             <button className="uw-mini uf-del" onClick={() => setItems(items.filter((x) => x.id !== it.id))}><X size={13} /></button>
@@ -232,7 +241,7 @@ export default function SpecSheet({ wfId, onClose }) {
 
   const isCustom = !spec && (wf.components || []).length > 0
   const hasArt = artItems(current, wf.code).length > 0
-  const saveDet = (secId, itemId, det) => patchSection(secId, { items: (spec.sections.find((s) => s.id === secId)?.items || []).map((x) => (x.id === itemId ? { ...x, det } : x)) })
+  const saveDet = (secId, itemId, det, basis) => patchSection(secId, { items: (spec.sections.find((s) => s.id === secId)?.items || []).map((x) => (x.id === itemId ? { ...x, det, basis: basis || undefined } : x)) })
   return createPortal(
     <div className="uf-wrap">
       <div className="uf-head">
@@ -299,8 +308,8 @@ export default function SpecSheet({ wfId, onClose }) {
                 {(s.items || []).length > 0 && (
                   <div className="ps-items">
                     {s.items.map((it) => s.kind === 'note'
-                      ? <span key={it.id} className={'ps-item' + (it.c ? ' contract' : '')}>{it.label}</span>
-                      : <button key={it.id} className={'ps-item ps-item-btn' + (it.c ? ' contract' : '') + (hasDet(it) ? ' has-det' : '')} title="點開填細節：A–E、資料來源" onClick={() => setDetail({ secId: s.id, item: it })}>{it.label}{hasDet(it) && <i className="ps-dot" />}</button>)}
+                      ? <button key={it.id} className="ps-item ps-item-btn" title={'點開標依據' + (basisOf(it) ? '｜' + BASIS_LABEL[basisOf(it)] : '')} onClick={() => setDetail({ secId: s.id, item: it })}>{basisOf(it) && <b className={'ps-basis b-' + basisOf(it)}>{BASIS_SHORT[basisOf(it)]}</b>}{it.label}</button>
+                      : <button key={it.id} className={'ps-item ps-item-btn' + (hasDet(it) ? ' has-det' : '')} title={'點開填細節：A–E、資料來源、依據' + (basisOf(it) ? '｜依據：' + BASIS_LABEL[basisOf(it)] : '')} onClick={() => setDetail({ secId: s.id, item: it })}>{basisOf(it) && <b className={'ps-basis b-' + basisOf(it)}>{BASIS_SHORT[basisOf(it)]}</b>}{it.label}{hasDet(it) && <i className="ps-dot" />}</button>)}
                   </div>
                 )}
               </div>
@@ -339,7 +348,8 @@ export default function SpecSheet({ wfId, onClose }) {
       {detail && spec && (
         <ItemDrawer key={detail.item.id} item={(spec.sections.find((s) => s.id === detail.secId)?.items || []).find((x) => x.id === detail.item.id) || detail.item}
           kind={SECTION_KINDS[spec.sections.find((s) => s.id === detail.secId)?.kind] || ''}
-          onSave={(det) => saveDet(detail.secId, detail.item.id, det)} onClose={() => setDetail(null)} />
+          isNote={spec.sections.find((s) => s.id === detail.secId)?.kind === 'note'}
+          onSave={(det, basis) => saveDet(detail.secId, detail.item.id, det, basis)} onClose={() => setDetail(null)} />
       )}
     </div>,
     document.body

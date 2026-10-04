@@ -16,6 +16,17 @@ export const DET_FIELDS = [
 ]
 export const DIR_OPTIONS = ['ERP→SL', 'SL→ERP', '雙向', '僅 ERP', '待定']
 export const hasDet = (it) => !!it?.det && Object.values(it.det).some((v) => String(v || '').trim())
+// 依據：這條規格從哪來。報價單原文／客戶確認（會議決議、補充）／現行系統／推測（我們補的，客戶還沒看過）
+export const BASIS = [
+  ['quote', '約', '報價單', '報價單原文寫的'],
+  ['client', '確', '客戶確認', '會議決議或客戶補充'],
+  ['current', '現', '現行系統', '照客戶現行系統的做法'],
+  ['infer', '推', '推測', '我們補的合理規則，客戶尚未確認'],
+]
+export const BASIS_LABEL = Object.fromEntries(BASIS.map(([k, , l]) => [k, l]))
+export const BASIS_SHORT = Object.fromEntries(BASIS.map(([k, s]) => [k, s]))
+export const basisOf = (it) => it?.basis || ''
+const basisTag = (it) => { const b = basisOf(it); return b && b !== 'quote' ? `〔${BASIS_LABEL[b]}〕` : '' }
 
 const ELEMENT_KINDS = ['tabs', 'stats', 'searchbar', 'filter', 'toolbar', 'table', 'form', 'desc', 'actions', 'pagination']
 const DATA_KINDS = ['table', 'form', 'stats', 'desc']
@@ -48,23 +59,23 @@ export function buildSpecData(project, wf) {
   for (const s of sections) {
     if (s.kind !== 'note') continue
     const title = (s.title || '').trim()
-    const items = (s.items || []).map((i) => i.label).filter((n) => n.trim() && n.trim() !== intro)
+    const items = (s.items || []).filter((i) => i.label.trim() && i.label.trim() !== intro).map((i) => ({ label: i.label, basis: basisOf(i) }))
     if (!items.length) continue
     if (/空狀態|錯誤|邊界/.test(title)) { edges.push(...items); continue }
     if (/驗收/.test(title)) { accept.push(...items); continue }
     const g = { title: title || '說明', items: [] }
-    for (const n of items) (/^(空狀態|錯誤狀態|邊界)/.test(n) ? edges : g.items).push(n)
+    for (const n of items) (/^(空狀態|錯誤狀態|邊界)/.test(n.label) ? edges : g.items).push(n)
     if (g.items.length) groups.push(g)
   }
   const layoutNotes = []
-  for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isTag(it.label)) layoutNotes.push(`${SECTION_KINDS[s.kind] || s.kind}${it.label}`)
+  for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isTag(it.label)) layoutNotes.push({ label: `${SECTION_KINDS[s.kind] || s.kind}${it.label}`, basis: basisOf(it) })
   if (layoutNotes.length) groups.push({ title: '版面', items: layoutNotes })
-  const notes = groups.flatMap((g) => g.items)
+  const notes = groups.flatMap((g) => g.items.map((i) => i.label))
   const jumps = []
   for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) {
     if (!isJump(it.label) || isTag(it.label)) continue
-    if (it.label.includes('→')) { const [a, ...b] = it.label.split('→'); jumps.push([a.trim(), '→ ' + b.join('→').trim()]) }
-    else { const { name, rest } = splitLabel(it.label); jumps.push([name, rest || it.label]) }
+    if (it.label.includes('→')) { const [a, ...b] = it.label.split('→'); jumps.push([a.trim(), '→ ' + b.join('→').trim(), basisOf(it)]) }
+    else { const { name, rest } = splitLabel(it.label); jumps.push([name, rest || it.label, basisOf(it)]) }
   }
   const elements = []
   const sources = []
@@ -76,10 +87,10 @@ export function buildSpecData(project, wf) {
       const { name, rest } = splitLabel(it.label)
       const act = rest && IS_ACTION.test(rest)
       elements.push({
-        n: elements.length + 1, name, kind, label: it.label,
+        n: elements.length + 1, name, kind, label: it.label, basis: basisOf(it),
         op: g(it, 'op') || (act ? rest : ''), def: g(it, 'def'), rule: g(it, 'rule') || (!act ? rest : ''), state: g(it, 'state'), opt: g(it, 'opt'),
       })
-      if (DATA_KINDS.includes(s.kind) && name && !IS_ACTION_COL.test(name)) sources.push({ name, erp: g(it, 'erp'), sl: g(it, 'sl'), dir: g(it, 'dir'), memo: g(it, 'memo') })
+      if (DATA_KINDS.includes(s.kind) && name && !IS_ACTION_COL.test(name)) sources.push({ name, erp: g(it, 'erp'), sl: g(it, 'sl'), dir: g(it, 'dir'), memo: g(it, 'memo'), basis: basisOf(it) })
     }
   }
   return { code: wf.code || '', name: wf.name || '', unit: wf.unit || req?.unit || '', intro, notes, groups, accept, flows, jumps, elements, sources, edges }
@@ -91,42 +102,45 @@ export function buildSpecText(project, wf, { withSource = true } = {}) {
   L.push(`# ${d.code ? d.code + ' ' : ''}${d.name}`, '')
   L.push('## 製作說明', '')
   if (d.intro) L.push(d.intro, '')
+  const bl = (b) => BASIS_LABEL[b] || ''
+  const bullet = (i) => `- ${i.basis && i.basis !== 'quote' ? `〔${bl(i.basis)}〕` : ''}${i.label}`
   for (const g of d.groups) {
     L.push(`### ${g.title}`, '')
-    for (const n of g.items) L.push(`- ${n}`)
+    for (const n of g.items) L.push(bullet(n))
     L.push('')
   }
   if (d.flows.length) L.push(`相關流程：${d.flows.join('、')}`, '')
   if (!d.intro && !d.groups.length) L.push('（這頁做什麼、給誰用、進入方式）', '')
+  L.push('依據標記：未標＝報價單原文；〔客戶確認〕＝會議決議或客戶補充；〔現行系統〕＝照現行做法；〔推測〕＝我們補的合理規則，客戶尚未確認。', '')
 
-  L.push('## 跳轉規則', '', '| 元素 | 點擊行為 |', '|---|---|')
-  if (d.jumps.length) for (const [a, b] of d.jumps) L.push(`| ${esc(a)} | ${esc(b)} |`)
-  else L.push('| （無） | |')
+  L.push('## 跳轉規則', '', '| 元素 | 點擊行為 | 依據 |', '|---|---|---|')
+  if (d.jumps.length) for (const [a, b, bs] of d.jumps) L.push(`| ${esc(a)} | ${esc(b)} | ${bl(bs)} |`)
+  else L.push('| （無） | | |')
   L.push('')
 
-  L.push('## 畫面元件清單', '', '| # | 元件 | 說明（A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項） |', '|---|---|---|')
+  L.push('## 畫面元件清單', '', '| # | 元件 | 依據 | 說明（A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項） |', '|---|---|---|---|')
   for (const e of d.elements) {
     const lines = [`A. 操作：${esc(e.op)}`, `B. 預設：${esc(e.def)}`, `C. 規則：${esc(e.rule)}`, `D. 狀態：${esc(e.state)}`, `E. 選項：${esc(e.opt)}`]
-    L.push(`| ${e.n} | ${esc(e.name)}<br><small>${e.kind}</small> | ${lines.join('<br>')} |`)
+    L.push(`| ${e.n} | ${esc(e.name)}<br><small>${e.kind}</small> | ${bl(e.basis)} | ${lines.join('<br>')} |`)
   }
-  if (!d.elements.length) L.push('| 1 | （尚無元件） | A. 操作：<br>B. 預設：<br>C. 規則：<br>D. 狀態：<br>E. 選項： |')
+  if (!d.elements.length) L.push('| 1 | （尚無元件） | | A. 操作：<br>B. 預設：<br>C. 規則：<br>D. 狀態：<br>E. 選項： |')
   L.push('')
 
   if (withSource) {
     L.push('## 資料來源', '', '方向：ERP→SL（推送 Shopline）、SL→ERP（從 Shopline 回寫）、雙向、僅 ERP（不同步）', '')
-    L.push('| 欄位 | ERP 來源 | Shopline 欄位 | 方向 | 備註 |', '|---|---|---|---|---|')
-    for (const s of d.sources) L.push(`| ${esc(s.name)} | ${esc(s.erp)} | ${esc(s.sl)} | ${esc(s.dir)} | ${esc(s.memo)} |`)
-    if (!d.sources.length) L.push('| （無資料欄位） | | | | |')
+    L.push('| 欄位 | ERP 來源 | Shopline 欄位 | 方向 | 備註 | 依據 |', '|---|---|---|---|---|---|')
+    for (const s of d.sources) L.push(`| ${esc(s.name)} | ${esc(s.erp)} | ${esc(s.sl)} | ${esc(s.dir)} | ${esc(s.memo)} | ${bl(s.basis)} |`)
+    if (!d.sources.length) L.push('| （無資料欄位） | | | | | |')
     L.push('')
   }
 
   L.push('## 邊界情境', '')
-  if (d.edges.length) for (const e of d.edges) L.push(`- ${e}`)
+  if (d.edges.length) for (const e of d.edges) L.push(bullet(e))
   else L.push('- （無資料／失敗／權限不足時怎麼呈現）')
   L.push('')
   if (d.accept.length) {
     L.push('## 驗收條件', '')
-    for (const a of d.accept) L.push(`- ${a}`)
+    for (const a of d.accept) L.push(bullet(a))
     L.push('')
   }
   return L.join('\n')

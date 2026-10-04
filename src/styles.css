@@ -2716,3 +2716,21 @@ button.qm-chip { cursor: pointer; }
 .sx-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sx-toggle { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; font: inherit; font-size: 12px; font-weight: 700; color: #7A8A70; cursor: pointer; padding: 6px 2px; }
 .ps-det-head .ps-kind { white-space: nowrap; flex-shrink: 0; }
+
+/* ── 依據標記：約（報價單）／確（客戶確認）／現（現行系統）／推（推測，提醒色） ── */
+.ps-basis { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 5px; font-size: 10px; font-weight: 800; line-height: 1; flex-shrink: 0; }
+.ps-basis.b-quote { background: #EAF2D8; color: #3A5D25; }
+.ps-basis.b-client { background: #E1EDF9; color: #2E5F96; }
+.ps-basis.b-current { background: #EEEDE8; color: #5B6256; }
+.ps-basis.b-infer { background: #FBF0DC; color: #B0691F; }
+.ps-item-btn .ps-basis { margin-left: -3px; }
+.ps-row .ps-basis { width: 20px; height: 20px; }
+.ps-basis-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.ps-basis-opt { display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(58,93,37,0.18); background: #fff; font: inherit; font-size: 12px; color: #22301F; border-radius: 999px; padding: 5px 10px; cursor: pointer; }
+.ps-basis-opt b { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 5px; font-size: 10px; }
+.ps-basis-opt.b-quote b { background: #EAF2D8; color: #3A5D25; }
+.ps-basis-opt.b-client b { background: #E1EDF9; color: #2E5F96; }
+.ps-basis-opt.b-current b { background: #EEEDE8; color: #5B6256; }
+.ps-basis-opt.b-infer b { background: #FBF0DC; color: #B0691F; }
+.ps-basis-opt.on { border-color: #9CBD48; background: #F6FAEC; font-weight: 700; }
+.ps-basis-opt.on.b-infer { border-color: #B0691F; background: #FBF0DC; }
