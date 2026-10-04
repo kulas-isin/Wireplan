@@ -13,7 +13,6 @@ import SpecView from './components/SpecView.jsx'
 const WireframeBoard = lazy(() => import('./components/WireframeBoard.jsx'))
 // 流程畫布用到 reactflow，延遲載入
 const FlowCanvas = lazy(() => import('./components/FlowCanvas.jsx'))
-import FieldSpec from './components/FieldSpec.jsx'
 import Todos from './components/Todos.jsx'
 import { openCount } from './lib/todos.js'
 import { useSyncStatus, SYNC_LABEL, fmt as fmtSync } from './lib/ghSync.js'
@@ -24,7 +23,6 @@ const TABS = [
   { key: 'import', label: '匯入', Icon: FileInput },
   { key: 'requirements', label: '需求', Icon: ListChecks },
   { key: 'wireframe', label: 'Wireframe', Icon: LayoutTemplate },
-  { key: 'fields', label: '欄位規格', Icon: Table2 },
   { key: 'spec', label: '規格文件', Icon: FileText },
   { key: 'flow', label: '流程設計', Icon: Workflow },
 ]
@@ -184,7 +182,6 @@ export default function App() {
               <WireframeBoard />
             </Suspense>
           )}
-          {tab === 'fields' && <FieldSpec />}
           {tab === 'spec' && <SpecView />}
           {tab === 'flow' && (
             <Suspense fallback={<div className="empty"><div className="muted">載入流程畫布中…</div></div>}>

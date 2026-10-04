@@ -6,9 +6,9 @@ import QuoteText from './QuoteText.jsx'
 import UnitFlows from './UnitFlows.jsx'
 import { FinalArtPanel } from './FinalArt.jsx'
 import { artItems } from '../lib/finalArt.js'
-import { buildSpecText } from '../lib/specText.js'
+import { buildSpecText, DET_FIELDS, DIR_OPTIONS, hasDet } from '../lib/specText.js'
 import { downloadText } from '../lib/download.js'
-import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText, FileText, Copy, RefreshCw, Download } from 'lucide-react'
+import { X, ChevronUp, ChevronDown, Trash2, Plus, ClipboardPaste, Pencil, Eye, ArrowUpRight, GitBranch, ScrollText, FileText, Copy, Download, SlidersHorizontal } from 'lucide-react'
 
 // 頁面規格清單：頁面的真相來源是「區段＋項目」，線稿由規格自動渲染。
 // 檢視模式＝膠囊掃視＋示意預覽（無任何編輯鈕）；編輯模式＝一行一項大列表（手機友善）＋貼上多行批次。
@@ -105,8 +105,46 @@ function Sketch({ spec }) {
   )
 }
 
+// 條目細節抽屜：A–E、ERP 來源、Shopline 欄位、方向、備註。規格清單是唯一主檔，文字版與 Excel 都從這些格子長
+function ItemDrawer({ item, kind, onSave, onClose }) {
+  const [det, setDet] = useState({ ...(item.det || {}) })
+  const set = (k, v) => setDet((d) => ({ ...d, [k]: v }))
+  const save = () => { onSave(det); onClose() }
+  return (
+    <div className="ps-det-wrap" onClick={onClose}>
+      <div className="ps-det" onClick={(e) => e.stopPropagation()}>
+        <div className="ps-det-head">
+          <span className="ps-kind">{kind}</span>
+          <strong>{item.label}</strong>
+          <div className="spacer" />
+          <button className="rd-back" onClick={onClose}><X size={16} /></button>
+        </div>
+        <div className="ps-det-body">
+          {DET_FIELDS.map(([k, label, hint]) => (
+            <label key={k} className="ps-det-f">
+              <span>{label}</span>
+              {k === 'dir' ? (
+                <select value={det[k] || ''} onChange={(e) => set(k, e.target.value)}>
+                  <option value="">—</option>
+                  {DIR_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <textarea rows={k === 'rule' || k === 'op' ? 2 : 1} value={det[k] || ''} placeholder={hint} onChange={(e) => set(k, e.target.value)} />
+              )}
+            </label>
+          ))}
+        </div>
+        <div className="ps-det-foot">
+          <button className="uf-sealbtn" onClick={onClose}>取消</button>
+          <button className="uf-sealgo" onClick={save}>儲存</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 單一區段的編輯列表：一行一項大目標；↑↓ 排序、✕ 刪除、底部新增＋貼上多行
-function SectionEditor({ sec, onPatch, onRemove, onMove }) {
+function SectionEditor({ sec, onPatch, onRemove, onMove, onDetail }) {
   const [adding, setAdding] = useState('')
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pasteText, setPasteText] = useState('')
@@ -135,6 +173,7 @@ function SectionEditor({ sec, onPatch, onRemove, onMove }) {
           <div key={it.id} className="ps-row">
             <input value={it.label} onChange={(e) => setItems(items.map((x) => x.id === it.id ? { ...x, label: e.target.value } : x))} />
             {it.c && <span className="ps-row-c" title="報價合約來源">約</span>}
+            {!['note'].includes(sec.kind) && <button className={'uw-mini' + (hasDet(it) ? ' on' : '')} title="細節：A–E、資料來源" onClick={() => onDetail(it)}><SlidersHorizontal size={13} /></button>}
             <button className="uw-mini" onClick={() => move(i, -1)}><ChevronUp size={13} /></button>
             <button className="uw-mini" onClick={() => move(i, 1)}><ChevronDown size={13} /></button>
             <button className="uw-mini uf-del" onClick={() => setItems(items.filter((x) => x.id !== it.id))}><X size={13} /></button>
@@ -168,6 +207,7 @@ export default function SpecSheet({ wfId, onClose }) {
   const [addSec, setAddSec] = useState(false)
   const [quoteOpen, setQuoteOpen] = useState(false)
   const [openFlow, setOpenFlow] = useState(null) // 點流程 chip → 直達該張圖
+  const [detail, setDetail] = useState(null) // { secId, item } → 條目細節抽屜
   if (!wf) return null
   // 脈絡列：這頁的需求 → 相關流程（covers 反查）＋ 報價原文（審規格時就地比對缺漏）
   const req = (current.requirements || []).find((r) => r.id === wf.requirementId)
@@ -191,8 +231,8 @@ export default function SpecSheet({ wfId, onClose }) {
   }
 
   const isCustom = !spec && (wf.components || []).length > 0
-  const textStale = !!(wf.specText && wf.updatedAt && (wf.specTextAt || 0) < wf.updatedAt)
   const hasArt = artItems(current, wf.code).length > 0
+  const saveDet = (secId, itemId, det) => patchSection(secId, { items: (spec.sections.find((s) => s.id === secId)?.items || []).map((x) => (x.id === itemId ? { ...x, det } : x)) })
   return createPortal(
     <div className="uf-wrap">
       <div className="uf-head">
@@ -258,7 +298,9 @@ export default function SpecSheet({ wfId, onClose }) {
                   {(s.items || []).length > 0 && <span className="ps-kind">{s.items.length} 項</span>}</div>
                 {(s.items || []).length > 0 && (
                   <div className="ps-items">
-                    {s.items.map((it) => <span key={it.id} className={'ps-item' + (it.c ? ' contract' : '')}>{it.label}</span>)}
+                    {s.items.map((it) => s.kind === 'note'
+                      ? <span key={it.id} className={'ps-item' + (it.c ? ' contract' : '')}>{it.label}</span>
+                      : <button key={it.id} className={'ps-item ps-item-btn' + (it.c ? ' contract' : '') + (hasDet(it) ? ' has-det' : '')} title="點開填細節：A–E、資料來源" onClick={() => setDetail({ secId: s.id, item: it })}>{it.label}{hasDet(it) && <i className="ps-dot" />}</button>)}
                   </div>
                 )}
               </div>
@@ -268,14 +310,15 @@ export default function SpecSheet({ wfId, onClose }) {
           </div>
           </div>
         )}
-        {mode === 'text' && <SpecTextPane wf={wf} project={current} onPatch={patch} />}
+        {mode === 'text' && <SpecTextPane wf={wf} project={current} />}
         {spec && mode === 'edit' && (
           <div className="uf-card" style={{ gap: 10 }}>
             {spec.sections.map((s) => (
               <SectionEditor key={s.id} sec={s}
                 onPatch={(p) => patchSection(s.id, p)}
                 onRemove={() => patchSpec({ sections: spec.sections.filter((x) => x.id !== s.id) })}
-                onMove={(d) => moveSection(s.id, d)} />
+                onMove={(d) => moveSection(s.id, d)}
+                onDetail={(it) => setDetail({ secId: s.id, item: it })} />
             ))}
             {addSec ? (
               <div className="ps-items">
@@ -293,35 +336,35 @@ export default function SpecSheet({ wfId, onClose }) {
         )}
       </div>
       {openFlow && <UnitFlows unit={openFlow.unit || ''} focusId={openFlow.id} onClose={() => setOpenFlow(null)} />}
+      {detail && spec && (
+        <ItemDrawer key={detail.item.id} item={(spec.sections.find((s) => s.id === detail.secId)?.items || []).find((x) => x.id === detail.item.id) || detail.item}
+          kind={SECTION_KINDS[spec.sections.find((s) => s.id === detail.secId)?.kind] || ''}
+          onSave={(det) => saveDet(detail.secId, detail.item.id, det)} onClose={() => setDetail(null)} />
+      )}
     </div>,
     document.body
   )
 }
 
-// 文字版規格：Markdown 一整份，可直接改、複製、下載。第一次開時從規格清單長出來；之後規格清單再改，提示可重新產生
-function SpecTextPane({ wf, project, onPatch }) {
-  const generated = buildSpecText(project, wf)
-  const [text, setText] = useState(wf.specText || generated)
+// 文字版規格：唯讀的 Markdown 預覽，永遠跟規格清單一致（要改內容回規格清單，點條目填細節）。可複製、下載。
+function SpecTextPane({ wf, project }) {
+  const [withSource, setWithSource] = useState(true)
+  const text = buildSpecText(project, wf, { withSource })
   const [copied, setCopied] = useState(false)
   const ref = useRef(null)
-  const stale = !!(wf.specText && wf.updatedAt && (wf.specTextAt || 0) < wf.updatedAt)
-  useEffect(() => { setText(wf.specText || generated) }, [wf.id]) // eslint-disable-line
   useEffect(() => { const el = ref.current; if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' } }, [text])
-  const save = (t) => { setText(t); onPatch({ specText: t, specTextAt: Date.now() }) }
   const copy = async () => { try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { ref.current?.select() } }
-  const regen = () => { if (wf.specText && !confirm('用目前的規格清單重新產生，會蓋掉文字版裡手改的內容。確定？')) return; save(generated) }
   return (
     <div className="uf-card ps-text">
       <div className="ps-text-bar">
-        <span className="ps-kind">Markdown・{wf.specText ? '已手改' : '自規格清單產生'}</span>
-        {stale && <span className="fa-stale">規格清單在文字版之後改過</span>}
+        <span className="ps-kind">Markdown・自規格清單產生</span>
+        <label className="ps-chk"><input type="checkbox" checked={withSource} onChange={(e) => setWithSource(e.target.checked)} /> 含資料來源</label>
         <div className="spacer" />
-        <button className="uf-sealbtn" onClick={regen}><RefreshCw size={11} /> 重新產生</button>
         <button className="uf-sealbtn" onClick={() => downloadText(`${wf.code || ''}${wf.code ? ' ' : ''}${wf.name}.md`, text, 'text/markdown')}><Download size={11} /> 下載</button>
         <button className="uf-sealgo" onClick={copy}><Copy size={12} /> {copied ? '已複製' : '複製全文'}</button>
       </div>
-      <textarea ref={ref} className="ps-text-area" value={text} spellCheck={false} onChange={(e) => save(e.target.value)} />
-      <div className="uf-tips">段落照規格書習慣：製作說明 → 跳轉規則 → 畫面元件清單（每個元件寫 A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項）→ 邊界情境。表格用 Markdown，貼進 Notion、Docs、Word 都會成表。</div>
+      <textarea ref={ref} className="ps-text-area" value={text} spellCheck={false} readOnly />
+      <div className="uf-tips">要改內容：回規格清單，點任一條目填 A. 操作／B. 預設／C. 規則／D. 狀態／E. 選項與資料來源。這份文字和 Excel 都從那裡長，不另外維護。</div>
     </div>
   )
 }
