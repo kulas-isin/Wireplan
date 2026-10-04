@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useStore } from '../store/StoreContext.jsx'
-import { artItems, artUrl, artStale, artSource, artConfigured, listFinalArt, variantOfFile, fmtDate, artCount, uploadArt, deleteArt, nameForUpload, upsertItems, patchItem, removeItem } from '../lib/finalArt.js'
+import { artItems, artUrl, artStale, artSource, artConfigured, listFinalArt, variantOfFile, fmtDate, artCount, uploadArt, deleteArt, nameForUpload, upsertItems, patchItem, removeItem, importBatch, versionsOf, batchOf } from '../lib/finalArt.js'
 import { loadGhConfig } from '../lib/github.js'
-import { X, Image as ImageIcon, RefreshCw, Maximize2, TriangleAlert, Upload, Trash2, Pencil, StickyNote } from 'lucide-react'
+import { X, Image as ImageIcon, RefreshCw, Maximize2, TriangleAlert, Upload, Trash2, Pencil, StickyNote, History, FolderUp } from 'lucide-react'
 
 // 一頁的定案圖：載入 URL、標過期
 export function useFinalArt(wf) {
@@ -39,15 +39,22 @@ export function FinalArtPanel({ wf, compact = false }) {
   if (!items.length && !configured) return null
   const setFA = (fa) => dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'finalArt', value: fa })
   const flash = (t) => { setMsg(t); setTimeout(() => setMsg(''), 3000) }
+  const [verOf, setVerOf] = useState({}) // name → 正在看的版本 index
+  const [oldOpen, setOldOpen] = useState(null) // { item, ver }
   const upload = async (files, forceName) => {
+    const reason = (prompt(forceName ? '這次更新的原因（會記在版本履歷）' : '這張圖的說明／原因（選填）', '') ?? null)
+    if (reason === null) return
     let fa = current.finalArt || {}
     for (const f of files) {
       const name = forceName || nameForUpload(f.name, wf.code)
       setBusy(name)
-      try { const it = await uploadArt({ ...current, finalArt: fa }, f, name); fa = upsertItems({ ...current, finalArt: fa }, wf.code, it); setFA(fa); flash(`已上傳 ${name}`) }
-      catch (e) { flash('上傳失敗：' + e.message); break }
+      try {
+        const prevItem = (fa.items?.[wf.code] || []).find((x) => x.name === name) || null
+        const it = await uploadArt({ ...current, finalArt: fa }, f, name, { reason, prevItem })
+        fa = upsertItems({ ...current, finalArt: fa }, wf.code, it); setFA(fa); flash(`已上傳 ${name}`)
+      } catch (e) { flash('上傳失敗：' + e.message); break }
     }
-    setBusy('')
+    setVerOf({}); setBusy('')
   }
   const remove = async (it) => {
     if (!confirm(`刪除定案圖「${it.name}」？repo 裡的檔案也會一併移除。`)) return
@@ -79,11 +86,31 @@ export function FinalArtPanel({ wf, compact = false }) {
             <figcaption>
               <span className="fa-cap">{variantOfFile(it.name) || it.name}</span>
               <span className="fa-date">{fmtDate(it.seenAt)}</span>
+              {versionsOf(it).length > 1 && (
+                <span className="fa-vers" title="版本：點舊版可看圖與原因">
+                  {versionsOf(it).map((v, i) => (
+                    <button key={v.sha + i} className={'uf-vchip' + ((verOf[it.name] ?? versionsOf(it).length - 1) === i ? ' on' : '')}
+                      onClick={() => setVerOf((m) => ({ ...m, [it.name]: i }))}>v{i + 1}</button>
+                  ))}
+                </span>
+              )}
               <div className="spacer" />
               <button className="uw-mini" title="備註" onClick={() => { setNoteOf(noteOf === it.name ? null : it.name); setNoteTxt(it.note || '') }}><StickyNote size={12} /></button>
               {configured && <button className="uw-mini" title="用新圖取代這張（同檔名）" disabled={!!busy} onClick={() => { replTarget.current = it.name; replRef.current?.click() }}><Pencil size={12} /></button>}
               {configured && <button className="uw-mini uf-del" title="刪除" disabled={!!busy} onClick={() => remove(it)}><Trash2 size={12} /></button>}
             </figcaption>
+            {(() => {
+              const vs = versionsOf(it); const i = verOf[it.name] ?? vs.length - 1; const v = vs[i]
+              if (vs.length <= 1 && !v?.reason) return null
+              const b = v?.batchId ? batchOf(current, v.batchId) : null
+              return (
+                <div className={'fa-ver' + (i < vs.length - 1 ? ' old' : '')}>
+                  <History size={11} /> v{i + 1}・{fmtDate(v.at)}{i < vs.length - 1 ? '（舊版）' : ''}
+                  {v.reason ? `・${v.reason}` : ''}{b ? `・批次 ${fmtDate(b.at)}（${b.files.length} 張）` : ''}
+                  {i < vs.length - 1 && <button className="uf-sealbtn" onClick={() => setOldOpen({ item: it, ver: v, i })}>看這版</button>}
+                </div>
+              )
+            })()}
             {noteOf === it.name ? (
               <div className="fa-note-edit">
                 <textarea rows={2} autoFocus value={noteTxt} placeholder="這張圖的備註（例：10/6 客戶要求把篩選移到右側）" onChange={(e) => setNoteTxt(e.target.value)} />
@@ -94,8 +121,19 @@ export function FinalArtPanel({ wf, compact = false }) {
         ))}
       </div>
       {open && <FinalArtLightbox src={urls[open.sha]} label={`${wf.code}　${variantOfFile(open.name) || wf.name}`} onClose={() => setOpen(null)} />}
+      {oldOpen && <OldVersionLightbox project={current} item={oldOpen.item} ver={oldOpen.ver} label={`${wf.code}　${variantOfFile(oldOpen.item.name) || wf.name}　v${oldOpen.i + 1}（舊版${oldOpen.ver.reason ? '・' + oldOpen.ver.reason : ''}）`} onClose={() => setOldOpen(null)} />}
     </div>
   )
+}
+
+// 舊版本：用 sha 抓 blob 再開全螢幕
+function OldVersionLightbox({ project, item, ver, label, onClose }) {
+  const [src, setSrc] = useState('')
+  const [err, setErr] = useState('')
+  useEffect(() => { artUrl(project, { ...item, sha: ver.sha, current: false }).then(setSrc).catch((e) => setErr(e.message)) }, [ver.sha]) // eslint-disable-line
+  if (err) return createPortal(<div className="fa-lb" onClick={onClose}><div className="fa-lb-head"><span>{label}</span><div className="spacer" /><button className="rd-back" onClick={onClose}><X size={16} /></button></div><div className="fa-msg bad" style={{ margin: 16 }}>舊版載入失敗：{err}</div></div>, document.body)
+  if (!src) return createPortal(<div className="fa-lb"><div className="fa-lb-head"><span>{label}</span><div className="spacer" /><button className="rd-back" onClick={onClose}><X size={16} /></button></div><div className="fa-ph" style={{ color: '#EDF7CF' }}>載入舊版中…</div></div>, document.body)
+  return <FinalArtLightbox src={src} label={label} onClose={onClose} />
 }
 
 // 全螢幕看圖：預設塞進螢幕，點一下切 1:1 可捲動；Esc 關
@@ -169,7 +207,62 @@ export function FinalArtSettings() {
       </div>
       {!gh.token && <div className="gh-msg">要先在上面設定同步 token，才讀得到私人 repo 的圖。</div>}
       {msg && <div className="gh-msg">{msg}</div>}
+      <BatchImport disabled={busy || !path.trim() || !(repo.trim() || gh.repo) || !gh.token} onBeforeImport={save} />
     </details>
+  )
+}
+
+// 大批匯入：選很多張（Figma 整批匯出），依檔名編號各自歸位；整批一個原因，記成一筆批次
+function BatchImport({ disabled, onBeforeImport }) {
+  const { current, dispatch } = useStore()
+  const ref = useRef(null)
+  const [reason, setReason] = useState('')
+  const [prog, setProg] = useState('')
+  const [report, setReport] = useState(null)
+  const [openBatch, setOpenBatch] = useState(null)
+  const batches = [...(current.finalArt?.batches || [])].reverse()
+  const run = async (files) => {
+    if (!files.length) return
+    onBeforeImport && onBeforeImport()
+    setReport(null)
+    const r = await importBatch(current, files, reason.trim(), (n) => setProg(n))
+    setProg('')
+    dispatch({ type: 'UPDATE_PROJECT_FIELD', field: 'finalArt', value: r.finalArt })
+    setReport(r); setReason('')
+  }
+  return (
+    <div className="fa-batch">
+      <div className="ht-title"><FolderUp size={12} /> 批次匯入</div>
+      <input className="fa-reason" value={reason} placeholder="這批更新的原因（例：10/6 第 3 場後依決議修訂）" onChange={(e) => setReason(e.target.value)} />
+      <div className="gh-btns">
+        <button className="tg-big" disabled={disabled || !!prog} onClick={() => ref.current?.click()}><Upload size={15} /> 選檔案（可多選）</button>
+      </div>
+      <input ref={ref} type="file" accept="image/png,image/jpeg,image/webp" multiple style={{ display: 'none' }} onChange={(e) => { run([...e.target.files]); e.target.value = '' }} />
+      <div className="gh-help muted">檔名開頭要有頁面編號（P3-02_…png）才會歸位；同檔名會覆蓋成新版本，舊版仍可回看。</div>
+      {prog && <div className="gh-msg">上傳中：{prog}</div>}
+      {report && (
+        <div className="gh-msg">
+          完成 {report.done.length} 張（取代 {report.done.filter((d) => d.replaced).length}、新增 {report.done.filter((d) => !d.replaced).length}）
+          {report.skipped.length > 0 && <>；略過 {report.skipped.length} 張沒有頁面編號：{report.skipped.slice(0, 4).join('、')}{report.skipped.length > 4 ? '…' : ''}</>}
+          {report.failed.length > 0 && <><br />失敗：{report.failed.join('；')}</>}
+        </div>
+      )}
+      {batches.length > 0 && (
+        <div className="fa-batches">
+          <div className="ht-title"><History size={12} /> 批次紀錄</div>
+          {batches.map((b) => (
+            <div key={b.id} className="fa-batch-row">
+              <button className="fa-batch-head" onClick={() => setOpenBatch(openBatch === b.id ? null : b.id)}>
+                <span className="fa-date">{new Date(b.at).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                <span className="fa-batch-reason">{b.reason || '（沒寫原因）'}</span>
+                <span className="ps-kind">{b.files.length} 張</span>
+              </button>
+              {openBatch === b.id && <div className="fa-batch-files">{b.files.map((f) => <span key={f.name}><b>{f.code}</b> {f.name}{f.replaced ? '（取代）' : '（新增）'}</span>)}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 

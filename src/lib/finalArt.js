@@ -47,7 +47,10 @@ export async function listFinalArt(project) {
     const code = codeOfFile(f.name)
     if (!code) { if (/\.(png|jpe?g|webp)$/i.test(f.name)) unmatched.push(f.name); continue }
     const old = (prev[code] || []).find((x) => x.name === f.name)
-    const it = { name: f.name, path: f.path, sha: f.sha, size: f.size, seenAt: old && old.sha === f.sha ? old.seenAt : now, ...(old?.note ? { note: old.note } : {}) }
+    const same = old && old.sha === f.sha
+    const history = [...(old?.history || (old ? [{ sha: old.sha, at: old.seenAt, size: old.size, reason: '' }] : []))]
+    if (!same) history.push({ sha: f.sha, at: now, size: f.size, reason: old ? '資料夾裡的檔案被更新（非從 Wireplan 上傳）' : '' })
+    const it = { name: f.name, path: f.path, sha: f.sha, size: f.size, seenAt: same ? old.seenAt : now, history, ...(old?.note ? { note: old.note } : {}) }
     ;(items[code] = items[code] || []).push(it)
   }
   for (const k of Object.keys(items)) items[k].sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'))
@@ -81,9 +84,19 @@ export async function artUrl(project, item) {
     if (!blob) {
       const src = artSource(project)
       const token = loadGhConfig().token
-      const res = await fetch(api(src.repo, item.path, src.branch), { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.raw+json' } })
-      if (!res.ok) throw new Error(explain(res))
-      blob = await res.blob()
+      const h = { Authorization: `Bearer ${token}` }
+      let res = item.path && item.current !== false
+        ? await fetch(api(src.repo, item.path, src.branch), { headers: { ...h, Accept: 'application/vnd.github.raw+json' } })
+        : null
+      if (!res || !res.ok) {
+        // 舊版本或路徑已不在：直接拿 blob（GitHub 用 sha 保存每一版）
+        res = await fetch(`https://api.github.com/repos/${src.repo}/git/blobs/${item.sha}`, { headers: { ...h, Accept: 'application/vnd.github+json' } })
+        if (!res.ok) throw new Error(explain(res))
+        const j = await res.json()
+        const bin = atob((j.content || '').replace(/\n/g, ''))
+        const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
+        blob = new Blob([arr], { type: 'image/png' })
+      } else blob = await res.blob()
       idbPut(item.sha, blob)
     }
     const u = URL.createObjectURL(blob)
@@ -96,7 +109,7 @@ export async function artUrl(project, item) {
 
 // 手動上傳／更新一張圖（Figma 改完匯出的 PNG）：直接寫進 repo 資料夾，同名就覆蓋（帶舊 sha）
 const b64 = (buf) => { let bin = ''; const a = new Uint8Array(buf); for (let i = 0; i < a.length; i += 0x8000) bin += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(bin) }
-export async function uploadArt(project, file, name) {
+export async function uploadArt(project, file, name, { reason = '', batchId = null, prevItem = null } = {}) {
   const src = artSource(project)
   const token = loadGhConfig().token
   if (!src.repo || !src.path) throw new Error('請先在同步設定填定案圖的 repo 與資料夾')
@@ -114,6 +127,8 @@ export async function uploadArt(project, file, name) {
   if (!res.ok) throw new Error(res.status === 403 ? 'Token 沒有這個 repo 的寫入權限' : explain(res))
   const j = await res.json()
   const item = { name, path, sha: j?.content?.sha || sha, size: buf.byteLength, seenAt: Date.now() }
+  item.history = [...(prevItem?.history || (prevItem ? [{ sha: prevItem.sha, at: prevItem.seenAt, size: prevItem.size, reason: '' }] : [])), { sha: item.sha, at: item.seenAt, size: item.size, reason: reason || '', batchId: batchId || undefined }]
+  if (prevItem?.note) item.note = prevItem.note
   const blob = new Blob([buf], { type: file.type || 'image/png' })
   idbPut(item.sha, blob)
   if (urlCache.has(item.sha)) URL.revokeObjectURL(urlCache.get(item.sha))
@@ -155,5 +170,28 @@ export function removeItem(project, code, name) {
   if (list.length) items[code] = list; else delete items[code]
   return { ...fa, items }
 }
+
+// 批次匯入：一次丟很多張，每張依檔名的頁面編號歸位；沒有編號的略過。整批共用一個原因。
+export async function importBatch(project, files, reason, onProgress) {
+  let fa = project.finalArt || {}
+  const batchId = 'b' + Date.now().toString(36)
+  const done = [], skipped = [], failed = []
+  for (const f of files) {
+    const name = f.name.replace(/[\\/:*?"<>|]/g, '_')
+    const code = codeOfFile(name)
+    if (!code) { skipped.push(name); continue }
+    onProgress && onProgress(name)
+    try {
+      const prevItem = (fa.items?.[code] || []).find((x) => x.name === name) || null
+      const it = await uploadArt({ ...project, finalArt: fa }, f, name, { reason, batchId, prevItem })
+      fa = upsertItems({ ...project, finalArt: fa }, code, it)
+      done.push({ code, name, replaced: !!prevItem })
+    } catch (e) { failed.push(`${name}：${e.message}`) }
+  }
+  if (done.length) fa = { ...fa, batches: [...(fa.batches || []), { id: batchId, at: Date.now(), reason: reason || '', files: done }] }
+  return { finalArt: fa, done, skipped, failed, batchId }
+}
+export const versionsOf = (item) => item?.history?.length ? item.history : [{ sha: item.sha, at: item.seenAt, size: item.size, reason: '' }]
+export const batchOf = (project, id) => (project?.finalArt?.batches || []).find((b) => b.id === id)
 
 export const fmtDate = (ts) => (ts ? new Date(ts).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' }) : '')
