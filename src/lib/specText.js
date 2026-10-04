@@ -16,6 +16,7 @@ function splitLabel(label) {
   return { name: m[1].trim(), rest }
 }
 const isJump = (label) => /→|跳至|跳轉|轉跳|另開|導向/.test(label || '')
+const isTag = (label) => /^[（(][^）)]{1,8}[）)]/.test(String(label || '').trim()) // （版面）（共用機制）…
 // 說明裡有操作動詞（含「跳出標籤」＝滑入／點擊的原地提示）就放 A. 操作，否則放 C. 規則
 const IS_ACTION = /點|按|輸入|勾|拖|切換|選|跳出標籤|滑入/
 
@@ -31,12 +32,16 @@ export function buildSpecText(project, wf) {
   if (intro) L.push(intro, '')
   const useNotes = notes.filter((n) => !/^(空狀態|錯誤狀態|邊界)/.test(n) && n.trim() !== intro)
   for (const n of useNotes) L.push(n, '')
+  // 元件區裡開頭帶（版面）（共用機制）這類標記的條目，是整區的說明，不是元件 → 放製作說明
+  const layoutNotes = []
+  for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isTag(it.label)) layoutNotes.push(`${SECTION_KINDS[s.kind] || s.kind}${it.label}`)
+  for (const n of layoutNotes) L.push(n, '')
   if (flows.length) L.push(`相關流程：${flows.join('、')}`, '')
   if (!intro && !useNotes.length) L.push('（這頁做什麼、給誰用、進入方式）', '')
 
   // 跳轉規則：label 裡有「→」的按鈕／連結
   const jumps = []
-  for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isJump(it.label)) jumps.push(it.label)
+  for (const s of sections) if (ELEMENT_KINDS.includes(s.kind)) for (const it of s.items || []) if (isJump(it.label) && !isTag(it.label)) jumps.push(it.label)
   L.push('## 跳轉規則', '', '| 元素 | 點擊行為 |', '|---|---|')
   if (jumps.length) for (const j of jumps) {
     if (j.includes('→')) { const [a, ...b] = j.split('→'); L.push(`| ${esc(a.trim())} | → ${esc(b.join('→').trim())} |`) }
@@ -52,6 +57,7 @@ export function buildSpecText(project, wf) {
     if (!ELEMENT_KINDS.includes(s.kind)) continue
     const cap = SECTION_KINDS[s.kind] || s.kind
     for (const it of s.items || []) {
+      if (isTag(it.label)) continue
       const { name, rest } = splitLabel(it.label)
       n++
       const act = rest && IS_ACTION.test(rest)
