@@ -16,6 +16,8 @@ function splitLabel(label) {
   return { name: m[1].trim(), rest }
 }
 const isJump = (label) => /→|跳至|跳轉|轉跳|另開|導向/.test(label || '')
+// 說明裡有操作動詞（含「跳出標籤」＝滑入／點擊的原地提示）就放 A. 操作，否則放 C. 規則
+const IS_ACTION = /點|按|輸入|勾|拖|切換|選|跳出標籤|滑入/
 
 export function buildSpecText(project, wf) {
   const sections = wf?.spec?.sections || []
@@ -52,10 +54,11 @@ export function buildSpecText(project, wf) {
     for (const it of s.items || []) {
       const { name, rest } = splitLabel(it.label)
       n++
+      const act = rest && IS_ACTION.test(rest)
       const lines = [
-        `A. 操作：${rest && /點|按|輸入|勾|拖|切換|選/.test(rest) ? esc(rest) : ''}`,
+        `A. 操作：${act ? esc(rest) : ''}`,
         'B. 預設：',
-        `C. 規則：${rest && !/點|按|輸入|勾|拖|切換|選/.test(rest) ? esc(rest) : ''}`,
+        `C. 規則：${rest && !act ? esc(rest) : ''}`,
         'D. 狀態：',
         'E. 選項：',
       ]
