@@ -191,7 +191,7 @@ export async function buildSpecWorkbook(project, opts = {}) {
 
 export async function exportSpecXlsx(project, opts = {}) {
   const { wb, pages } = await buildSpecWorkbook(project, opts)
-  const name = `${project.name || '專案'}-頁面規格${opts.withSource === false ? '（客戶版）' : ''}.xlsx`
+  const name = `${project.name || '專案'}-頁面規格.xlsx`
   const buf = await wb.xlsx.writeBuffer()
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const url = URL.createObjectURL(blob)
